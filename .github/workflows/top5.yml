@@ -8,11 +8,12 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'review: 9개 후보 원본·세로 컷 검수 / draft: 검수용 MP4 / discover: 검색만'
+        description: 'review: 후보 검수 / selected-draft: 선정한 5개 편집 / draft: 자동 초안 / discover: 검색'
         required: true
         type: choice
         options:
           - review
+          - selected-draft
           - discover
           - draft
         default: review
