@@ -899,24 +899,47 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
                    ensure_ascii=False,indent=2),encoding='utf-8')
     voiceover_timeline(dest,captions)
     final=dest/f'TOP5_DRAFT_REVIEW_ONLY_{width}x{height}.mp4'
-    audio_inputs=['-i',str(sfx),'-i',str(joined_sound)]+(['-i',str(narration)] if narration else [])
-    base_mix=('[1:a]atrim=0:30,asetpts=N/SR/TB,volume=0.65[sfx];'
-              '[2:a]atrim=0:30,asetpts=N/SR/TB,volume=0.92[ambient];')
+    # The previous mux could generate a 30s video but only 17s of AAC audio
+    # when the concat-demuxed silent WAV had unstable timestamps.
+    # Never include the concat soundtrack if no source audio was approved.
+    has_source_audio=any(x.get('audio_approved') is True for x in selected)
+    audio_inputs=['-i',str(sfx)]
+    if has_source_audio:
+        audio_inputs+=['-i',str(joined_sound)]
     if narration:
-        audio_filter=(base_mix+
-              '[3:a]apad,atrim=0:30,asetpts=N/SR/TB,volume=1.0[voice];'
-              '[sfx][ambient][voice]amix=inputs=3:duration=first:normalize=0,alimiter=limit=0.92[aout]')
+        audio_inputs+=['-i',str(narration)]
+    base_mix='[1:a]aresample=async=1:first_pts=0,apad,atrim=0:30,asetpts=PTS-STARTPTS,volume=0.65[sfx];'
+    sources=['sfx']
+    if has_source_audio:
+        base_mix+='[2:a]aresample=async=1:first_pts=0,apad,atrim=0:30,asetpts=PTS-STARTPTS,volume=0.92[ambient];'
+        sources.append('ambient')
+    if narration:
+        idx=3 if has_source_audio else 2
+        base_mix+=f'[{idx}:a]aresample=async=1:first_pts=0,apad,atrim=0:30,asetpts=PTS-STARTPTS[voice];'
+        sources.append('voice')
+    if len(sources)>1:
+        audio_filter=(base_mix+''.join(f'[{k}]' for k in sources)+
+            f'amix=inputs={len(sources)}:duration=longest:normalize=0,'
+            'apad,atrim=0:30,asetpts=PTS-STARTPTS,alimiter=limit=0.92[aout]')
     else:
-        audio_filter=(base_mix+
-              '[sfx][ambient]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.92[aout]')
+        audio_filter=base_mix+'[sfx]apad,atrim=0:30,asetpts=PTS-STARTPTS,alimiter=limit=0.92[aout]'
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(joined),*audio_inputs,
          '-filter_complex',f'[0:v]subtitles={ass}[vout];{audio_filter}',
          '-map','[vout]','-map','[aout]','-t','30',
          '-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-r','24',
          '-c:a','aac','-b:a','128k','-movflags','+faststart',str(final)],timeout=350)
     final_duration=probe_duration(final)
-    if abs(final_duration-30)>0.3:
-        raise RuntimeError(f'최종 영상 길이 오류: {final_duration:.2f}초')
+    audio_probe=subprocess.check_output([
+        'ffprobe','-v','error','-select_streams','a:0',
+        '-show_entries','stream=duration','-of','default=noprint_wrappers=1:nokey=1',
+        str(final)],timeout=30).decode().strip()
+    try:
+        audio_duration=float(audio_probe)
+    except (TypeError,ValueError):
+        raise RuntimeError('오디오 스트림이 없거나 길이를 측정할 수 없습니다.')
+    if abs(final_duration-30)>0.3 or not 29.85<=audio_duration<=30.2:
+        raise RuntimeError(f'영상·오디오 길이 오류: video={final_duration:.2f}s, audio={audio_duration:.2f}s')
+    print(f'[오디오 싱크] video={final_duration:.2f}s, audio={audio_duration:.2f}s',flush=True)
     # Eight frames for rapid visual review of cuts, title, ranking and readability.
     try:
         run(['ffmpeg','-hide_banner','-loglevel','error','-y',
