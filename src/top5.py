@@ -514,7 +514,16 @@ def collect_editorial_selections(rows,out):
     for ix,row in enumerate(rows,1):
         title=row['title']
         if title not in indexed:
-            raise RuntimeError(f'권리/파일 조건 미통과: {title}')
+            pages=metadata.get('query',{}).get('pages',[])
+            matching=next((x for x in pages if x.get('title','').casefold()==title.casefold()),{})
+            i0=(matching.get('imageinfo') or [{}])[0]
+            m=i0.get('extmetadata',{})
+            diagnostic={'title':title, 'api_title':matching.get('title'),
+                        'mime':i0.get('mime'),'size':i0.get('size'),
+                        'license_url':short_meta(m,'LicenseUrl'),
+                        'license_name':short_meta(m,'LicenseShortName'),
+                        'has_download_url':bool(i0.get('url'))}
+            raise RuntimeError('권리/파일 조건 미통과: '+json.dumps(diagnostic,ensure_ascii=False))
         if candidate_relevance(title)<=-100:
             raise RuntimeError(f'비실사/혼합 콘텐츠 위험 제외: {title}')
         c=indexed[title]
