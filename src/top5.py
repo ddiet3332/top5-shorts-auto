@@ -526,8 +526,10 @@ def collect_editorial_selections(rows,out):
                         'license_name':short_meta(m,'LicenseShortName'),
                         'has_download_url':bool(i0.get('url'))}
             raise RuntimeError('권리/파일 조건 미통과: '+json.dumps(diagnostic,ensure_ascii=False))
-        if candidate_relevance(title)<=-100:
-            raise RuntimeError(f'비실사/혼합 콘텐츠 위험 제외: {title}')
+        # Some genuinely reviewed self-shot animal videos have non-descriptive
+        # filenames. Allow those ONLY after explicit source content inspection.
+        if candidate_relevance(title)<=-100 and row.get('manual_content_review') is not True:
+            raise RuntimeError(f'비실사/혼합 콘텐츠 위험 제외(실제 내용 검수 미승인): {title}')
         c=indexed[title]
         suffix=Path(urllib.parse.urlparse(c['download_url']).path).suffix.lower()
         file=clips/f'editorial_{ix:02}{suffix}'
@@ -546,6 +548,9 @@ def collect_editorial_selections(rows,out):
                          'highlight_start':start,'motion_score':motion,
                          'crop_risk':crop_risk(file),
                          'editorial_selected':True,
+                         'manual_content_review':row.get('manual_content_review') is True,
+                         'reaction_sfx':str(row.get('reaction_sfx','')),
+                         'reaction_offset':row.get('reaction_offset',None),
                          'audio_approved':row.get('audio_approved') is True,
                          'approved_for_publication':False})
     return selected
