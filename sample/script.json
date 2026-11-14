@@ -22,5 +22,14 @@
     "File:Larry the cat getting his nails trimmed (VID 20210408 123153).webm": "발톱 손질 고양이",
     "File:Cat behaviour - self-grooming.webm": "그루밍 고양이"
   },
-  "focus_overrides": {}
+  "focus_overrides": {},
+  "exclude_titles": [
+    "File:Larry the cat and Chloé playing (100111224612).webm",
+    "File:Cat playing in Taiwan.webm",
+    "File:Interaction between a peacock and a cat.webm",
+    "File:Kitten playing - Tokyo - Jan 7 2020.webm",
+    "File:Larry the cat getting his nails trimmed (VID 20210408 123153).webm",
+    "File:Dogs'-Expectation-about-Signalers'-Body-Size-by-Virtue-of-Their-Growls-pone.0015175.s004.ogv"
+  ],
+  "exclude_notes": "Excluded after V4 human review due to severe cropping, weak comedic payoff or research footage. May be restored after individual scene QA."
 }
