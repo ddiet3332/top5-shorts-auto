@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V8 provisional 5-cut render QA - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V8 CC0 metadata diagnostic - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
