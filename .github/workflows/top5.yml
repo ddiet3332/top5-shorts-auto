@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V10 corrected action cutpoints and captions - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V11 actual-action audition - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -12,11 +12,12 @@ on:
         required: true
         type: choice
         options:
+          - candidate-review
           - review
           - selected-draft
           - discover
           - draft
-        default: review
+        default: candidate-review
       topic:
         description: '영어 검색 키워드 (예: cat playing / dog funny)'
         required: true
@@ -43,11 +44,15 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'selected-draft' || 'review') }}
+          MODE: ${{ inputs.mode || 'candidate-review' }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
         run: |
-          python3 src/top5.py --output output
+          if [ "$MODE" = "candidate-review" ]; then
+            python3 src/v11_candidate_review.py --output output
+          else
+            python3 src/top5.py --output output
+          fi
       - name: Upload MP4, candidates, attribution, rights review
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,5 +83,9 @@ jobs:
             output/V8_MOMENT_*_GRID.jpg
             output/V8_MOMENTS_REVIEW.json
             output/V8_EDITORIAL_GUIDE.md
+            output/V11_CANDIDATE_REPORT.json
+            output/V11_REVIEW_GUIDE.md
+            output/V11_STORYBOARD_*.jpg
+            output/V11_PREVIEWS/candidate_*.mp4
           if-no-files-found: warn
           retention-days: 7
