@@ -1,5 +1,9 @@
 name: TOP5 CC Shorts - discover and draft
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5.yml'
   workflow_dispatch:
     inputs:
       mode:
@@ -32,11 +36,13 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+      - name: Validate ranking and licensing logic
+        run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode }}
-          TOPIC: ${{ inputs.topic }}
-          TITLE: ${{ inputs.title }}
+          MODE: ${{ inputs.mode || 'draft' }}
+          TOPIC: ${{ inputs.topic || 'cat playing' }}
+          TITLE: ${{ inputs.title || '황당한 동물들의 순간 TOP5' }}
         run: |
           python3 src/top5.py --output output
       - name: Upload MP4, candidates, attribution, rights review
@@ -52,5 +58,6 @@ jobs:
             output/rejected.json
             output/YOUTUBE_CREDITS.txt
             output/RIGHTS_CHECKLIST.md
+            output/SHOTLIST_FOR_REVIEW.json
           if-no-files-found: warn
           retention-days: 7
