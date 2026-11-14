@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V11 validate full 30sec AAC stream - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V12 licensed-source discovery review - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -12,12 +12,13 @@ on:
         required: true
         type: choice
         options:
+          - source-review
           - candidate-review
           - review
           - selected-draft
           - discover
           - draft
-        default: candidate-review
+        default: source-review
       topic:
         description: '영어 검색 키워드 (예: cat playing / dog funny)'
         required: true
@@ -44,11 +45,18 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'selected-draft' || 'candidate-review') }}
+          MODE: ${{ inputs.mode || 'source-review' }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
-          if [ "$MODE" = "candidate-review" ]; then
+          if [ "$MODE" = "source-review" ]; then
+            if [ -n "$PEXELS_API_KEY" ]; then
+              python3 src/v12_sources.py --output output --existing-pexels-api
+            else
+              python3 src/v12_sources.py --output output
+            fi
+          elif [ "$MODE" = "candidate-review" ]; then
             python3 src/v11_candidate_review.py --output output
           else
             python3 src/top5.py --output output
@@ -88,5 +96,9 @@ jobs:
             output/V11_STORYBOARD_*.jpg
             output/V11_PREVIEWS/candidate_*.mp4
             output/V11_REACTION_SFX.json
+            output/V12_MOBILE_REVIEW.html
+            output/V12_SOURCE_REPORT.json
+            output/V12_SOURCES.csv
+            output/V12_RIGHTS_AND_EDITORIAL.md
           if-no-files-found: warn
           retention-days: 7
