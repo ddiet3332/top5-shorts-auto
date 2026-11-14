@@ -59,5 +59,9 @@ jobs:
             output/YOUTUBE_CREDITS.txt
             output/RIGHTS_CHECKLIST.md
             output/SHOTLIST_FOR_REVIEW.json
+            output/MOTION_RANKING_REPORT.json
+            output/VOICEOVER_TIMELINE.json
+            output/NARRATION_REQUIRED.md
+            output/QA_CONTACT_SHEET.jpg
           if-no-files-found: warn
           retention-days: 7
