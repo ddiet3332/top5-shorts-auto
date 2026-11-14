@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V12 official Pexels action audition - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V12 mixed verified clips QA - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -12,6 +12,7 @@ on:
         required: true
         type: choice
         options:
+          - mixed-draft
           - source-audition
           - source-review
           - candidate-review
@@ -46,12 +47,14 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || 'source-audition' }}
+          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'mixed-draft' || 'source-audition') }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
-          if [ "$MODE" = "source-audition" ]; then
+          if [ "$MODE" = "mixed-draft" ]; then
+            python3 src/v12_mixed_draft.py --output output
+          elif [ "$MODE" = "source-audition" ]; then
             python3 src/v12_pexels_audition.py --output output
           elif [ "$MODE" = "source-review" ]; then
             if [ -n "$PEXELS_API_KEY" ]; then
@@ -107,5 +110,6 @@ jobs:
             output/V12_PEXELS_AUDITION.md
             output/V12_PEXELS_FRAMES/*.jpg
             output/V12_PEXELS_PREVIEWS/*.mp4
+            output/V12_MIXED_RIGHTS_AUDIT.json
           if-no-files-found: warn
           retention-days: 7
