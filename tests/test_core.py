@@ -97,7 +97,7 @@ class BasicTests(unittest.TestCase):
             file=Path(d)/'caption.ass'
             create_subtitles(file,'고양이 TOP5',DEFAULT_CAPTIONS)
             contents=file.read_text(encoding='utf-8')
-            self.assertIn(r'\\pos(540,1248)',contents)   # 65% of 1920
+            self.assertIn(r'\pos(540,1248)',contents)   # 65% of 1920
             geometry=stage_geometry(1080,1920)
             self.assertGreaterEqual(geometry['width'],850)
             self.assertGreaterEqual(geometry['x'],195)
