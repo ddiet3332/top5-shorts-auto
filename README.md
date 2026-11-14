@@ -1,4 +1,4 @@
-# TOP5 CC Shorts Auto — V11 (한국어 안내)
+# TOP5 CC Shorts Auto — V12 (한국어 안내)
 
 **주제 검색 → Wikimedia Commons CC BY·CC0 영상 자동 발견 → 5개 파일 자동 다운로드 → 30초 TOP5 세로영상 초안 → 출처·권리 검토 자료 출력**
 
@@ -232,3 +232,44 @@ python3 src/top5.py --mode local-test --local-manifest local.json --size 360x640
 - V7의 확대된 검정 배경·1~5위 표시·자막 높이 65%는 유지합니다. 디자인 최종 수정은 이후 단계로 보류합니다.
 - 결과물은 미공개 **검수용**입니다. 독창성, 피사체의 재미, 원본 출처의 진정성, 음악/대사 제3자 권리 및 유튜브 수익화 적합성은 별도 승인해야 합니다.
 
+
+
+## V12 — 기존 CC 자동 제작 + 신규 상업 이용 영상 소스 후보 검수
+
+기존 Wikimedia Commons의 CC BY/CC0 수집·검수·편집 기능은 그대로 유지됩니다. V12는 별도의 \`source-review\` 모드를 추가합니다.
+
+### 왜 별도 모드인가
+
+Pixabay/Pexels/Mixkit 동영상의 **사용 라이선스**와 실제 동영상의 **내용이 웃긴지**는 별개입니다. 더구나 Mixkit은 Free와 Restricted가 달라서 개별 영상 페이지 확인 없이 일괄 다운로드하면 안 됩니다. 현재 공급사 사용 조건도 대량 스크래핑을 허용하는 포괄적 동의가 아닙니다. 따라서 V12는 출처 검토 전의 원본 다운로드를 자동화하지 않습니다.
+
+### 휴대폰에서 후보 7개 확인하기
+
+1. GitHub 저장소 → Actions → TOP5 CC Shorts - discover and draft → Run workflow.
+2. mode = \`source-review\` 선택.
+3. 실행 후 Artifacts → TOP5-shorts-review-… ZIP 다운로드.
+4. ZIP 안의 \`V12_MOBILE_REVIEW.html\`을 휴대폰 브라우저에서 열면 후보 원본 페이지/라이선스 링크를 볼 수 있습니다.
+5. \`V12_SOURCE_REPORT.json\`, \`V12_SOURCES.csv\`, \`V12_RIGHTS_AND_EDITORIAL.md\`에 제작자 표기, 실제 액션 검수, 음악/초상/제3자 권리 검수 상태가 기록됩니다.
+
+### 추가 후보 사이트별 정책
+
+- **Pexels**: 공식 Pexels License는 일반적 상업 편집 사용이 가능하지만 단순 무변형 배포, 제3자 로고·초상·원본 음원 등을 별도로 검토해야 합니다. Pexels API는 현재 **신규 키 발급이 일시 중단**돼 있습니다. 이미 키가 있으면 GitHub Actions Repository secret의 이름을 정확히 \`PEXELS_API_KEY\`로 지정할 수 있으며, \`source-review\` 실행 시 최대 8건씩 두 검색어로 **후보 메타데이터만** 받아옵니다. 키가 없으면 API 요청을 시도하지 않고 이미 검증한 출처 페이지 7개를 보여줍니다. API 키나 요청 URL의 민감값을 로그/아티팩트에 출력하지 않습니다.
+- **Pixabay**: 개별 페이지가 Pixabay Content License 대상인지 확인하고, 동영상 자체가 실사인지 AI 영상인지, 음악/권리가 포함됐는지 검수합니다. 무변형 재배포 금지.
+- **Mixkit**: 개별 영상에 \`Mixkit Stock Video Free License\`가 표시되는 경우만 후보로 인정하며 \`Restricted License\`는 제외합니다. 특정 영상의 이용권과 원본 다운로드 권한을 구분합니다.
+- **Wikimedia**: 기존의 CC BY·CC0 필터와 출처 표기 방식 유지, 제3자 권리 검토 필요.
+
+### 필수 검수 및 다음 제작 기준
+
+- 제목에 \`funny\` 또는 \`jump\`가 있어도 실제 편집 5초 내 사건 전개가 없으면 탈락.
+- 다른 순위와 같은 행동 반복 시 탈락. 단순 모음이 아니라 편집자의 판단이 드러나는 비교·해설을 포함.
+- TTS는 기본 미사용, 원본 음성은 개별 음원 권리 승인 전에는 사용하지 않음.
+- V7의 검은색 배경·큰 영상·순위표, 한글 자막 높이 65% 유지.
+- V12의 후보를 자동으로 게시용 MP4로 합성하는 기능은 **아직 없습니다**. 권리와 실제 장면 검수 승인 전에는 혼합하지 않습니다.
+
+### 공급사 및 유튜브 공식 자료
+
+- Pexels License: https://www.pexels.com/license/
+- Pexels API 공식: https://www.pexels.com/api/
+- Pixabay Content License: https://pixabay.com/service/license-summary/
+- Mixkit Free Video: https://mixkit.co/license/modal/videoFree/
+- Mixkit Restricted Video: https://mixkit.co/license/modal/videoRestricted/
+- YouTube 재사용/비진정성 콘텐츠: https://support.google.com/youtube/answer/1311392
