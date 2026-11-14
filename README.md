@@ -69,3 +69,10 @@ python3 src/top5.py --mode local-test --local-manifest local.json --size 360x640
 - MediaWiki API imageinfo: https://www.mediawiki.org/wiki/API:Imageinfo
 - GitHub Actions: https://docs.github.com/en/actions/how-tos/manage-workflow-runs
 - YouTube 정책: https://support.google.com/youtube/answer/1311392
+## V2: 순위 이름과 전체 화면
+
+- 1~5위 각각의 이름을 원본 파일명으로 표시합니다. sample/script.json의 source_names에서 한국어 이름을 원본 제목별로 지정할 수 있습니다.
+- 기존 블러 배경 대신 9:16 화면을 원본 영상으로 채웁니다. 가로 영상은 좌우가 잘릴 수 있습니다.
+- focus_overrides에 원본 제목별 가로 위치값(0.0~1.0)을 지정할 수 있습니다. 자동 위치는 움직임 기반 근사치이며 피사체 식별은 아닙니다.
+- SHOTLIST_FOR_REVIEW.json에 구간별 원본·시작시각·초점 위치가 기록됩니다.
+- 게시 전 검수용 초안입니다. 웃긴 순간 자체의 자동 이해, 음악/출연자 권리 확인, 해설 TTS와 코믹 효과음은 아직 자동 완료되지 않습니다.
