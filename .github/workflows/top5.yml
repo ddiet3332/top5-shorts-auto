@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V8 rank-1 source action QA - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V8 corrected funny hook 5-second window - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
