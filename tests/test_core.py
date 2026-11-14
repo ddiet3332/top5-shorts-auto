@@ -10,6 +10,8 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(supported_license('https://creativecommons.org/licenses/by/4.0/'), 'CC BY')
         self.assertEqual(supported_license('http://creativecommons.org/licenses/by/3.0'), 'CC BY')
         self.assertEqual(supported_license('https://creativecommons.org/publicdomain/zero/1.0/'), 'CC0')
+        self.assertEqual(supported_license('http://creativecommons.org/publicdomain/zero/1.0/deed.en'), 'CC0')
+        self.assertIsNone(supported_license('http://creativecommons.org/publicdomain/zero/1.0/deed.en/fake'))
     def test_license_negative(self):
         for x in ('https://creativecommons.org/licenses/by-sa/4.0/',
                   'https://creativecommons.org/licenses/by-nc/4.0/',
