@@ -5,6 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
 from v8_moments import window_candidates
 from v12_sources import allowed_page, validate_catalog, parse_pexels_results, make_report
 from v12_pexels_audition import official_video_id
+from v12_mixed_draft import validate_mixed_selection
 from v11_candidate_review import validate_titles
 from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions, original_audio_available, make_approved_source_audio
 
@@ -244,6 +245,29 @@ class BasicTests(unittest.TestCase):
         bad=dict(item,provider='mixkit')
         with self.assertRaises(ValueError):
             official_video_id(bad)
+
+    def test_v12_mixed_rank_list_never_approves_unreviewed_audio(self):
+        catalog=[{'id':'PX-23','provider':'pexels',
+                  'page_url':'https://www.pexels.com/video/a-cat-23/',
+                  'license_url':'https://www.pexels.com/license/',
+                  'license_label':'Pexels License'}]
+        rows=[{'provider':'pexels','id':'PX-23','start_sec':0,
+               'display_name':'고양이'},
+              *[{'provider':'wikimedia','title':f'File:Cat_{i}.webm',
+                'start_sec':1,'display_name':'고양이'} for i in range(4)]]
+        self.assertEqual(len(validate_mixed_selection(rows,catalog)),5)
+        with self.assertRaises(ValueError):
+            validate_mixed_selection(rows[:4],catalog)
+        with self.assertRaises(ValueError):
+            validate_mixed_selection(rows[:4]+[rows[0]],catalog)
+        audio=[dict(x) for x in rows]
+        audio[0]['audio_approved']=True
+        with self.assertRaises(ValueError):
+            validate_mixed_selection(audio,catalog)
+        bad=[dict(x) for x in rows]
+        bad[0]['id']='PX-999'
+        with self.assertRaises(ValueError):
+            validate_mixed_selection(bad,catalog)
 
     def test_ass(self):
         import tempfile
