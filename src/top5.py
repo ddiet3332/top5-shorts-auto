@@ -409,16 +409,20 @@ def create_review_gallery(items, out):
     print(f'[V4 검수] 후보 {len(records)}개, 원본·세로 비교 이미지 생성 완료',flush=True)
 
 
-def collect_media(cands, out, count=5, review_only=False):
+def collect_media(cands, out, count=5, review_only=False, excluded_titles=None):
     clips = Path(out)/'clips'
     clips.mkdir(parents=True, exist_ok=True)
     pool=[]
     downloaded_bytes=0
     rejects=[]
     candidates = sorted(cands, key=lambda x: candidate_relevance(x['title']), reverse=True)
+    excluded_titles=set(excluded_titles or [])
     for i,c in enumerate(candidates):
         if len(pool)>=max(count,REVIEW_POOL):
             break
+        if c['title'] in excluded_titles:
+            rejects.append({'title':c['title'],'reason':'수동 편집 검수에서 부적합으로 지정된 원본'})
+            continue
         if candidate_relevance(c['title'])<=-100:
             rejects.append({'title':c['title'],'reason':'애니메이션/영화 등 비실사 콘텐츠 제목 제외'})
             continue
@@ -769,7 +773,7 @@ def cli(argv=None):
             return 0
         if len(cands)<5:
             raise RuntimeError('CC BY/CC0 영상 후보 5개 미만입니다. 주제를 변경해 다시 실행하세요.')
-        selected=collect_media(cands,out,review_only=(args.mode=='review'))
+        selected=collect_media(cands,out,review_only=(args.mode=='review'),excluded_titles=settings.get('exclude_titles',[]))
         if args.mode=='review':
             print('[V4] 검수 결과만 출력, MP4는 검수 전 생성하지 않습니다.',flush=True)
             return 0
