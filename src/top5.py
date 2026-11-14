@@ -20,6 +20,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from v8_moments import publish_moment_review
 
 API = 'https://commons.wikimedia.org/w/api.php'
 DEFAULT_QUERIES = ['cat playing', 'kitten playing', 'dog playing', 'puppy playing', 'funny animals', 'goat jumping', 'pet playing']
@@ -392,6 +393,8 @@ def create_review_gallery(items, out):
                        check=True,timeout=65,stdout=subprocess.DEVNULL)
     (out/'REVIEW_SHORTLIST.json').write_text(
         json.dumps(records,ensure_ascii=False,indent=2),encoding='utf-8')
+    publish_moment_review(items,out)
+    print(f'[V8] {len(items)}개 소스 × 3개 순간의 추가 프레임 검수 자료 생성',flush=True)
     lines=['# V5 TOP5 후보 검수표','',
            '이 순위는 동작량에 의한 임시 추천일 뿐 웃김이나 저작권 승인을 의미하지 않습니다.',
            'REVIEW_ORIGINAL_GRID.jpg와 REVIEW_VERTICAL_GRID.jpg를 같은 번호로 비교하세요.',
