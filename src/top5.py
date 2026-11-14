@@ -933,6 +933,17 @@ def cli(argv=None):
             raise FileNotFoundError('sample/selection.json이 없습니다.')
         entries=json.loads(selected_config.read_text(encoding='utf-8'))
         selected=collect_editorial_selections(entries,out)
+        # V8 QA: export 10 s of the top-ranked source at low resolution so
+        # reviewers can verify the claimed hook, not just a metadata title.
+        primary=selected[-1]
+        qa=out/'QA_RANK1_FULL_SOURCE.mp4'
+        probe_len=min(12.0,primary['duration'])
+        run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',primary['local_path'],
+             '-t',str(probe_len),
+             '-vf','scale=540:960:force_original_aspect_ratio=decrease,'
+                   'pad=540:960:(ow-iw)/2:(oh-ih)/2:color=black,fps=12,setsar=1',
+             '-an','-c:v','libx264','-preset','veryfast','-crf','27',
+             '-movflags','+faststart',str(qa)],timeout=100)
         settings.setdefault('source_names',{}).update({
             v['title']:v['display_name'] for v in entries if v.get('display_name')})
         settings.setdefault('focus_overrides',{}).update({
