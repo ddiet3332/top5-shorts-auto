@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V8 corrected funny hook 5-second window - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V9 candidate action comparison - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
@@ -68,6 +68,7 @@ jobs:
             output/AUDIO_RIGHTS_REVIEW.md
             output/QA_CONTACT_SHEET.jpg
             output/QA_RANK1_FULL_SOURCE.mp4
+            output/QA_V9_NEW_SOURCE_*.mp4
             output/REVIEW_ORIGINAL_GRID.jpg
             output/REVIEW_VERTICAL_GRID.jpg
             output/REVIEW_SHORTLIST.json
