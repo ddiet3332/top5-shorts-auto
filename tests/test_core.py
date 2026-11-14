@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
-from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions
+from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions, original_audio_available, make_approved_source_audio
 
 class BasicTests(unittest.TestCase):
     def test_license_positive(self):
@@ -90,6 +90,47 @@ class BasicTests(unittest.TestCase):
                 xs=[p[0] for p in coords];ys=[p[1] for p in coords]
                 aspect=(max(xs)-min(xs)+2)/(max(ys)-min(ys)+2)
                 self.assertAlmostEqual(aspect,source_w/source_h,delta=0.09)
+
+    def test_v6_caption_is_65_percent_and_wider_video(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            file=Path(d)/'caption.ass'
+            create_subtitles(file,'고양이 TOP5',DEFAULT_CAPTIONS)
+            contents=file.read_text(encoding='utf-8')
+            self.assertIn(r'\\pos(540,1248)',contents)   # 65% of 1920
+            geometry=stage_geometry(1080,1920)
+            self.assertGreaterEqual(geometry['width'],850)
+            self.assertGreaterEqual(geometry['x'],195)
+
+    def test_v6_original_audio_requires_explicit_approval(self):
+        import subprocess
+        import tempfile
+        import wave
+        with tempfile.TemporaryDirectory() as d:
+            d=Path(d)
+            src=d/'sample.mp4'
+            subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+                '-f','lavfi','-i','color=c=blue:s=320x180:d=2:r=24',
+                '-f','lavfi','-i','sine=frequency=440:duration=2:sample_rate=48000',
+                '-shortest','-c:v','libx264','-c:a','aac',str(src)],
+                check=True,timeout=35)
+            self.assertTrue(original_audio_available(src))
+            silent=d/'silent.wav'
+            played=d/'played.wav'
+            self.assertEqual(make_approved_source_audio(
+                {'local_path':str(src),'audio_approved':False},0.0,1,silent),
+                'silent_no_approved_audio')
+            self.assertEqual(make_approved_source_audio(
+                {'local_path':str(src),'audio_approved':True},0.0,1,played),
+                'original_audio_rights_confirmed')
+            with wave.open(str(silent)) as w:
+                data_s=w.readframes(w.getnframes())
+                self.assertEqual(w.getnframes(),48000)
+            with wave.open(str(played)) as w:
+                data_p=w.readframes(w.getnframes())
+                self.assertEqual(w.getnframes(),48000)
+            self.assertEqual(max(data_s),0)
+            self.assertNotEqual(data_p,data_s)
 
     def test_ass(self):
         import tempfile
