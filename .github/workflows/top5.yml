@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V6 larger video, 65% captions & audio QA - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V6 corrected caption and audio QA - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
