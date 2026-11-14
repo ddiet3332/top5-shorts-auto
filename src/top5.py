@@ -326,6 +326,8 @@ def create_review_gallery(items, out):
     out=Path(out)
     thumbs=out/'REVIEW_THUMBNAILS'
     thumbs.mkdir(parents=True,exist_ok=True)
+    previews=out/'REVIEW_PREVIEWS'
+    previews.mkdir(parents=True,exist_ok=True)
     records=[]
     for ix,item in enumerate(items,1):
         file=item['local_path']
@@ -345,6 +347,27 @@ def create_review_gallery(items, out):
                             '-ss',f'{sample:.2f}','-i',str(file),'-vf',vf,
                             '-frames:v','1','-q:v','4',str(jpg)],
                            check=True,timeout=55,stdout=subprocess.DEVNULL)
+        # Both motion pictures appear side-by-side for action and framing QA.
+        # Left = entire source, right = the proposed 9:16 fullscreen crop.
+        full=(
+            'scale=360:640:force_original_aspect_ratio=decrease,'
+            'pad=360:640:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1'
+        )
+        vertical=(
+            'scale=360:640:force_original_aspect_ratio=increase,'
+            f'crop=360:640:x=(iw-ow)*{focus_left:.5f}:y=(ih-oh)/2,setsar=1'
+        )
+        side_by_side=f'[0:v]split=2[raw][crop];[raw]{full}[left];[crop]{vertical}[right];' + (
+            '[left][right]hstack=inputs=2,fps=12,format=yuv420p[outv]')
+        preview=previews/f'{ix:02d}.mp4'
+        take=min(5.0,max(0.1,item['duration']-float(item['highlight_start'])-0.05))
+        subprocess.run([
+            'ffmpeg','-hide_banner','-loglevel','error','-y',
+            '-ss',f"{item['highlight_start']:.2f}",'-i',str(file),
+            '-t',f'{take:.2f}','-filter_complex',side_by_side,
+            '-map','[outv]','-an','-c:v','libx264','-preset','veryfast',
+            '-crf','28','-movflags','+faststart',str(preview)
+        ],check=True,timeout=100,stdout=subprocess.DEVNULL)
         records.append({
             'number':ix,'title':item['title'],'source_page':item['source_page'],
             'author':item['author'],'license':item['license'],
@@ -356,6 +379,8 @@ def create_review_gallery(items, out):
             'editorial_status':'NEEDS_HUMAN_REVIEW',
             'copyright_status':'UNVERIFIED_METADATA_ONLY',
             'rank_is_provisional':True,
+            'preview_file':f'REVIEW_PREVIEWS/{ix:02d}.mp4',
+            'crop_warning':item['crop_risk']>0.55,
         })
     for mode in ('original','vertical'):
         subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
@@ -369,6 +394,7 @@ def create_review_gallery(items, out):
     lines=['# V4 TOP5 후보 검수표','',
            '이 순위는 동작량에 의한 임시 추천일 뿐 웃김이나 저작권 승인을 의미하지 않습니다.',
            'REVIEW_ORIGINAL_GRID.jpg와 REVIEW_VERTICAL_GRID.jpg를 같은 번호로 비교하세요.',
+           'REVIEW_PREVIEWS의 01.mp4~09.mp4는 왼쪽 원본·오른쪽 9:16 제안 컷 5초를 동시에 보여줍니다.',
            '원본에서는 보이는 동물이 세로 화면에서 잘리면 탈락시키거나 초점을 조정해야 합니다.',
            '권리 검증 없이 유튜브에 게시하지 마세요.','']
     for c in records:
