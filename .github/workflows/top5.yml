@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V4 editorial review - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V4 filtered review - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
