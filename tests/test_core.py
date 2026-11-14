@@ -3,6 +3,7 @@ from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
 from v8_moments import window_candidates
+from v11_candidate_review import validate_titles
 from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions, original_audio_available, make_approved_source_audio
 
 class BasicTests(unittest.TestCase):
@@ -154,6 +155,16 @@ class BasicTests(unittest.TestCase):
             self.assertTrue(all(0 <= c['start'] <= 7.0 for c in windows))
             self.assertTrue(all(c['motion']>=0 for c in windows))
             self.assertTrue(all(c.get('algorithm')!='humor_ai' for c in windows))
+
+    def test_v11_candidate_audition_requires_distinct_commons_titles(self):
+        names=["File:Sammy springt.webm", "File:Moomin1.webm"]
+        self.assertEqual(validate_titles(names),names)
+        with self.assertRaises(ValueError):
+            validate_titles(names + ["File:MOOMIN1.webm"])
+        with self.assertRaises(ValueError):
+            validate_titles(["https://www.youtube.com/watch?v=dummy"])
+        with self.assertRaises(ValueError):
+            validate_titles([])
 
     def test_ass(self):
         import tempfile
