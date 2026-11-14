@@ -1,0 +1,28 @@
+import sys
+from pathlib import Path
+import unittest
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
+from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS
+
+class BasicTests(unittest.TestCase):
+    def test_license_positive(self):
+        self.assertEqual(supported_license('https://creativecommons.org/licenses/by/4.0/'), 'CC BY')
+        self.assertEqual(supported_license('http://creativecommons.org/licenses/by/3.0'), 'CC BY')
+        self.assertEqual(supported_license('https://creativecommons.org/publicdomain/zero/1.0/'), 'CC0')
+    def test_license_negative(self):
+        for x in ('https://creativecommons.org/licenses/by-sa/4.0/',
+                  'https://creativecommons.org/licenses/by-nc/4.0/',
+                  'https://creativecommons.org/licenses/by-nd/4.0/',
+                  'https://example.org/by/4.0', ''):
+            self.assertIsNone(supported_license(x))
+    def test_html(self):
+        self.assertEqual(clean_html('<a href="/">Kim</a> &amp; Jane'), 'Kim & Jane')
+    def test_ass(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'r.ass'
+            create_subtitles(p,'재미있는 TOP5',DEFAULT_CAPTIONS)
+            content=p.read_text(encoding='utf-8')
+            self.assertEqual(content.count('Dialogue:'),1+1+7*6)
+            self.assertIn('0:00:30.00',content)
+if __name__=='__main__': unittest.main()
