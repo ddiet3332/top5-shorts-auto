@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V8 3-moment editorial source review - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V8 provisional 5-cut render QA - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
@@ -43,7 +43,7 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || 'review' }}
+          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'selected-draft' || 'review') }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '황당한 동물들의 순간 TOP5' }}
         run: |
