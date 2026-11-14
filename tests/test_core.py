@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
-from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label
+from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline
 
 class BasicTests(unittest.TestCase):
     def test_license_positive(self):
@@ -20,6 +20,25 @@ class BasicTests(unittest.TestCase):
     def test_source_names(self):
         self.assertEqual(source_label("File:Cat playing in Taiwan.webm", {"File:Cat playing in Taiwan.webm": "대만 고양이"}), "대만 고양이")
         self.assertTrue(source_label("File:Cat playing in Taiwan.webm").startswith("Cat playing"))
+
+    def test_v3_relevance(self):
+        self.assertEqual(candidate_relevance("Magician's Cat (2012).webm"), -100)
+        self.assertGreater(candidate_relevance("Funny kitten jumping and playing.webm"), 0)
+
+    def test_v3_audio_and_timeline(self):
+        import tempfile
+        import wave
+        import json
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d)
+            create_transition_sfx(out/'effects.wav',seconds=30)
+            with wave.open(str(out/'effects.wav')) as audio:
+                self.assertEqual(audio.getframerate(),48000)
+                self.assertEqual(audio.getnframes(),30*48000)
+            lines=voiceover_timeline(out,DEFAULT_CAPTIONS)
+            self.assertEqual(len(lines),7)
+            self.assertEqual(lines[-1]['end'],30)
+            self.assertTrue((out/'NARRATION_REQUIRED.md').exists())
 
     def test_ass(self):
         import tempfile
