@@ -625,7 +625,7 @@ Style: Rank,NanumSquare,60,&H00FFFFFF,&H00FFFFFF,&H00101010,&H60000000,-1,0,0,0,
 Style: Active,NanumSquare,68,&H0000A5FF,&H0000A5FF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,6,2,7,15,10,10,1
 Style: RankName,NanumGothic,30,&H00FFFFFF,&H00FFFFFF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,4,1,7,15,10,10,1
 Style: ActiveName,NanumGothic,34,&H0000A5FF,&H0000A5FF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,5,2,7,15,10,10,1
-Style: Caption,NanumSquare,57,&H00FFFFFF,&H00FFFFFF,&H00111111,&H88000000,-1,0,0,0,100,100,0,0,3,3,1,5,35,35,0,1
+Style: Caption,NanumSquare,54,&H00FFFFFF,&H00FFFFFF,&H00111111,&H88000000,-1,0,0,0,100,100,0,0,3,3,1,5,35,35,0,1
 Style: Brand,NanumSquare,42,&H00FFFFFF,&H00FFFFFF,&H00181818,&H40000000,-1,0,0,0,100,100,0,0,1,4,1,7,15,15,15,1
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -646,11 +646,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             event(current,end,'Active' if r==ranking else 'Rank',f'{r}위',
                   '{\\an7\\pos(43,'+str(y)+')}',3)
             label = str((rank_names or {}).get(str(r), '이름 확인 필요'))
-            label = label[:7] + ('…' if len(label)>7 else '')
+            label = label[:5] + ('…' if len(label)>5 else '')
             event(current,end,'ActiveName' if r==ranking else 'RankName',label,
                   '{\\an7\\pos(43,'+str(y+69)+')}',3)
         event(current,end,'Caption',captions.get(name,DEFAULT_CAPTIONS[name]),
-              '{\\an5\\pos(540,1690)}',5)
+              '{\\an5\\pos(540,1248)}',5)
         current=end
     Path(path).write_text(''.join(lines),encoding='utf-8')
 
@@ -664,10 +664,11 @@ def stage_geometry(width=1080, height=1920):
     """
     if width <= 0 or height <= 0 or width * 16 != height * 9:
         raise ValueError('세로 9:16 해상도만 지원')
-    x=round(width*0.23/2)*2
-    y=round(height*0.145/2)*2
-    stage_w=(width-x-round(width*0.020))//2*2
-    stage_h=(round(height*0.680))//2*2
+    # V6: video begins immediately after a slimmer ranking rail.
+    x=round(width*0.20/2)*2
+    y=round(height*0.125/2)*2
+    stage_w=(width-x-round(width*0.008))//2*2
+    stage_h=(round(height*0.73))//2*2
     return {'x':x,'y':y,'width':stage_w,'height':stage_h}
 
 
