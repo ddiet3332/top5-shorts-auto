@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
-from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections
+from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions
 
 class BasicTests(unittest.TestCase):
     def test_license_positive(self):
@@ -53,6 +53,43 @@ class BasicTests(unittest.TestCase):
             verify_editorial_selections(rows[:4]+[rows[0]])
         with self.assertRaises(ValueError):
             verify_editorial_selections(rows[:4]+[{'title':'File:new.webm','focus_x':1.1}])
+
+    def test_v5_stage_geometry(self):
+        frame=stage_geometry(1080,1920)
+        self.assertEqual(frame['x']%2,0)
+        self.assertEqual(frame['height']%2,0)
+        self.assertGreater(frame['x'],200)
+        self.assertLessEqual(frame['x']+frame['width'],1080)
+        self.assertLessEqual(frame['y']+frame['height'],1920)
+        with self.assertRaises(ValueError):
+            stage_geometry(1080,1080)
+
+    def test_v5_fit_wide_and_portrait_sources_without_cropping(self):
+        import subprocess
+        import tempfile
+        # Synthetic full-frame yellow clip allows exact checks of black matte
+        # and preserved source aspect without needing real CC assets.
+        with tempfile.TemporaryDirectory() as d:
+            d=Path(d)
+            for source_w,source_h in [(320,180),(180,320)]:
+                src=d/f'{source_w}x{source_h}.mp4'
+                out=d/f'{source_w}x{source_h}_out.mp4'
+                subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+                                '-f','lavfi','-i',f'color=c=yellow:s={source_w}x{source_h}:d=1.2:r=24',
+                                '-c:v','libx264','-pix_fmt','yuv420p',str(src)],check=True,timeout=30)
+                render_segment(src,out,0,1,width=360,height=640,fps=24)
+                self.assertEqual(probe_dimensions(out),(360,640))
+                frame=subprocess.check_output(['ffmpeg','-hide_banner','-loglevel','error',
+                                               '-i',str(out),'-frames:v','1',
+                                               '-vf','format=gray','-f','rawvideo','-'],timeout=35)
+                self.assertEqual(len(frame),360*640)
+                self.assertLess(frame[50*360+10],20)
+                self.assertLess(frame[610*360+200],20)
+                coords=[(x,y) for y in range(80,560,2) for x in range(65,356,2) if frame[y*360+x]>90]
+                self.assertTrue(coords)
+                xs=[p[0] for p in coords];ys=[p[1] for p in coords]
+                aspect=(max(xs)-min(xs)+2)/(max(ys)-min(ys)+2)
+                self.assertAlmostEqual(aspect,source_w/source_h,delta=0.09)
 
     def test_ass(self):
         import tempfile
