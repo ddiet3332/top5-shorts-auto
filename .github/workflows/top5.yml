@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V10 replacement candidates review - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V10 corrected action cutpoints and captions - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
