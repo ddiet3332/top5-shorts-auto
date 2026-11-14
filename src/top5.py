@@ -622,9 +622,9 @@ Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour,
 Style: Title,NanumSquare,85,&H0000DDFF,&H0000DDFF,&H00191919,&H64000000,-1,0,0,0,100,100,0,0,1,7,3,8,20,20,20,1
 Style: Rank,NanumSquare,60,&H00FFFFFF,&H00FFFFFF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,5,2,7,15,10,10,1
 Style: Active,NanumSquare,68,&H0000A5FF,&H0000A5FF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,6,2,7,15,10,10,1
-Style: RankName,NanumGothic,40,&H00FFFFFF,&H00FFFFFF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,4,1,7,15,10,10,1
-Style: ActiveName,NanumGothic,44,&H0000A5FF,&H0000A5FF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,5,2,7,15,10,10,1
-Style: Caption,NanumSquare,62,&H00FFFFFF,&H00FFFFFF,&H00111111,&H88000000,-1,0,0,0,100,100,0,0,3,3,1,5,35,35,0,1
+Style: RankName,NanumGothic,30,&H00FFFFFF,&H00FFFFFF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,4,1,7,15,10,10,1
+Style: ActiveName,NanumGothic,34,&H0000A5FF,&H0000A5FF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,5,2,7,15,10,10,1
+Style: Caption,NanumSquare,57,&H00FFFFFF,&H00FFFFFF,&H00111111,&H88000000,-1,0,0,0,100,100,0,0,3,3,1,5,35,35,0,1
 Style: Brand,NanumSquare,42,&H00FFFFFF,&H00FFFFFF,&H00181818,&H40000000,-1,0,0,0,100,100,0,0,1,4,1,7,15,15,15,1
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -639,10 +639,17 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         end=current+length
         ranking = int(name[-1]) if name.startswith('rank') else 0
         for r in range(1,6):
-            event(current,end,'Active' if r==ranking else 'Rank',f'{r}위','{\\an7\\pos(44,'+str(350+(r-1)*112)+')}',3)
-            label = (rank_names or {}).get(str(r), '이름 확인 필요')
-            event(current,end,'ActiveName' if r==ranking else 'RankName',label,'{\\an7\\pos(175,'+str(356+(r-1)*112)+')}',3)
-        event(current,end,'Caption',captions.get(name,DEFAULT_CAPTIONS[name]),'{\\an5\\pos(540,1260)}',5)
+            # Ranking rail occupies only the left black 23% of the screen.
+            # Put labels UNDER numbers, rather than over the footage.
+            y=350+(r-1)*197
+            event(current,end,'Active' if r==ranking else 'Rank',f'{r}위',
+                  '{\\an7\\pos(43,'+str(y)+')}',3)
+            label = str((rank_names or {}).get(str(r), '이름 확인 필요'))
+            label = label[:7] + ('…' if len(label)>7 else '')
+            event(current,end,'ActiveName' if r==ranking else 'RankName',label,
+                  '{\\an7\\pos(43,'+str(y+69)+')}',3)
+        event(current,end,'Caption',captions.get(name,DEFAULT_CAPTIONS[name]),
+              '{\\an5\\pos(540,1690)}',5)
         current=end
     Path(path).write_text(''.join(lines),encoding='utf-8')
 
@@ -749,8 +756,8 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
         elif name=='outro': start=min(max(0,base+1.0),max(0,duration-3.1))
         else: start=min(max(0,base),max(0,duration-length-0.1))
         seg=tmp/f'segment_{ix:02}.mp4'
-        manual_focus=(focus_overrides or {}).get(clip['title'])
-        focus=choose_focus_x(clip['local_path'],start,length,width,height) if manual_focus is None else float(manual_focus)
+        # V5 preserves source frames. No focus detection or crop calibration needed.
+        focus=0.5
         render_segment(clip['local_path'],seg,start,length,width,height,focus_x=focus)
         shotlist.append({'segment':name,'source_title':clip['title'],'start_seconds':round(start,3),
                          'length_seconds':length,'focus_x':round(focus,3),'crop_mode':'black_fit_no_crop',
