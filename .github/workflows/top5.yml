@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V11 replaced 5th/3rd and reaction SFX QA - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V11 validate full 30sec AAC stream - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
