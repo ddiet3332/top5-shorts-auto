@@ -641,8 +641,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         end=current+length
         ranking = int(name[-1]) if name.startswith('rank') else 0
         for r in range(1,6):
-            # Ranking rail occupies only the left black 23% of the screen.
-            # Put labels UNDER numbers, rather than over the footage.
+            # The ranking rail overlays video translucently, freeing full width.
+            # Labels stay under the numbers for a consistent TOP5 hierarchy.
             y=350+(r-1)*197
             event(current,end,'Active' if r==ranking else 'Rank',f'{r}위',
                   '{\\an7\\pos(43,'+str(y)+')}',3)
@@ -665,26 +665,29 @@ def stage_geometry(width=1080, height=1920):
     """
     if width <= 0 or height <= 0 or width * 16 != height * 9:
         raise ValueError('세로 9:16 해상도만 지원')
-    # V6: video begins immediately after a slimmer ranking rail.
-    x=round(width*0.20/2)*2
-    y=round(height*0.125/2)*2
-    stage_w=(width-x-round(width*0.008))//2*2
-    stage_h=(round(height*0.73))//2*2
+    # V7: all available width is footage. Ranking labels overlay a translucent
+    # left rail instead of permanently reserving ~20% of the canvas.
+    x=0
+    y=round(height*0.0833/2)*2
+    stage_w=width
+    stage_h=round(height*0.75/2)*2
     return {'x':x,'y':y,'width':stage_w,'height':stage_h}
 
 
 def render_segment(input_path, output_path, start, seconds, width=1080, height=1920, fps=24, focus_x=0.5):
-    """Fit full source into a fixed black canvas; never crop or blur the source.
-    focus_x is accepted for API compatibility but intentionally ignored in fit mode.
+    """Fit full source to whole-width black canvas without cropping.
+    Semi-transparent ranking rail overlays the left edge of the footage.
+    focus_x is kept for API compatibility but unused.
     """
     stage=stage_geometry(width,height)
     sw,sh=stage['width'],stage['height']
-    # All clips share the same black canvas, ranking rail and video stage.
-    # Landscape footage fills the stage width; portrait fills its height.
+    # Landscape footage fills the full 1080px width; portrait fills stage height.
+    # No source pixels are cropped, but the left edge is dimmed under ranking text.
     filter_graph=(
         f'[0:v]scale={sw}:{sh}:force_original_aspect_ratio=decrease:flags=lanczos,'
         f'pad={sw}:{sh}:(ow-iw)/2:(oh-ih)/2:color=black,'
         f'pad={width}:{height}:{stage["x"]}:{stage["y"]}:color=black,'
+        f'drawbox=x=0:y=325:w={round(width*0.185)}:h=935:color=black@0.52:t=fill,'
         f'fps={fps},setsar=1,format=yuv420p[outv]'
     )
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss',f'{start:.3f}','-i',str(input_path),
@@ -800,7 +803,7 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
         focus=0.5
         render_segment(clip['local_path'],seg,start,length,width,height,focus_x=focus)
         shotlist.append({'segment':name,'source_title':clip['title'],'start_seconds':round(start,3),
-                         'length_seconds':length,'focus_x':round(focus,3),'crop_mode':'black_fit_no_crop',
+                         'length_seconds':length,'focus_x':round(focus,3),'crop_mode':'black_full_width_with_rank_overlay',
                          'rank_label':names.get(name[-1],'') if name.startswith('rank') else '',
                          'crop_risk':clip.get('crop_risk'), 'motion_score':clip.get('motion_score'),
                          'selection_score':clip.get('selection_score'),
