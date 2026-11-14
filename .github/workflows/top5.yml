@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V11 actual-action audition - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V11 replaced 5th/3rd and reaction SFX QA - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -44,7 +44,7 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || 'candidate-review' }}
+          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'selected-draft' || 'candidate-review') }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
         run: |
@@ -87,5 +87,6 @@ jobs:
             output/V11_REVIEW_GUIDE.md
             output/V11_STORYBOARD_*.jpg
             output/V11_PREVIEWS/candidate_*.mp4
+            output/V11_REACTION_SFX.json
           if-no-files-found: warn
           retention-days: 7
