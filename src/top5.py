@@ -815,7 +815,7 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     joined=tmp/'joined.mp4'
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0','-i',str(concat),'-c','copy',str(joined)])
     source_audio_list=tmp/'concat_source_audio.txt'
-    source_audio_list.write_text(''.join("file '"+str(f.resolve()).replace("'", "'\\''")+"'"+"\\n" for f in audio_segments),encoding='utf-8')
+    source_audio_list.write_text(''.join("file '"+str(f.resolve()).replace("'", "'\\''")+"'"+"\n" for f in audio_segments),encoding='utf-8')
     joined_sound=tmp/'source_audio.wav'
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0',
          '-i',str(source_audio_list),'-c:a','pcm_s16le',str(joined_sound)])
@@ -824,11 +824,11 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     (dest/'SHOTLIST_FOR_REVIEW.json').write_text(json.dumps(shotlist,ensure_ascii=False,indent=2),encoding='utf-8')
     approvals=[f"{x['segment']}: {x['source_title']} → {x['source_audio_status']}" for x in shotlist]
     (dest/'AUDIO_RIGHTS_REVIEW.md').write_text(
-        "# V6 original sound verification\\n\\n" +
+        "# V6 original sound verification\n\n" +
         "원본 음원은 해당 소스의 음악·제3자 음성에 대한 권리를 별도로 확인하고 " +
         "sample/selection.json에서 audio_approved=true로 승인된 소스만 포함합니다. " +
-        "확인되지 않은 소스는 전환 효과음만 삽입됩니다.\\n\\n" +
-        "\\n".join(approvals) + "\\n",
+        "확인되지 않은 소스는 전환 효과음만 삽입됩니다.\n\n" +
+        "\n".join(approvals) + "\n",
         encoding='utf-8')
     # Original transition sounds, with optional externally licensed narration.
     sfx=tmp/'transitions.wav'
