@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V8 verified CC0 selected draft - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V8 rank-1 source action QA - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
@@ -67,6 +67,7 @@ jobs:
             output/NARRATION_REQUIRED.md
             output/AUDIO_RIGHTS_REVIEW.md
             output/QA_CONTACT_SHEET.jpg
+            output/QA_RANK1_FULL_SOURCE.mp4
             output/REVIEW_ORIGINAL_GRID.jpg
             output/REVIEW_VERTICAL_GRID.jpg
             output/REVIEW_SHORTLIST.json
