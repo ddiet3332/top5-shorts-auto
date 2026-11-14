@@ -90,14 +90,27 @@ def fetch_json(params, tries=3):
 def file_page_for_title(title):
     return 'https://commons.wikimedia.org/wiki/' + urllib.parse.quote(title.replace(' ', '_'), safe=':/()')
 
-def query_candidates(term, per_query=30):
+def query_candidates(term, per_query=100):
+    # Restrict the Commons full-text search to video files rather than images.
     params = {
         'action': 'query', 'format': 'json', 'formatversion': '2',
-        'generator': 'search', 'gsrsearch': term,
+        'generator': 'search', 'gsrsearch': f'{term} filetype:video',
         'gsrnamespace': '6', 'gsrlimit': str(per_query),
         'prop': 'imageinfo', 'iiprop': 'url|size|mime|extmetadata',
     }
-    data = fetch_json(params)
+    yield from extract_candidates(fetch_json(params))
+
+def category_candidates(category, per_query=100):
+    # Commons has curated categories of actual video files; use these as fallback.
+    params = {
+        'action': 'query', 'format': 'json', 'formatversion': '2',
+        'generator': 'categorymembers', 'gcmtitle': 'Category:' + category,
+        'gcmtype': 'file', 'gcmlimit': str(per_query),
+        'prop': 'imageinfo', 'iiprop': 'url|size|mime|extmetadata',
+    }
+    yield from extract_candidates(fetch_json(params))
+
+def extract_candidates(data):
     for page in data.get('query', {}).get('pages', []):
         title = page.get('title', '')
         if not title.lower().endswith(VIDEO_EXTS):
@@ -154,7 +167,7 @@ def discover(query, count=30):
             continue
         seen_q.add(phrase.lower())
         try:
-            for c in query_candidates(phrase, 30):
+            for c in query_candidates(phrase, 100):
                 if c['source_page'] not in picked:
                     picked[c['source_page']] = c
             print(f'[검색] {phrase}: 총 {len(picked)}개 후보 확보', flush=True)
@@ -163,6 +176,27 @@ def discover(query, count=30):
         if len(picked) >= count:
             break
         time.sleep(0.3)
+    # Media-specific categories are more reliable than keyword searches on Commons.
+    # Category names are verified existing Wikimedia Commons categories.
+    if len(picked) < count:
+        lower = (query or '').lower()
+        cat_categories = ['Videos of playing cats', 'Videos of cats', 'Videos of kittens']
+        dog_categories = ['Videos of dogs']
+        if 'dog' in lower or 'puppy' in lower:
+            categories = dog_categories + cat_categories
+        else:
+            categories = cat_categories + dog_categories
+        for category in categories:
+            try:
+                for c in category_candidates(category, 100):
+                    if c['source_page'] not in picked:
+                        picked[c['source_page']] = c
+                print(f'[카테고리] {category}: 총 {len(picked)}개 후보 확보', flush=True)
+            except RuntimeError as e:
+                errors.append(str(e))
+            if len(picked) >= count:
+                break
+            time.sleep(0.3)
     if not picked and errors:
         raise RuntimeError('; '.join(errors[:2]))
     return list(picked.values())
