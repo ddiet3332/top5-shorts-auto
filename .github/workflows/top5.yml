@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V9 edited 5-cat action ranking - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V10 replacement candidates review - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -25,7 +25,7 @@ on:
       title:
         description: '쇼츠 상단 한국어 제목'
         required: true
-        default: '고양이 예상 밖 행동 TOP5'
+        default: '고양이 기상천외 행동 TOP5'
         type: string
 permissions:
   contents: read
@@ -45,7 +45,7 @@ jobs:
         env:
           MODE: ${{ inputs.mode || (github.event_name == 'push' && 'selected-draft' || 'review') }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
-          TITLE: ${{ inputs.title || '고양이 예상 밖 행동 TOP5' }}
+          TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
         run: |
           python3 src/top5.py --output output
       - name: Upload MP4, candidates, attribution, rights review
