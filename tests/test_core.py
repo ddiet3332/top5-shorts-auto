@@ -58,7 +58,9 @@ class BasicTests(unittest.TestCase):
         frame=stage_geometry(1080,1920)
         self.assertEqual(frame['x']%2,0)
         self.assertEqual(frame['height']%2,0)
-        self.assertGreater(frame['x'],200)
+        self.assertEqual(frame['x'],0)
+        self.assertEqual(frame['width'],1080)
+        self.assertGreater(frame['height'],1300)
         self.assertLessEqual(frame['x']+frame['width'],1080)
         self.assertLessEqual(frame['y']+frame['height'],1920)
         with self.assertRaises(ValueError):
@@ -85,11 +87,13 @@ class BasicTests(unittest.TestCase):
                 self.assertEqual(len(frame),360*640)
                 self.assertLess(frame[50*360+10],20)
                 self.assertLess(frame[610*360+200],20)
-                coords=[(x,y) for y in range(80,560,2) for x in range(65,356,2) if frame[y*360+x]>90]
+                coords=[(x,y) for y in range(70,570,2) for x in range(0,360,2) if frame[y*360+x]>80]
                 self.assertTrue(coords)
                 xs=[p[0] for p in coords];ys=[p[1] for p in coords]
                 aspect=(max(xs)-min(xs)+2)/(max(ys)-min(ys)+2)
                 self.assertAlmostEqual(aspect,source_w/source_h,delta=0.09)
+                if source_w>source_h:
+                    self.assertGreater(max(xs)-min(xs),345)
 
     def test_v6_caption_is_65_percent_and_wider_video(self):
         import tempfile
@@ -100,7 +104,7 @@ class BasicTests(unittest.TestCase):
             self.assertIn(r'\pos(540,1248)',contents)   # 65% of 1920
             geometry=stage_geometry(1080,1920)
             self.assertGreaterEqual(geometry['width'],850)
-            self.assertGreaterEqual(geometry['x'],195)
+            self.assertEqual(geometry['x'],0)
 
     def test_v6_original_audio_requires_explicit_approval(self):
         import subprocess
