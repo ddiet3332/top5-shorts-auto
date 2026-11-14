@@ -1,0 +1,56 @@
+name: TOP5 CC Shorts - discover and draft
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'discover: 후보 목록만 / draft: MP4 초안 자동 제작'
+        required: true
+        type: choice
+        options:
+          - discover
+          - draft
+        default: draft
+      topic:
+        description: '영어 검색 키워드 (예: cat playing / dog funny)'
+        required: true
+        default: 'cat playing'
+        type: string
+      title:
+        description: '쇼츠 상단 한국어 제목'
+        required: true
+        default: '황당한 동물들의 순간 TOP5'
+        type: string
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg and Korean fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+      - name: Discover, download, and build draft
+        env:
+          MODE: ${{ inputs.mode }}
+          TOPIC: ${{ inputs.topic }}
+          TITLE: ${{ inputs.title }}
+        run: |
+          python3 src/top5.py --output output
+      - name: Upload MP4, candidates, attribution, rights review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-shorts-review-${{ github.run_number }}
+          path: |
+            output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
+            output/candidates.csv
+            output/candidates.json
+            output/selected_sources.json
+            output/rejected.json
+            output/YOUTUBE_CREDITS.txt
+            output/RIGHTS_CHECKLIST.md
+          if-no-files-found: warn
+          retention-days: 7
