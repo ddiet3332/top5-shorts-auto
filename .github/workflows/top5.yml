@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V12 licensed-source discovery review - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V12 official Pexels action audition - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -12,13 +12,14 @@ on:
         required: true
         type: choice
         options:
+          - source-audition
           - source-review
           - candidate-review
           - review
           - selected-draft
           - discover
           - draft
-        default: source-review
+        default: source-audition
       topic:
         description: '영어 검색 키워드 (예: cat playing / dog funny)'
         required: true
@@ -45,12 +46,14 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || 'source-review' }}
+          MODE: ${{ inputs.mode || 'source-audition' }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
-          if [ "$MODE" = "source-review" ]; then
+          if [ "$MODE" = "source-audition" ]; then
+            python3 src/v12_pexels_audition.py --output output
+          elif [ "$MODE" = "source-review" ]; then
             if [ -n "$PEXELS_API_KEY" ]; then
               python3 src/v12_sources.py --output output --existing-pexels-api
             else
@@ -100,5 +103,9 @@ jobs:
             output/V12_SOURCE_REPORT.json
             output/V12_SOURCES.csv
             output/V12_RIGHTS_AND_EDITORIAL.md
+            output/V12_PEXELS_AUDITION.json
+            output/V12_PEXELS_AUDITION.md
+            output/V12_PEXELS_FRAMES/*.jpg
+            output/V12_PEXELS_PREVIEWS/*.mp4
           if-no-files-found: warn
           retention-days: 7
