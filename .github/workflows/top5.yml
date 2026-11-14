@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V5 black frame QA - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V5 Korean labels QA - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
