@@ -251,8 +251,17 @@ def candidate_relevance(title):
     t = str(title or '').lower()
     reject = ('animation', 'animated', 'cartoon', 'magician', 'movie', 'trailer',
               'music video', 'film', 'documentary', 'ai generated', 'vfx',
-              'lecture', 'advert', 'compilation', 'gameplay', 'drawing')
+              'lecture', 'advert', 'compilation', 'gameplay', 'drawing',
+              'tv show', 'nickelodeon', 'zoey 101', 'victorious', 'tetris',
+              'ctwc', 'kenan thompson', 'interview', 'copyright free',
+              'fox dark', 'soundtrack', 'netflix', 'disney', 'fox news')
     if any(word in t for word in reject):
+        return -100
+    # Without animal words, generic 'playing' searches include television and gaming.
+    animals=('cat', 'kitten', 'dog', 'puppy', 'puppies', 'goat', 'hamster',
+             'ferret', 'rabbit', 'parrot', 'peacock', 'elephant', 'gato',
+             'кот', 'кошен', 'кошка', 'mačka', 'felis catus')
+    if not any(word in t for word in animals):
         return -100
     terms = ('play', 'jump', 'chase', 'funny', 'surpris', 'curious', 'react',
              'climb', 'trick', 'roll', 'bounce', 'fall', 'run', 'fight', 'catch')
