@@ -532,6 +532,7 @@ def collect_editorial_selections(rows,out):
                          'highlight_start':start,'motion_score':motion,
                          'crop_risk':crop_risk(file),
                          'editorial_selected':True,
+                         'audio_approved':row.get('audio_approved') is True,
                          'approved_for_publication':False})
     return selected
 
@@ -695,6 +696,39 @@ def render_segment(input_path, output_path, start, seconds, width=1080, height=1
         raise RuntimeError(f'잘린 렌더 구간: {output_path}, {dur:.2f}초 / {seconds}초')
 
 
+def original_audio_available(path):
+    """Detect embedded audio; this says nothing about whether it can be reused."""
+    try:
+        p=subprocess.run(['ffprobe','-v','error','-select_streams','a:0',
+            '-show_entries','stream=codec_type','-of','default=noprint_wrappers=1:nokey=1',str(path)],
+            capture_output=True,text=True,check=True,timeout=25)
+        return p.stdout.strip() == 'audio'
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def make_approved_source_audio(clip, start, seconds, output_path):
+    """Create an exact-length 48 kHz stereo PCM audio segment.
+    Embedded source audio is included ONLY after individual manual confirmation.
+    """
+    permitted = clip.get('audio_approved') is True
+    existing = original_audio_available(clip['local_path']) if permitted else False
+    if permitted and existing:
+        cmd=['ffmpeg','-hide_banner','-loglevel','error','-y',
+             '-ss',f'{start:.3f}','-i',str(clip['local_path']),
+             '-vn','-af',f'aresample=48000,apad,atrim=0:{seconds},asetpts=PTS-STARTPTS,volume=0.82,alimiter=limit=0.91',
+             '-t',str(seconds),'-ac','2','-ar','48000',
+             '-c:a','pcm_s16le',str(output_path)]
+        outcome='original_audio_rights_confirmed'
+    else:
+        cmd=['ffmpeg','-hide_banner','-loglevel','error','-y','-f','lavfi',
+             '-i','anullsrc=r=48000:cl=stereo','-t',str(seconds),
+             '-c:a','pcm_s16le',str(output_path)]
+        outcome='silent_no_approved_audio' if not permitted else 'source_has_no_audio'
+    subprocess.run(cmd,check=True,stdout=subprocess.DEVNULL,timeout=100)
+    return outcome
+
+
 def create_transition_sfx(path, seconds=30, sample_rate=48000):
     """Original synthesized tick/pop/whoosh cues; no third-party sound samples."""
     from array import array
@@ -748,6 +782,7 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     for number,item in zip([5,4,3,2,1],selected):
         lookup[f'rank{number}']=item
     videos=[]
+    audio_segments=[]
     shotlist=[]
     names={str(rank):source_label(item['title'],name_overrides) for rank,item in zip([5,4,3,2,1],selected)}
     for ix,(name,length) in enumerate(SEGMENTS):
@@ -758,7 +793,10 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
         elif name=='outro': start=min(max(0,base+1.0),max(0,duration-3.1))
         else: start=min(max(0,base),max(0,duration-length-0.1))
         seg=tmp/f'segment_{ix:02}.mp4'
-        # V5 preserves source frames. No focus detection or crop calibration needed.
+        # Only original sound explicitly approved for each selected clip is reused.
+        sound=tmp/f'source_audio_{ix:02}.wav'
+        audio_status=make_approved_source_audio(clip,start,length,sound)
+        # V6 preserves source frames. No focus detection or crop calibration needed.
         focus=0.5
         render_segment(clip['local_path'],seg,start,length,width,height,focus_x=focus)
         shotlist.append({'segment':name,'source_title':clip['title'],'start_seconds':round(start,3),
@@ -767,27 +805,46 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
                          'crop_risk':clip.get('crop_risk'), 'motion_score':clip.get('motion_score'),
                          'selection_score':clip.get('selection_score'),
                          'stage_geometry':stage_geometry(width,height),
+                         'source_audio_status':audio_status,
+                         'original_audio_rights_confirmed':clip.get('audio_approved') is True,
                          'requires_human_crop_and_action_review':True})
         videos.append(seg)
+        audio_segments.append(sound)
     concat=tmp/'concat.txt'
     concat.write_text(''.join("file '"+str(f.resolve()).replace("'", "'\\''")+"'\n" for f in videos),encoding='utf-8')
     joined=tmp/'joined.mp4'
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0','-i',str(concat),'-c','copy',str(joined)])
+    source_audio_list=tmp/'concat_source_audio.txt'
+    source_audio_list.write_text(''.join("file '"+str(f.resolve()).replace("'", "'\\''")+"'"+"\\n" for f in audio_segments),encoding='utf-8')
+    joined_sound=tmp/'source_audio.wav'
+    run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0',
+         '-i',str(source_audio_list),'-c:a','pcm_s16le',str(joined_sound)])
     ass=tmp/'ranking.ass'
     create_subtitles(ass,title,captions,rank_names=names)
     (dest/'SHOTLIST_FOR_REVIEW.json').write_text(json.dumps(shotlist,ensure_ascii=False,indent=2),encoding='utf-8')
+    approvals=[f"{x['segment']}: {x['source_title']} → {x['source_audio_status']}" for x in shotlist]
+    (dest/'AUDIO_RIGHTS_REVIEW.md').write_text(
+        "# V6 original sound verification\\n\\n" +
+        "원본 음원은 해당 소스의 음악·제3자 음성에 대한 권리를 별도로 확인하고 " +
+        "sample/selection.json에서 audio_approved=true로 승인된 소스만 포함합니다. " +
+        "확인되지 않은 소스는 전환 효과음만 삽입됩니다.\\n\\n" +
+        "\\n".join(approvals) + "\\n",
+        encoding='utf-8')
     # Original transition sounds, with optional externally licensed narration.
     sfx=tmp/'transitions.wav'
     create_transition_sfx(sfx)
     voiceover_timeline(dest,captions)
     final=dest/f'TOP5_DRAFT_REVIEW_ONLY_{width}x{height}.mp4'
-    audio_inputs=['-i',str(sfx)]+(['-i',str(narration)] if narration else [])
+    audio_inputs=['-i',str(sfx),'-i',str(joined_sound)]+(['-i',str(narration)] if narration else [])
+    base_mix=('[1:a]atrim=0:30,asetpts=N/SR/TB,volume=0.65[sfx];'
+              '[2:a]atrim=0:30,asetpts=N/SR/TB,volume=0.92[ambient];')
     if narration:
-        audio_filter=('[1:a]atrim=0:30,asetpts=N/SR/TB,volume=0.60[sfx];'
-                      '[2:a]apad,atrim=0:30,asetpts=N/SR/TB,volume=1.0[voice];'
-                      '[sfx][voice]amix=inputs=2:duration=first:normalize=0[aout]')
+        audio_filter=(base_mix+
+              '[3:a]apad,atrim=0:30,asetpts=N/SR/TB,volume=1.0[voice];'
+              '[sfx][ambient][voice]amix=inputs=3:duration=first:normalize=0,alimiter=limit=0.92[aout]')
     else:
-        audio_filter='[1:a]atrim=0:30,asetpts=N/SR/TB[aout]'
+        audio_filter=(base_mix+
+              '[sfx][ambient]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.92[aout]')
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(joined),*audio_inputs,
          '-filter_complex',f'[0:v]subtitles={ass}[vout];{audio_filter}',
          '-map','[vout]','-map','[aout]','-t','30',
