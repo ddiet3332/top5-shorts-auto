@@ -493,6 +493,49 @@ def render_segment(input_path, output_path, start, seconds, width=1080, height=1
     if dur < seconds-0.12:
         raise RuntimeError(f'잘린 렌더 구간: {output_path}, {dur:.2f}초 / {seconds}초')
 
+def create_transition_sfx(path, seconds=30, sample_rate=48000):
+    """Original synthesized tick/pop/whoosh cues; no third-party sound samples."""
+    from array import array
+    import sys as _sys
+    frames=array('h',[0])*(seconds*sample_rate*2)
+    transitions=[0.04,2.0,7.0,12.0,17.0,22.0,27.0]
+    for ix,at in enumerate(transitions):
+        start=int(at*sample_rate)
+        length=int((0.34 if ix in (0,6) else 0.14)*sample_rate)
+        for n in range(length):
+            t=n/sample_rate
+            env=(1-n/length)**2
+            hz=(500-280*n/length) if ix in (0,6) else (680 if n<length//2 else 920)
+            val=int(5200*env*math.sin(2*math.pi*hz*t))
+            j=2*(start+n)
+            if j+1<len(frames):
+                frames[j]=max(-32768,min(32767,frames[j]+val))
+                frames[j+1]=max(-32768,min(32767,frames[j+1]+val))
+    if _sys.byteorder!='little': frames.byteswap()
+    with wave.open(str(path),'wb') as wav:
+        wav.setnchannels(2);wav.setsampwidth(2);wav.setframerate(sample_rate)
+        wav.writeframes(frames.tobytes())
+
+
+def voiceover_timeline(dest, captions):
+    """Per-shot Korean script for a licensed TTS tool; no unlicensed generated speech."""
+    t=0
+    lines=[]
+    for name,length in SEGMENTS:
+        lines.append({'segment':name,'start':t,'end':t+length,
+                      'narration_suggestion':captions.get(name,DEFAULT_CAPTIONS[name]),
+                      'voice_file_supplied':False})
+        t+=length
+    (Path(dest)/'VOICEOVER_TIMELINE.json').write_text(json.dumps(lines,ensure_ascii=False,indent=2),encoding='utf-8')
+    (Path(dest)/'NARRATION_REQUIRED.md').write_text(
+        '# 음성 및 게시 전 검수 안내\n\n현재 MP4에는 직접 합성한 전환 효과음만 들어 있습니다.\n'
+        '한국어 TTS는 사용권이 명확한 음성 파일을 --narration 경로로 제공해야 합성됩니다.\n'
+        '원본 클립의 오디오는 라이선스 불확실성을 피하려고 제거합니다.\n'
+        'VOICEOVER_TIMELINE.json을 기준으로 실제 대사를 작성하고 타이밍을 검수하세요.\n'
+        '모션 점수는 재미·저작권·초상권을 자동 판정하지 않습니다.\n',encoding='utf-8')
+    return lines
+
+
 def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None):
     width,height=map(int,size.lower().split('x'))
     if width <= 0 or height <= 0 or width*16!=height*9:
@@ -508,9 +551,10 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     for ix,(name,length) in enumerate(SEGMENTS):
         clip=lookup[name]
         duration=clip['duration']
-        if name=='hook': start=max(0.0,duration-2.25)
-        elif name=='outro': start=max(0.0,duration-3.15)
-        else: start=max(0.0,min(duration-length-0.2,(duration-length)*0.43))
+        base=max(0.0,min(float(clip.get('highlight_start',0.0)),duration-5.2))
+        if name=='hook': start=min(max(0,base+1.8),max(0,duration-2.1))
+        elif name=='outro': start=min(max(0,base+1.0),max(0,duration-3.1))
+        else: start=min(max(0,base),max(0,duration-length-0.1))
         seg=tmp/f'segment_{ix:02}.mp4'
         manual_focus=(focus_overrides or {}).get(clip['title'])
         focus=choose_focus_x(clip['local_path'],start,length,width,height) if manual_focus is None else float(manual_focus)
@@ -518,6 +562,8 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
         shotlist.append({'segment':name,'source_title':clip['title'],'start_seconds':round(start,3),
                          'length_seconds':length,'focus_x':round(focus,3),'crop_mode':'full_bleed_no_blur',
                          'rank_label':names.get(name[-1],'') if name.startswith('rank') else '',
+                         'crop_risk':clip.get('crop_risk'), 'motion_score':clip.get('motion_score'),
+                         'selection_score':clip.get('selection_score'),
                          'requires_human_crop_and_action_review':True})
         videos.append(seg)
     concat=tmp/'concat.txt'
@@ -527,12 +573,19 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     ass=tmp/'ranking.ass'
     create_subtitles(ass,title,captions,rank_names=names)
     (dest/'SHOTLIST_FOR_REVIEW.json').write_text(json.dumps(shotlist,ensure_ascii=False,indent=2),encoding='utf-8')
-    # Uses libass subtitles; fonts-nanum package installed in GitHub Actions.
-    # libass path escaping: fixed working directory with no colon/special characters.
+    # Original transition sounds, with optional externally licensed narration.
+    sfx=tmp/'transitions.wav'
+    create_transition_sfx(sfx)
+    voiceover_timeline(dest,captions)
     final=dest/f'TOP5_DRAFT_REVIEW_ONLY_{width}x{height}.mp4'
-    input_audio=(['-i',str(narration)] if narration else ['-f','lavfi','-i','anullsrc=r=48000:cl=stereo'])
-    audio_filter=('[1:a]apad,atrim=0:30,asetpts=N/SR/TB[aout]' if narration else '[1:a]atrim=0:30,asetpts=N/SR/TB[aout]')
-    run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(joined),*input_audio,
+    audio_inputs=['-i',str(sfx)]+(['-i',str(narration)] if narration else [])
+    if narration:
+        audio_filter=('[1:a]atrim=0:30,asetpts=N/SR/TB,volume=0.60[sfx];'
+                      '[2:a]apad,atrim=0:30,asetpts=N/SR/TB,volume=1.0[voice];'
+                      '[sfx][voice]amix=inputs=2:duration=first:normalize=0[aout]')
+    else:
+        audio_filter='[1:a]atrim=0:30,asetpts=N/SR/TB[aout]'
+    run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(joined),*audio_inputs,
          '-filter_complex',f'[0:v]subtitles={ass}[vout];{audio_filter}',
          '-map','[vout]','-map','[aout]','-t','30',
          '-c:v','libx264','-preset','veryfast','-crf','20','-pix_fmt','yuv420p','-r','24',
@@ -550,6 +603,7 @@ def write_rights_docs(selected,out):
             '- [ ] 원본에 삽입된 음악·음성·영상에 별도 권리 침해가 없는지 확인',
             '- [ ] 인물 초상·개인정보·동물 안전·브랜드 문제 검토',
             '- [ ] 실제 영상 30초 전체를 보고 오동작·유해 장면 검수',
+            '- [ ] 허가된 한국어 TTS 파일을 추가하고 자막과 일치시켰는지 확인',
             '- [ ] 자신만의 해설, 상황 분석과 새 스토리로 실질적 변형 추가',
             '- [ ] 유튜브 재사용/비진정성 콘텐츠 정책 검토','', '## 원본별 목록','']
     for rank,item in zip([5,4,3,2,1],selected):
