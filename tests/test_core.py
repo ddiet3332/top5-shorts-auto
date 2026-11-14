@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
+from v8_moments import window_candidates
 from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions, original_audio_available, make_approved_source_audio
 
 class BasicTests(unittest.TestCase):
@@ -135,6 +136,22 @@ class BasicTests(unittest.TestCase):
                 self.assertEqual(w.getnframes(),48000)
             self.assertEqual(max(data_s),0)
             self.assertNotEqual(data_p,data_s)
+
+    def test_v8_action_windows_are_editorial_candidates(self):
+        import tempfile
+        import subprocess
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/'v8_moving.mp4'
+            subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+                '-f','lavfi','-i','testsrc2=s=192x108:r=12:d=12',
+                '-c:v','libx264','-preset','ultrafast',str(p)],
+                check=True,timeout=40)
+            windows=window_candidates(p,12.0)
+            self.assertGreaterEqual(len(windows),1)
+            self.assertLessEqual(len(windows),3)
+            self.assertTrue(all(0 <= c['start'] <= 7.0 for c in windows))
+            self.assertTrue(all(c['motion']>=0 for c in windows))
+            self.assertTrue(all(c.get('algorithm')!='humor_ai' for c in windows))
 
     def test_ass(self):
         import tempfile
