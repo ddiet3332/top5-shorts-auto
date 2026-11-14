@@ -166,6 +166,19 @@ class BasicTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_titles([])
 
+    def test_v11_reaction_audio_changes_only_when_cue_set(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            a=Path(d)/'base.wav'
+            b=Path(d)/'cue.wav'
+            create_transition_sfx(a,seconds=6)
+            create_transition_sfx(b,seconds=6,reactions=[(4.7,'boing')])
+            self.assertNotEqual(a.read_bytes(),b.read_bytes())
+            import wave
+            with wave.open(str(b)) as w:
+                self.assertEqual(w.getnframes(),6*48000)
+                self.assertEqual(w.getnchannels(),2)
+
     def test_ass(self):
         import tempfile
         with tempfile.TemporaryDirectory() as d:
