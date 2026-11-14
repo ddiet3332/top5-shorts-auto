@@ -70,7 +70,9 @@ def supported_license(license_url, short_name=''):
     url = url.split('?')[0].split('#')[0].rstrip('/')
     if re.fullmatch(r'https://creativecommons\.org/licenses/by/(?:2\.0|2\.5|3\.0|4\.0)', url):
         return 'CC BY'
-    if url == 'https://creativecommons.org/publicdomain/zero/1.0':
+    # Commons can return the official human-readable CC0 deed URL.
+    if url in ('https://creativecommons.org/publicdomain/zero/1.0',
+               'https://creativecommons.org/publicdomain/zero/1.0/deed.en'):
         return 'CC0'
     return None
 
