@@ -24,6 +24,10 @@ class BasicTests(unittest.TestCase):
     def test_v3_relevance(self):
         self.assertEqual(candidate_relevance("Magician's Cat (2012).webm"), -100)
         self.assertGreater(candidate_relevance("Funny kitten jumping and playing.webm"), 0)
+        self.assertEqual(candidate_relevance("Kenan Thompson playing every character on All That.webm"), -100)
+        self.assertEqual(candidate_relevance("Fractal and DogPlayingTetris during CTWC.webm"), -100)
+        self.assertEqual(candidate_relevance("This is what plays in my mind - Victorious.webm"), -100)
+        self.assertGreaterEqual(candidate_relevance("Cat in a Bag.webm"), 0)
 
     def test_v3_audio_and_timeline(self):
         import tempfile
