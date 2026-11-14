@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V5 Korean labels QA - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V6 larger video, 65% captions & audio QA - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
@@ -65,6 +65,7 @@ jobs:
             output/MOTION_RANKING_REPORT.json
             output/VOICEOVER_TIMELINE.json
             output/NARRATION_REQUIRED.md
+            output/AUDIO_RIGHTS_REVIEW.md
             output/QA_CONTACT_SHEET.jpg
             output/REVIEW_ORIGINAL_GRID.jpg
             output/REVIEW_VERTICAL_GRID.jpg
