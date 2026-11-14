@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
-from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS
+from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label
 
 class BasicTests(unittest.TestCase):
     def test_license_positive(self):
@@ -17,12 +17,18 @@ class BasicTests(unittest.TestCase):
             self.assertIsNone(supported_license(x))
     def test_html(self):
         self.assertEqual(clean_html('<a href="/">Kim</a> &amp; Jane'), 'Kim & Jane')
+    def test_source_names(self):
+        self.assertEqual(source_label("File:Cat playing in Taiwan.webm", {"File:Cat playing in Taiwan.webm": "대만 고양이"}), "대만 고양이")
+        self.assertTrue(source_label("File:Cat playing in Taiwan.webm").startswith("Cat playing"))
+
     def test_ass(self):
         import tempfile
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/'r.ass'
             create_subtitles(p,'재미있는 TOP5',DEFAULT_CAPTIONS)
             content=p.read_text(encoding='utf-8')
-            self.assertEqual(content.count('Dialogue:'),1+1+7*6)
+            self.assertEqual(content.count('Dialogue:'),1+1+7*11)
             self.assertIn('0:00:30.00',content)
+            self.assertIn('ActiveName',content)
+            self.assertIn('RankName',content)
 if __name__=='__main__': unittest.main()
