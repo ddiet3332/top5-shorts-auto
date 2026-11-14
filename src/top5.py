@@ -593,6 +593,13 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     final_duration=probe_duration(final)
     if abs(final_duration-30)>0.3:
         raise RuntimeError(f'최종 영상 길이 오류: {final_duration:.2f}초')
+    # Eight frames for rapid visual review of cuts, title, ranking and readability.
+    try:
+        run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+             '-i',str(final),'-vf','fps=1/4,scale=240:426,tile=4x2',
+             '-frames:v','1',str(dest/'QA_CONTACT_SHEET.jpg')],timeout=90)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        print('[경고] QA contact sheet extraction failed',flush=True)
     return final
 
 def write_rights_docs(selected,out):
