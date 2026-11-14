@@ -333,31 +333,31 @@ def create_review_gallery(items, out):
         file=item['local_path']
         sample=min(max(0.0,float(item['highlight_start'])+2.0),
                    max(0.0,item['duration']-0.3))
-        focus_left=_preview_crop_fraction(file,sample,2.0)
+        geo=stage_geometry(324,576)
         for mode in ('original','vertical'):
             if mode=='original':
-                vf=('scale=330:580:force_original_aspect_ratio=decrease:flags=lanczos,'
-                    'pad=330:580:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1')
+                vf=('scale=324:576:force_original_aspect_ratio=decrease:flags=lanczos,'
+                    'pad=324:576:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1')
             else:
-                vf=('scale=330:580:force_original_aspect_ratio=increase:flags=lanczos,'
-                    f'crop=330:580:x=(iw-ow)*{focus_left:.5f}:y=(ih-oh)/2,setsar=1')
+                sw,sh=geo['width'],geo['height']
+                vf=(f'scale={sw}:{sh}:force_original_aspect_ratio=decrease:flags=lanczos,'
+                    f'pad={sw}:{sh}:(ow-iw)/2:(oh-ih)/2:color=black,'
+                    f'pad=324:576:{geo["x"]}:{geo["y"]}:color=black,setsar=1')
             vf+=f",drawtext=text='{ix:02d}':x=15:y=15:fontsize=46:fontcolor=yellow:borderw=3:bordercolor=black"
             jpg=thumbs/f'{mode}_{ix:02d}.jpg'
             subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
                             '-ss',f'{sample:.2f}','-i',str(file),'-vf',vf,
                             '-frames:v','1','-q:v','4',str(jpg)],
                            check=True,timeout=55,stdout=subprocess.DEVNULL)
-        # Both motion pictures appear side-by-side for action and framing QA.
-        # Left = entire source, right = the proposed 9:16 fullscreen crop.
-        full=(
-            'scale=360:640:force_original_aspect_ratio=decrease,'
-            'pad=360:640:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1'
-        )
-        vertical=(
-            'scale=360:640:force_original_aspect_ratio=increase,'
-            f'crop=360:640:x=(iw-ow)*{focus_left:.5f}:y=(ih-oh)/2,setsar=1'
-        )
-        side_by_side=f'[0:v]split=2[raw][crop];[raw]{full}[left];[crop]{vertical}[right];' + (
+        # Left shows full source. Right shows V5's uncropped black-frame layout.
+        full=('scale=360:640:force_original_aspect_ratio=decrease,'
+              'pad=360:640:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1')
+        geo2=stage_geometry(360,640)
+        sw,sh=geo2['width'],geo2['height']
+        vertical=(f'scale={sw}:{sh}:force_original_aspect_ratio=decrease,'
+                  f'pad={sw}:{sh}:(ow-iw)/2:(oh-ih)/2:color=black,'
+                  f'pad=360:640:{geo2["x"]}:{geo2["y"]}:color=black,setsar=1')
+        side_by_side=f'[0:v]split=2[raw][fit];[raw]{full}[left];[fit]{vertical}[right];' + (
             '[left][right]hstack=inputs=2,fps=12,format=yuv420p[outv]')
         preview=previews/f'{ix:02d}.mp4'
         take=min(5.0,max(0.1,item['duration']-float(item['highlight_start'])-0.05))
@@ -380,7 +380,8 @@ def create_review_gallery(items, out):
             'copyright_status':'UNVERIFIED_METADATA_ONLY',
             'rank_is_provisional':True,
             'preview_file':f'REVIEW_PREVIEWS/{ix:02d}.mp4',
-            'crop_warning':item['crop_risk']>0.55,
+            'crop_warning':False,
+            'v5_source_is_uncropped':True,
         })
     for mode in ('original','vertical'):
         subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
@@ -391,22 +392,22 @@ def create_review_gallery(items, out):
                        check=True,timeout=65,stdout=subprocess.DEVNULL)
     (out/'REVIEW_SHORTLIST.json').write_text(
         json.dumps(records,ensure_ascii=False,indent=2),encoding='utf-8')
-    lines=['# V4 TOP5 후보 검수표','',
+    lines=['# V5 TOP5 후보 검수표','',
            '이 순위는 동작량에 의한 임시 추천일 뿐 웃김이나 저작권 승인을 의미하지 않습니다.',
            'REVIEW_ORIGINAL_GRID.jpg와 REVIEW_VERTICAL_GRID.jpg를 같은 번호로 비교하세요.',
-           'REVIEW_PREVIEWS의 01.mp4~09.mp4는 왼쪽 원본·오른쪽 9:16 제안 컷 5초를 동시에 보여줍니다.',
-           '원본에서는 보이는 동물이 세로 화면에서 잘리면 탈락시키거나 초점을 조정해야 합니다.',
+           'REVIEW_PREVIEWS의 01.mp4~09.mp4는 왼쪽 원본·오른쪽 검정색 고정 레이아웃을 5초간 비교합니다.',
+           'V5는 원본 화면을 자르지 않지만 가로 영상은 상대적으로 작아 보일 수 있습니다.',
            '권리 검증 없이 유튜브에 게시하지 마세요.','']
     for c in records:
         lines.extend([f"## {c['number']:02d}. {c['title']}",
                       f"원본: {c['source_page']}",
                       f"라이선스 표기: {c['license']} ({c['license_url']})",
-                      f"움직임 지표: {c['motion_score']}, 가로 크롭 손실 위험: {c['crop_risk']}",
+                      f"움직임 지표: {c['motion_score']}, V5 크롭: 없음 (원본 비율 유지)",
                       '- [ ] 실제 재미/반전 존재',
                       '- [ ] 동물 또는 주된 장면이 잘리지 않음',
                       '- [ ] 원작자·음악·출연자 권리 확인',''])
     (out/'REVIEW_GUIDE.md').write_text('\n'.join(lines),encoding='utf-8')
-    print(f'[V4 검수] 후보 {len(records)}개, 원본·세로 비교 이미지 생성 완료',flush=True)
+    print(f'[V5 검수] 후보 {len(records)}개, 검은색 9:16 무크롭 비교 이미지 생성 완료',flush=True)
 
 
 def collect_media(cands, out, count=5, review_only=False, excluded_titles=None):
