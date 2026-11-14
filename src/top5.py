@@ -311,7 +311,79 @@ def crop_risk(path):
     return round(max(0.0,1.0-(9/16)/(w/h)),3)
 
 
-def collect_media(cands, out, count=5):
+
+def _preview_crop_fraction(path, start, seconds, width=330, height=580):
+    focus=choose_focus_x(path,start,seconds,width,height)
+    original_w,original_h=probe_dimensions(path)
+    fraction=(width/height)/(original_w/original_h) if original_w and original_h else 1.0
+    if fraction>=1:
+        return 0.5
+    return max(0.0,min(1.0,(focus-fraction/2)/(1-fraction)))
+
+
+def create_review_gallery(items, out):
+    """Produce original-aspect and proposed-vertical preview grids for mobile QA."""
+    out=Path(out)
+    thumbs=out/'REVIEW_THUMBNAILS'
+    thumbs.mkdir(parents=True,exist_ok=True)
+    records=[]
+    for ix,item in enumerate(items,1):
+        file=item['local_path']
+        sample=min(max(0.0,float(item['highlight_start'])+2.0),
+                   max(0.0,item['duration']-0.3))
+        focus_left=_preview_crop_fraction(file,sample,2.0)
+        for mode in ('original','vertical'):
+            if mode=='original':
+                vf=('scale=330:580:force_original_aspect_ratio=decrease:flags=lanczos,'
+                    'pad=330:580:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1')
+            else:
+                vf=('scale=330:580:force_original_aspect_ratio=increase:flags=lanczos,'
+                    f'crop=330:580:x=(iw-ow)*{focus_left:.5f}:y=(ih-oh)/2,setsar=1')
+            vf+=f",drawtext=text='{ix:02d}':x=15:y=15:fontsize=46:fontcolor=yellow:borderw=3:bordercolor=black"
+            jpg=thumbs/f'{mode}_{ix:02d}.jpg'
+            subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+                            '-ss',f'{sample:.2f}','-i',str(file),'-vf',vf,
+                            '-frames:v','1','-q:v','4',str(jpg)],
+                           check=True,timeout=55,stdout=subprocess.DEVNULL)
+        records.append({
+            'number':ix,'title':item['title'],'source_page':item['source_page'],
+            'author':item['author'],'license':item['license'],
+            'license_url':item['license_url'],
+            'sample_source_second':round(sample,2),
+            'highlight_start':item['highlight_start'],
+            'motion_score':item['motion_score'],
+            'crop_risk':item['crop_risk'],
+            'editorial_status':'NEEDS_HUMAN_REVIEW',
+            'copyright_status':'UNVERIFIED_METADATA_ONLY',
+            'rank_is_provisional':True,
+        })
+    for mode in ('original','vertical'):
+        subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+                        '-framerate','1','-start_number','1','-i',
+                        str(thumbs/f'{mode}_%02d.jpg'),
+                        '-vf','tile=3x3:padding=6:margin=6:color=black',
+                        '-frames:v','1','-q:v','3',str(out/f'REVIEW_{mode.upper()}_GRID.jpg')],
+                       check=True,timeout=65,stdout=subprocess.DEVNULL)
+    (out/'REVIEW_SHORTLIST.json').write_text(
+        json.dumps(records,ensure_ascii=False,indent=2),encoding='utf-8')
+    lines=['# V4 TOP5 후보 검수표','',
+           '이 순위는 동작량에 의한 임시 추천일 뿐 웃김이나 저작권 승인을 의미하지 않습니다.',
+           'REVIEW_ORIGINAL_GRID.jpg와 REVIEW_VERTICAL_GRID.jpg를 같은 번호로 비교하세요.',
+           '원본에서는 보이는 동물이 세로 화면에서 잘리면 탈락시키거나 초점을 조정해야 합니다.',
+           '권리 검증 없이 유튜브에 게시하지 마세요.','']
+    for c in records:
+        lines.extend([f"## {c['number']:02d}. {c['title']}",
+                      f"원본: {c['source_page']}",
+                      f"라이선스 표기: {c['license']} ({c['license_url']})",
+                      f"움직임 지표: {c['motion_score']}, 가로 크롭 손실 위험: {c['crop_risk']}",
+                      '- [ ] 실제 재미/반전 존재',
+                      '- [ ] 동물 또는 주된 장면이 잘리지 않음',
+                      '- [ ] 원작자·음악·출연자 권리 확인',''])
+    (out/'REVIEW_GUIDE.md').write_text('\n'.join(lines),encoding='utf-8')
+    print(f'[V4 검수] 후보 {len(records)}개, 원본·세로 비교 이미지 생성 완료',flush=True)
+
+
+def collect_media(cands, out, count=5, review_only=False):
     clips = Path(out)/'clips'
     clips.mkdir(parents=True, exist_ok=True)
     pool=[]
@@ -355,6 +427,9 @@ def collect_media(cands, out, count=5):
     def scene_score(x):
         return min(x['motion_score'],22)*1.4 + x['metadata_score']*1.7 - x['crop_risk']*7
     ranked=sorted(pool,key=scene_score,reverse=True)
+    if review_only:
+        create_review_gallery(ranked,out)
+        return []
     selected=list(reversed(ranked[:count]))
     for entry in selected:
         entry['selection_score']=round(scene_score(entry),2)
@@ -639,7 +714,7 @@ def write_rights_docs(selected,out):
 
 def cli(argv=None):
     parser=argparse.ArgumentParser(description='Wikimedia Commons CC BY/CC0 TOP5 ranking shorts draft builder')
-    parser.add_argument('--mode',choices=['discover','draft','local-test'],default=os.environ.get('MODE','draft'))
+    parser.add_argument('--mode',choices=['discover','review','draft','local-test'],default=os.environ.get('MODE','review'))
     parser.add_argument('--topic',default=os.environ.get('TOPIC','cat playing'))
     parser.add_argument('--title',default=os.environ.get('TITLE','황당한 동물들의 순간 TOP5'))
     parser.add_argument('--output',default='output')
@@ -661,14 +736,17 @@ def cli(argv=None):
         if len(selected)!=5:
             raise RuntimeError('로컬 테스트는 영상 5개가 필요합니다.')
     else:
-        cands=discover(args.topic,count=35 if args.mode=='draft' else 25)
+        cands=discover(args.topic,count=35 if args.mode in ('draft','review') else 25)
         save_candidates(cands,out)
         if args.mode=='discover':
             print(f'검색 완료: 후보 {len(cands)}개. 출처·라이선스 검토하세요.',flush=True)
             return 0
         if len(cands)<5:
             raise RuntimeError('CC BY/CC0 영상 후보 5개 미만입니다. 주제를 변경해 다시 실행하세요.')
-        selected=collect_media(cands,out)
+        selected=collect_media(cands,out,review_only=(args.mode=='review'))
+        if args.mode=='review':
+            print('[V4] 검수 결과만 출력, MP4는 검수 전 생성하지 않습니다.',flush=True)
+            return 0
     write_rights_docs(selected,out)
     narration=Path(args.narration) if args.narration else None
     if narration and not narration.exists():
