@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V3 review - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V4 editorial review - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
@@ -8,13 +8,14 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'discover: 후보 목록만 / draft: MP4 초안 자동 제작'
+        description: 'review: 9개 후보 원본·세로 컷 검수 / draft: 검수용 MP4 / discover: 검색만'
         required: true
         type: choice
         options:
+          - review
           - discover
           - draft
-        default: draft
+        default: review
       topic:
         description: '영어 검색 키워드 (예: cat playing / dog funny)'
         required: true
@@ -41,7 +42,7 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || 'draft' }}
+          MODE: ${{ inputs.mode || 'review' }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '황당한 동물들의 순간 TOP5' }}
         run: |
@@ -64,5 +65,10 @@ jobs:
             output/VOICEOVER_TIMELINE.json
             output/NARRATION_REQUIRED.md
             output/QA_CONTACT_SHEET.jpg
+            output/REVIEW_ORIGINAL_GRID.jpg
+            output/REVIEW_VERTICAL_GRID.jpg
+            output/REVIEW_SHORTLIST.json
+            output/REVIEW_GUIDE.md
+            output/REVIEW_THUMBNAILS/*.jpg
           if-no-files-found: warn
           retention-days: 7
