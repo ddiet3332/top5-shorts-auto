@@ -8,6 +8,8 @@ import csv
 import html
 from html.parser import HTMLParser
 import json
+import math
+import wave
 import os
 from pathlib import Path
 import re
@@ -24,7 +26,8 @@ DEFAULT_QUERIES = ['cat playing', 'kitten playing', 'dog playing', 'puppy playin
 VIDEO_EXTS = ('.webm', '.ogv', '.ogg', '.mp4', '.mov', '.m4v')
 MAX_MB = 60
 MAX_REQUEST_BYTES = 60 * 1024 * 1024
-MAX_TOTAL_BYTES = 220 * 1024 * 1024
+MAX_TOTAL_BYTES = 260 * 1024 * 1024
+REVIEW_POOL = 9
 CLIP_MIN_SEC = 5.25
 CLIP_MAX_SEC = 600
 SEGMENTS = [('hook', 2), ('rank5', 5), ('rank4', 5), ('rank3', 5), ('rank2', 5), ('rank1', 5), ('outro', 3)]
@@ -243,20 +246,80 @@ def download_video(cand, path):
         temp.unlink(missing_ok=True)
         raise
 
+def candidate_relevance(title):
+    """Metadata prefilter only. It does not understand comedic quality."""
+    t = str(title or '').lower()
+    reject = ('animation', 'animated', 'cartoon', 'magician', 'movie', 'trailer',
+              'music video', 'film', 'documentary', 'ai generated', 'vfx',
+              'lecture', 'advert', 'compilation', 'gameplay', 'drawing')
+    if any(word in t for word in reject):
+        return -100
+    terms = ('play', 'jump', 'chase', 'funny', 'surpris', 'curious', 'react',
+             'climb', 'trick', 'roll', 'bounce', 'fall', 'run', 'fight', 'catch')
+    return min(5, sum(2 for word in terms if word in t))
+
+
+def motion_highlight(path, duration, seconds=5):
+    """Pick energetic 5s window from 2fps gray frames, not a semantic fun detector."""
+    sample_secs = min(48.0, float(duration) - 0.08)
+    sample_secs = max(0.0, sample_secs)
+    if sample_secs < seconds:
+        return 0.0, 0.0
+    w,h,fps = 96,54,2
+    try:
+        raw = subprocess.check_output([
+            'ffmpeg','-hide_banner','-loglevel','error','-i',str(path),
+            '-t',f'{sample_secs:.3f}','-vf',f'fps={fps},scale={w}:{h},format=gray',
+            '-f','rawvideo','-pix_fmt','gray','-'],stderr=subprocess.DEVNULL,timeout=75)
+        stride = w*h
+        frames = [memoryview(raw)[i:i+stride] for i in range(0,len(raw)-stride+1,stride)]
+        if len(frames)<12:
+            return 0.0, 0.0
+        changes=[]
+        for a,b in zip(frames,frames[1:]):
+            dist=sum(abs(a[i]-b[i]) for i in range(w*6,w*(h-6),6))
+            changes.append(dist / max(1, len(range(w*6,w*(h-6),6))))
+        window=max(2,round(seconds*fps)-1)
+        best_start,best_score=0,0.0
+        for ix in range(0,max(1,len(changes)-window+1),2):
+            clip=changes[ix:ix+window]
+            if not clip: continue
+            ordered=sorted(clip)
+            sustained=sum(ordered[1:-1] or ordered)/max(1,len(ordered[1:-1] or ordered))
+            score=sustained*(0.4+0.6*min(1.0,sum(1 for n in clip if n>1.8)/max(1,len(clip))))
+            if score>best_score:
+                best_start,best_score=ix/fps,score
+        return min(best_start,max(0.0,duration-seconds-0.2)), round(best_score,3)
+    except (subprocess.SubprocessError, OSError, ValueError):
+        return 0.0, 0.0
+
+
+def crop_risk(path):
+    """Fraction of original width cut for 9:16 crop. Used for review flag only."""
+    w,h=probe_dimensions(path)
+    if not w or not h:
+        return 1.0
+    return round(max(0.0,1.0-(9/16)/(w/h)),3)
+
+
 def collect_media(cands, out, count=5):
     clips = Path(out)/'clips'
     clips.mkdir(parents=True, exist_ok=True)
-    selected=[]
+    pool=[]
     downloaded_bytes=0
     rejects=[]
-    for i,c in enumerate(cands):
-        if len(selected)>=count:
+    candidates = sorted(cands, key=lambda x: candidate_relevance(x['title']), reverse=True)
+    for i,c in enumerate(candidates):
+        if len(pool)>=max(count,REVIEW_POOL):
             break
+        if candidate_relevance(c['title'])<=-100:
+            rejects.append({'title':c['title'],'reason':'애니메이션/영화 등 비실사 콘텐츠 제목 제외'})
+            continue
         if downloaded_bytes + c['size_bytes'] > MAX_TOTAL_BYTES:
             rejects.append({'title':c['title'],'reason':'총 다운로드 한도 초과'})
             continue
         suffix=Path(urllib.parse.urlparse(c['download_url']).path).suffix.lower()
-        file = clips / f'clip_{len(selected)+1:02}{suffix}'
+        file = clips / f'clip_{len(pool)+1:02}{suffix}'
         try:
             size=download_video(c,file)
             length=probe_duration(file)
@@ -264,17 +327,37 @@ def collect_media(cands, out, count=5):
                 file.unlink(missing_ok=True)
                 rejects.append({'title':c['title'],'reason':f'영상 길이 미지원: {length:.2f}초'})
                 continue
-            entry = {**c, 'local_path': str(file), 'duration': length}
-            selected.append(entry)
+            highlight,energy=motion_highlight(file,length)
+            risk=crop_risk(file)
+            entry={**c, 'local_path':str(file),'duration':length,
+                   'highlight_start':highlight, 'motion_score':energy,
+                   'crop_risk':risk, 'metadata_score':candidate_relevance(c['title'])}
+            pool.append(entry)
             downloaded_bytes += size
-            print(f'[확보 {len(selected)}/{count}] {c["title"]} ({length:.1f}s)',flush=True)
+            print(f'[후보 확보 {len(pool)}/{REVIEW_POOL}] {c["title"]} ({length:.1f}s, motion={energy:.2f}, crop={risk:.2f})',flush=True)
         except Exception as ex:
             file.unlink(missing_ok=True)
             rejects.append({'title':c['title'],'reason':str(ex)[:140]})
             print(f'[건너뜀] {c["title"]}: {str(ex)[:140]}',flush=True)
     (Path(out)/'rejected.json').write_text(json.dumps(rejects,ensure_ascii=False,indent=2),encoding='utf-8')
-    if len(selected)!=count:
-        raise RuntimeError(f'동영상 {count}개 필요하지만 {len(selected)}개만 확보했습니다. 후보와 rejected.json 확인 후 다른 주제로 재실행하세요.')
+    if len(pool)<count:
+        raise RuntimeError(f'동영상 {count}개 필요하지만 {len(pool)}개만 확보했습니다. 다른 주제를 사용하세요.')
+    # Motion is a heuristic for preview order, NOT proof of humor.
+    def scene_score(x):
+        return min(x['motion_score'],22)*1.4 + x['metadata_score']*1.7 - x['crop_risk']*7
+    ranked=sorted(pool,key=scene_score,reverse=True)
+    selected=list(reversed(ranked[:count]))
+    for entry in selected:
+        entry['selection_score']=round(scene_score(entry),2)
+    kept={x['local_path'] for x in selected}
+    for x in pool:
+        if x['local_path'] not in kept:
+            Path(x['local_path']).unlink(missing_ok=True)
+            rejects.append({'title':x['title'], 'reason':'장면 움직임·크롭 위험 기반 후보 점수 미선정'})
+    (Path(out)/'rejected.json').write_text(json.dumps(rejects,ensure_ascii=False,indent=2),encoding='utf-8')
+    (Path(out)/'MOTION_RANKING_REPORT.json').write_text(json.dumps([
+       {k:v for k,v in x.items() if k not in ('local_path','download_url')}
+       for x in ranked],ensure_ascii=False,indent=2),encoding='utf-8')
     return selected
 
 def ass_escape(s):
