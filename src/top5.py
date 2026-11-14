@@ -912,6 +912,11 @@ def cli(argv=None):
         settings=json.loads(Path(args.script).read_text(encoding='utf-8'))
         captions.update({str(k):str(v)[:85] for k,v in settings.get('captions',{}).items() if k in captions})
     if args.mode=='selected-draft':
+        # Editorial captions are attached to the five specifically selected cuts.
+        editorial_captions=Path('sample/selected-script.json')
+        if editorial_captions.exists():
+            approved_script=json.loads(editorial_captions.read_text(encoding='utf-8'))
+            captions.update({str(k):str(v)[:72] for k,v in approved_script.get('captions',{}).items() if k in captions})
         selected_config=Path('sample/selection.json')
         if not selected_config.exists():
             raise FileNotFoundError('sample/selection.json이 없습니다.')
