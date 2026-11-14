@@ -70,5 +70,6 @@ jobs:
             output/REVIEW_SHORTLIST.json
             output/REVIEW_GUIDE.md
             output/REVIEW_THUMBNAILS/*.jpg
+            output/REVIEW_PREVIEWS/*.mp4
           if-no-files-found: warn
           retention-days: 7
