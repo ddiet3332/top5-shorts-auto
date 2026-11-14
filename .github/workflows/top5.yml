@@ -1,4 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
+run-name: TOP5 V3 review - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
