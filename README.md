@@ -113,3 +113,28 @@ python3 src/top5.py --mode local-test --local-manifest local.json --size 360x640
 `draft`: 이전처럼 원본 5개를 선정하여 자동 MP4 검수본을 생성하지만 편집품질·수익화·원권리자의 적법성은 보장되지 않습니다. 최종 승인은 원본 영상의 전후 맥락, 초상권, 원래 오디오/음악 권리, 장면의 재미·서사·자막과 TTS의 독창성 등을 직접 확인한 뒤 진행해야 합니다.
 
 한국어 음성은 외부 사용권이 명확한 TTS 오디오가 필요합니다. 자동으로 음성 제공업체에 연결하거나 유료 API를 호출하지 않습니다.
+
+### V4: 원하는 5개만 선택해서 제작
+
+`review`의 `REVIEW_SHORTLIST.json` 및 5초짜리 원본/세로 비교 미리보기를 검수한 후, 실제 사용하기로 결정된 5개만 `sample/selection.json`에 **5위부터 1위 순서**로 등록합니다.
+
+예시(반드시 자신의 검수 결과로 교체):
+
+```json
+[
+  {"title": "File:Example5.webm", "start_sec": 5, "display_name": "5위 별명", "focus_x": 0.5},
+  {"title": "File:Example4.webm", "start_sec": 8},
+  {"title": "File:Example3.webm", "start_sec": 2},
+  {"title": "File:Example2.webm", "start_sec": 15},
+  {"title": "File:Example1.webm", "start_sec": 1}
+]
+```
+
+이후 Actions에서 `mode=selected-draft`로 실행합니다. 파일을 하나하나 다운로드하거나 재업로드할 필요 없이 지정한 원본의 적법한 라이선스 **표기를 재조회**하고, 원본을 다운로드해 30초짜리 검수용 MP4를 만듭니다.
+
+- `start_sec`: 선택한 원본 영상에서 사용할 5초 구간 시작 (생략하면 움직임 분석)
+- `focus_x`: 가로로 잘리는 영역의 중심 비율 (0=왼쪽, 0.5=중앙, 1=오른쪽)
+- `display_name`: 순위표에 표시할 짧은 이름 (실제로 확인한 장면에 맞게 작성)
+- `sample/script.json`의 `exclude_titles`: 장면 검수에서 부적합하다고 판정한 원본을 다음 검색에서 제외함
+
+**주의:** `selected-draft`는 편집상 선정된 후보를 뜻할 뿐 원본 영상 사용권이나 수익화를 보증하는 `approved` 상태가 아닙니다. CC 메타데이터 외 제3자 권리/원작자 권리 검증과 독창적 해설은 여전히 필수입니다.
