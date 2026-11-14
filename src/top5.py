@@ -284,7 +284,73 @@ def ass_timestamp(sec):
     hh=int(sec//3600); mm=int(sec//60)%60; ss=sec%60
     return f'{hh}:{mm:02}:{ss:05.2f}'
 
-def create_subtitles(path, title, captions):
+def source_label(title, overrides=None):
+    """A source title or explicit, source-accurate nickname. Never invent an action."""
+    title = str(title or '').strip()
+    if overrides and title in overrides:
+        label = str(overrides[title]).strip()
+        if label:
+            return label[:18]
+    stem = re.sub(r'^File:', '', title, flags=re.I)
+    stem = re.sub(r'\.(?:webm|ogv|ogg|mp4|mov|m4v)$', '', stem, flags=re.I)
+    stem = re.sub(r'\s*\(\d{8,}\)', '', stem)
+    stem = re.sub(r'[_\s]+', ' ', stem).strip(' .-_')
+    return (stem or '원본 이름 확인')[:18]
+
+
+def probe_dimensions(path):
+    try:
+        result = subprocess.check_output([
+            'ffprobe','-v','error','-select_streams','v:0',
+            '-show_entries','stream=width,height','-of','csv=p=0:s=x',str(path)
+        ],timeout=20).decode().strip()
+        w,h=map(int,result.split('x'))
+        return w,h
+    except Exception:
+        return 0,0
+
+
+def choose_focus_x(path, start, seconds, width=1080, height=1920):
+    """Heuristic: center the most moving horizontal region; not an animal detector."""
+    vw,vh=probe_dimensions(path)
+    if not vw or not vh or vw/vh <= width/height*1.03:
+        return 0.5
+    frame_w,frame_h=160,90
+    try:
+        raw=subprocess.check_output([
+            'ffmpeg','-hide_banner','-loglevel','error','-ss',f'{start:.3f}',
+            '-i',str(path),'-t',str(min(seconds,5)),'-vf',
+            f'fps=2,scale={frame_w}:{frame_h},format=gray',
+            '-f','rawvideo','-pix_fmt','gray','-'
+        ],stderr=subprocess.DEVNULL,timeout=22)
+        stride=frame_w*frame_h
+        frames=[raw[i:i+stride] for i in range(0,len(raw)-stride+1,stride)]
+        if len(frames)<2:
+            return 0.5
+        energy=[0]*frame_w
+        for previous,current in zip(frames,frames[1:]):
+            for y in range(4,frame_h-4,3):
+                off=y*frame_w
+                for x in range(frame_w):
+                    energy[x]+=abs(current[off+x]-previous[off+x])
+        crop_w=min(frame_w,max(4,round(frame_w*(width/height)/(vw/vh))))
+        total=sum(energy)
+        if total < 1000:
+            return 0.5
+        best_x=0
+        best_val=float('-inf')
+        for x in range(frame_w-crop_w+1):
+            # Mild centrality preference prevents unstable side jumps on noise.
+            center=(x+crop_w/2)/frame_w
+            value=sum(energy[x:x+crop_w]) - total*0.07*abs(center-0.5)
+            if value>best_val:
+                best_x,best_val=x,value
+        return max(0.1,min(0.9,(best_x+crop_w/2)/frame_w))
+    except (subprocess.SubprocessError, ValueError, OSError):
+        return 0.5
+
+
+def create_subtitles(path, title, captions, rank_names=None):
     """Positioned ASS overlays; include caption in lower central area and fixed ranking column."""
     header='''[Script Info]
 Title: TOP5 ranking draft
@@ -298,6 +364,8 @@ Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour,
 Style: Title,NanumSquare,85,&H0000DDFF,&H0000DDFF,&H00191919,&H64000000,-1,0,0,0,100,100,0,0,1,7,3,8,20,20,20,1
 Style: Rank,NanumSquare,60,&H00FFFFFF,&H00FFFFFF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,5,2,7,15,10,10,1
 Style: Active,NanumSquare,68,&H0000A5FF,&H0000A5FF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,6,2,7,15,10,10,1
+Style: RankName,NanumGothic,40,&H00FFFFFF,&H00FFFFFF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,4,1,7,15,10,10,1
+Style: ActiveName,NanumGothic,44,&H0000A5FF,&H0000A5FF,&H00101010,&H60000000,-1,0,0,0,100,100,0,0,1,5,2,7,15,10,10,1
 Style: Caption,NanumSquare,62,&H00FFFFFF,&H00FFFFFF,&H00111111,&H88000000,-1,0,0,0,100,100,0,0,3,3,1,5,35,35,0,1
 Style: Brand,NanumSquare,42,&H00FFFFFF,&H00FFFFFF,&H00181818,&H40000000,-1,0,0,0,100,100,0,0,1,4,1,7,15,15,15,1
 [Events]
@@ -314,6 +382,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         ranking = int(name[-1]) if name.startswith('rank') else 0
         for r in range(1,6):
             event(current,end,'Active' if r==ranking else 'Rank',f'{r}위','{\\an7\\pos(44,'+str(350+(r-1)*112)+')}',3)
+            label = (rank_names or {}).get(str(r), '이름 확인 필요')
+            event(current,end,'ActiveName' if r==ranking else 'RankName',label,'{\\an7\\pos(175,'+str(356+(r-1)*112)+')}',3)
         event(current,end,'Caption',captions.get(name,DEFAULT_CAPTIONS[name]),'{\\an5\\pos(540,1260)}',5)
         current=end
     Path(path).write_text(''.join(lines),encoding='utf-8')
@@ -322,26 +392,25 @@ def run(cmd, timeout=300):
     print('[ffmpeg]', ' '.join(cmd[:9]), '...',flush=True)
     subprocess.run(cmd, check=True, timeout=timeout, stdout=subprocess.DEVNULL)
 
-def render_segment(input_path, output_path, start, seconds, width=1080, height=1920, fps=24):
-    # Blurred filling prevents destructive crop of landscape source while keeping action visible.
-    # Top5 landscape foreground may be letterboxed over defocused scene; a human crop check is required.
+def render_segment(input_path, output_path, start, seconds, width=1080, height=1920, fps=24, focus_x=0.5):
+    """Full-bleed 9:16 crop: no blur or smoky letterbox. Requires crop QA."""
+    focus_x=max(0.0,min(1.0,float(focus_x)))
+    video_w,video_h=probe_dimensions(input_path)
+    viewport_fraction=(width/height)/(video_w/video_h) if video_w and video_h else 1.0
+    left_frac=max(0.0,min(1.0,(focus_x-viewport_fraction/2)/(1-viewport_fraction))) if viewport_fraction < 1 else 0.5
     filter_graph=(
-        '[0:v]split=2[bgsrc][fgsrc];'
-        f'[bgsrc]scale={width}:{height}:force_original_aspect_ratio=increase,'
-        f'crop={width}:{height},boxblur=20:2[bg];'
-        f'[fgsrc]scale={width}:{int(height*.80)}:force_original_aspect_ratio=decrease[fg];'
-        '[bg][fg]overlay=(W-w)/2:(H-h)/2:shortest=1,'
+        f'[0:v]scale={width}:{height}:force_original_aspect_ratio=increase:flags=lanczos,'
+        f'crop={width}:{height}:x=(iw-ow)*{left_frac:.4f}:y=(ih-oh)/2,'
         f'fps={fps},setsar=1,format=yuv420p[outv]'
     )
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss',f'{start:.3f}','-i',str(input_path),
          '-filter_complex',filter_graph,'-map','[outv]','-an','-frames:v',str(round(seconds*fps)),
          '-c:v','libx264','-preset','veryfast','-crf','23','-pix_fmt','yuv420p','-movflags','+faststart',str(output_path)],timeout=240)
-    # ffmpeg may terminate before target if source is shorter than segment. Fail rather than publish broken video.
     dur=probe_duration(output_path)
     if dur < seconds-0.12:
         raise RuntimeError(f'잘린 렌더 구간: {output_path}, {dur:.2f}초 / {seconds}초')
 
-def render_video(selected, dest, title, captions, narration=None, size='1080x1920'):
+def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None):
     width,height=map(int,size.lower().split('x'))
     if width <= 0 or height <= 0 or width*16!=height*9:
         raise ValueError('9:16 해상도만 허용')
@@ -351,6 +420,8 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     for number,item in zip([5,4,3,2,1],selected):
         lookup[f'rank{number}']=item
     videos=[]
+    shotlist=[]
+    names={str(rank):source_label(item['title'],name_overrides) for rank,item in zip([5,4,3,2,1],selected)}
     for ix,(name,length) in enumerate(SEGMENTS):
         clip=lookup[name]
         duration=clip['duration']
@@ -358,14 +429,21 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
         elif name=='outro': start=max(0.0,duration-3.15)
         else: start=max(0.0,min(duration-length-0.2,(duration-length)*0.43))
         seg=tmp/f'segment_{ix:02}.mp4'
-        render_segment(clip['local_path'],seg,start,length,width,height)
+        manual_focus=(focus_overrides or {}).get(clip['title'])
+        focus=choose_focus_x(clip['local_path'],start,length,width,height) if manual_focus is None else float(manual_focus)
+        render_segment(clip['local_path'],seg,start,length,width,height,focus_x=focus)
+        shotlist.append({'segment':name,'source_title':clip['title'],'start_seconds':round(start,3),
+                         'length_seconds':length,'focus_x':round(focus,3),'crop_mode':'full_bleed_no_blur',
+                         'rank_label':names.get(name[-1],'') if name.startswith('rank') else '',
+                         'requires_human_crop_and_action_review':True})
         videos.append(seg)
     concat=tmp/'concat.txt'
     concat.write_text(''.join("file '"+str(f.resolve()).replace("'", "'\\''")+"'\n" for f in videos),encoding='utf-8')
     joined=tmp/'joined.mp4'
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0','-i',str(concat),'-c','copy',str(joined)])
     ass=tmp/'ranking.ass'
-    create_subtitles(ass,title,captions)
+    create_subtitles(ass,title,captions,rank_names=names)
+    (dest/'SHOTLIST_FOR_REVIEW.json').write_text(json.dumps(shotlist,ensure_ascii=False,indent=2),encoding='utf-8')
     # Uses libass subtitles; fonts-nanum package installed in GitHub Actions.
     # libass path escaping: fixed working directory with no colon/special characters.
     final=dest/f'TOP5_DRAFT_REVIEW_ONLY_{width}x{height}.mp4'
@@ -419,6 +497,7 @@ def cli(argv=None):
     args=parser.parse_args(argv)
     out=Path(args.output);out.mkdir(parents=True,exist_ok=True)
     captions=dict(DEFAULT_CAPTIONS)
+    settings={}
     if Path(args.script).exists():
         settings=json.loads(Path(args.script).read_text(encoding='utf-8'))
         captions.update({str(k):str(v)[:85] for k,v in settings.get('captions',{}).items() if k in captions})
@@ -441,7 +520,7 @@ def cli(argv=None):
     narration=Path(args.narration) if args.narration else None
     if narration and not narration.exists():
         raise FileNotFoundError(str(narration))
-    final=render_video(selected,out,args.title,captions,narration,args.size)
+    final=render_video(selected,out,args.title,captions,narration,args.size,settings.get('source_names',{}),settings.get('focus_overrides',{}))
     print(f'렌더 완료: {final} ({probe_duration(final):.2f}초)',flush=True)
     return 0
 
