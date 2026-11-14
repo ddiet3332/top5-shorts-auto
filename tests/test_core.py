@@ -4,6 +4,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
 from v8_moments import window_candidates
 from v12_sources import allowed_page, validate_catalog, parse_pexels_results, make_report
+from v12_pexels_audition import official_video_id
 from v11_candidate_review import validate_titles
 from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions, original_audio_available, make_approved_source_audio
 
@@ -230,6 +231,19 @@ class BasicTests(unittest.TestCase):
             report=(Path(d)/'V12_SOURCE_REPORT.json').read_text(encoding='utf-8')
             self.assertIn('NOT_APPROVED',report)
             self.assertIn('false',report)
+
+    def test_v12_real_video_download_allowlist(self):
+        item={'id':'PX-5495527','provider':'pexels',
+              'page_url':'https://www.pexels.com/video/a-cat-jumping-in-the-box-5495527/',
+              'license_url':'https://www.pexels.com/license/',
+              'license_label':'Pexels License'}
+        self.assertEqual(official_video_id(item),5495527)
+        bad=dict(item,page_url='https://evil.pexels.com/video/example-5495527/')
+        with self.assertRaises(ValueError):
+            official_video_id(bad)
+        bad=dict(item,provider='mixkit')
+        with self.assertRaises(ValueError):
+            official_video_id(bad)
 
     def test_ass(self):
         import tempfile
