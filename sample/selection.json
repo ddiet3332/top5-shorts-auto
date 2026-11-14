@@ -1,32 +1,44 @@
 [
   {
-    "title": "File:Ocicat on Cat Wheel.webm",
-    "start_sec": 0.5,
-    "display_name": "쳇바퀴냥",
-    "audio_approved": false
+    "title": "File:Moomin1.webm",
+    "start_sec": 1.8,
+    "display_name": "면봉점프",
+    "audio_approved": false,
+    "manual_content_review": true,
+    "reaction_sfx": "boing",
+    "reaction_offset": 2.7
   },
   {
     "title": "File:Ocicat on leash climbing a tree.webm",
     "start_sec": 21,
     "display_name": "나무정복",
-    "audio_approved": false
+    "audio_approved": false,
+    "reaction_sfx": "pop",
+    "reaction_offset": 3
   },
   {
-    "title": "File:Cat jumping backwards.webm",
-    "start_sec": 9.6,
-    "display_name": "백점프냥",
-    "audio_approved": false
+    "title": "File:Katzensprung in Zeitlupe.webm",
+    "start_sec": 17.8,
+    "display_name": "연못점프",
+    "audio_approved": false,
+    "manual_content_review": true,
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 1.1
   },
   {
     "title": "File:Cat Jumpscare.webm",
     "start_sec": 5,
     "display_name": "돌진냥이",
-    "audio_approved": false
+    "audio_approved": false,
+    "reaction_sfx": "swoop",
+    "reaction_offset": 2.3
   },
   {
     "title": "File:Salto - Cat Jump.webm",
     "start_sec": 2.5,
     "display_name": "공중비행",
-    "audio_approved": false
+    "audio_approved": false,
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 1.5
   }
 ]
