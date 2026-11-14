@@ -7,5 +7,13 @@
     "rank2": "2위 — 이 장면의 포인트는?",
     "rank1": "1위 — 여러분의 의견은 어떤가요?",
     "outro": "여러분의 TOP1을 댓글로 알려주세요"
-  }
+  },
+  "source_names": {
+    "File:Whisky-Iswed (27 sec).ogv": "위스키",
+    "File:Cat playing in Taiwan.webm": "대만 고양이",
+    "File:Larry the cat and Chloé playing (100111224612).webm": "래리와 클로에",
+    "File:Jared Rimos - Magician's Cat, The (2012).webm": "마술사의 고양이",
+    "File:Трійця кошенят.webm": "아기 고양이 셋"
+  },
+  "focus_overrides": {}
 }
