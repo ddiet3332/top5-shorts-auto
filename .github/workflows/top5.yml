@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V7 full-width actual footage QA - ${{ inputs.topic || 'cat playing' }}
+run-name: TOP5 V8 3-moment editorial source review - ${{ inputs.topic || 'cat playing' }}
 on:
   push:
     branches: [main]
@@ -43,7 +43,7 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'draft' || 'review') }}
+          MODE: ${{ inputs.mode || 'review' }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '황당한 동물들의 순간 TOP5' }}
         run: |
@@ -73,5 +73,8 @@ jobs:
             output/REVIEW_GUIDE.md
             output/REVIEW_THUMBNAILS/*.jpg
             output/REVIEW_PREVIEWS/*.mp4
+            output/V8_MOMENT_*_GRID.jpg
+            output/V8_MOMENTS_REVIEW.json
+            output/V8_EDITORIAL_GUIDE.md
           if-no-files-found: warn
           retention-days: 7
