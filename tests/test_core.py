@@ -3,6 +3,7 @@ from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
 from v8_moments import window_candidates
+from v12_sources import allowed_page, validate_catalog, parse_pexels_results, make_report
 from v11_candidate_review import validate_titles
 from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions, original_audio_available, make_approved_source_audio
 
@@ -178,6 +179,57 @@ class BasicTests(unittest.TestCase):
             with wave.open(str(b)) as w:
                 self.assertEqual(w.getnframes(),6*48000)
                 self.assertEqual(w.getnchannels(),2)
+
+    def test_v12_source_page_licensing_and_domains(self):
+        sample={'id':'PX-1','provider':'pexels','title':'Example cat video',
+                'page_url':'https://www.pexels.com/video/example-cat-1234/',
+                'license_url':'https://www.pexels.com/license/',
+                'license_label':'Pexels License','creator':'Example',
+                'action_description':'cat jumps','review_target':'confirm jump'}
+        self.assertTrue(allowed_page(sample))
+        items=validate_catalog([sample])
+        self.assertFalse(items[0]['publication_approved'])
+        self.assertFalse(items[0]['actual_video_watched'])
+        self.assertFalse(items[0]['source_audio_approved'])
+        bad=dict(sample,page_url='https://evil.pexels.com/video/example-cat-1234/')
+        self.assertFalse(allowed_page(bad))
+        with self.assertRaises(ValueError):
+            validate_catalog([bad])
+        with self.assertRaises(ValueError):
+            validate_catalog([sample,sample])
+        restricted=dict(sample,provider='mixkit',
+                        page_url='https://mixkit.co/free-stock-video/example-1234/',
+                        license_label='Mixkit Stock Video Restricted License',
+                        license_url='https://mixkit.co/license/modal/videoRestricted/')
+        self.assertFalse(allowed_page(restricted))
+
+    def test_v12_optional_pexels_search_metadata_never_approved(self):
+        sample={'videos':[{'id':1234,'duration':10,
+                           'url':'https://www.pexels.com/video/example-cat-1234/',
+                           'user':{'name':'Contributor'}},
+                          {'id':10,'duration':2,
+                           'url':'https://www.pexels.com/video/short-cat-10/'},
+                          {'id':23,'duration':7,
+                           'url':'https://not-pexels.example/video/cat-23/'}]}
+        out=parse_pexels_results(sample)
+        self.assertEqual(len(out),1)
+        self.assertEqual(out[0]['id'],'PEXELS-API-1234')
+        self.assertFalse(out[0]['publication_approved'])
+
+    def test_v12_mobile_board_no_video_reuse_claims(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            catalog=validate_catalog([{
+                'id':'PB-2','provider':'pixabay','title':'Cat jumping',
+                'page_url':'https://pixabay.com/videos/cat-jumping-123/',
+                'creator':'Creator','license_url':'https://pixabay.com/service/license-summary/',
+                'license_label':'Pixabay Content License',
+                'action_description':'Jumping cat','review_target':'confirm joke'}])
+            make_report(catalog,d,'NOT_CONFIGURED_NEW_KEYS_PAUSED')
+            self.assertTrue((Path(d)/'V12_MOBILE_REVIEW.html').exists())
+            report=(Path(d)/'V12_SOURCE_REPORT.json').read_text(encoding='utf-8')
+            self.assertIn('NOT_APPROVED',report)
+            self.assertIn('false',report)
 
     def test_ass(self):
         import tempfile
