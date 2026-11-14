@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src'))
-from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline
+from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections
 
 class BasicTests(unittest.TestCase):
     def test_license_positive(self):
@@ -43,6 +43,16 @@ class BasicTests(unittest.TestCase):
             self.assertEqual(len(lines),7)
             self.assertEqual(lines[-1]['end'],30)
             self.assertTrue((out/'NARRATION_REQUIRED.md').exists())
+
+    def test_editorial_selection_validation(self):
+        rows=[{'title':f'File:Clip_{i:02}.webm','start_sec':3,'focus_x':0.5} for i in range(5)]
+        self.assertEqual(len(verify_editorial_selections(rows)),5)
+        with self.assertRaises(ValueError):
+            verify_editorial_selections(rows[:4])
+        with self.assertRaises(ValueError):
+            verify_editorial_selections(rows[:4]+[rows[0]])
+        with self.assertRaises(ValueError):
+            verify_editorial_selections(rows[:4]+[{'title':'File:new.webm','focus_x':1.1}])
 
     def test_ass(self):
         import tempfile
