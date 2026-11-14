@@ -474,6 +474,67 @@ def collect_media(cands, out, count=5, review_only=False, excluded_titles=None):
        for x in ranked],ensure_ascii=False,indent=2),encoding='utf-8')
     return selected
 
+
+def verify_editorial_selections(rows):
+    """Human-picked titles and cut points; editorial choice NEVER grants rights."""
+    if not isinstance(rows,list) or len(rows)!=5:
+        raise ValueError('sample/selection.json에 서로 다른 후보 5개가 필요합니다.')
+    titles=[]
+    for row in rows:
+        if not isinstance(row,dict) or not str(row.get('title','')).startswith('File:'):
+            raise ValueError('각 후보에 Wikimedia의 정확한 File: 제목이 필요합니다.')
+        if row['title'] in titles:
+            raise ValueError('동일한 원본을 중복 사용하지 않습니다.')
+        titles.append(row['title'])
+        if 'start_sec' in row and (not isinstance(row['start_sec'],(int,float)) or
+                                   not 0<=row['start_sec']<=590):
+            raise ValueError('start_sec는 0~590초 사이여야 합니다.')
+        if 'focus_x' in row and (not isinstance(row['focus_x'],(int,float)) or
+                                 not 0<=row['focus_x']<=1):
+            raise ValueError('focus_x는 0~1 사이여야 합니다.')
+    return titles
+
+
+def collect_editorial_selections(rows,out):
+    """Fetch only explicitly selected source URLs and revalidate Commons license."""
+    titles=verify_editorial_selections(rows)
+    metadata=fetch_json({
+        'action':'query','format':'json','formatversion':'2',
+        'titles':'|'.join(titles),'prop':'imageinfo',
+        'iiprop':'url|size|mime|extmetadata'
+    })
+    indexed={c['title']:c for c in extract_candidates(metadata)}
+    clips=Path(out)/'clips'
+    clips.mkdir(parents=True,exist_ok=True)
+    selected=[]
+    for ix,row in enumerate(rows,1):
+        title=row['title']
+        if title not in indexed:
+            raise RuntimeError(f'권리/파일 조건 미통과: {title}')
+        if candidate_relevance(title)<=-100:
+            raise RuntimeError(f'비실사/혼합 콘텐츠 위험 제외: {title}')
+        c=indexed[title]
+        suffix=Path(urllib.parse.urlparse(c['download_url']).path).suffix.lower()
+        file=clips/f'editorial_{ix:02}{suffix}'
+        download_video(c,file)
+        duration=probe_duration(file)
+        if not CLIP_MIN_SEC<=duration<=CLIP_MAX_SEC:
+            raise RuntimeError(f'영상 길이 부적합: {title}')
+        if 'start_sec' in row:
+            start=float(row['start_sec'])
+            if start+5.0>duration:
+                raise RuntimeError(f'지정 시작초 + 5초가 원본을 초과함: {title}')
+            motion=None
+        else:
+            start,motion=motion_highlight(file,duration)
+        selected.append({**c,'local_path':str(file),'duration':duration,
+                         'highlight_start':start,'motion_score':motion,
+                         'crop_risk':crop_risk(file),
+                         'editorial_selected':True,
+                         'approved_for_publication':False})
+    return selected
+
+
 def ass_escape(s):
     return str(s).replace('\\','\\\\').replace('{','(').replace('}',')').replace('\n',' ')
 
@@ -744,7 +805,7 @@ def write_rights_docs(selected,out):
 
 def cli(argv=None):
     parser=argparse.ArgumentParser(description='Wikimedia Commons CC BY/CC0 TOP5 ranking shorts draft builder')
-    parser.add_argument('--mode',choices=['discover','review','draft','local-test'],default=os.environ.get('MODE','review'))
+    parser.add_argument('--mode',choices=['discover','review','draft','selected-draft','local-test'],default=os.environ.get('MODE','review'))
     parser.add_argument('--topic',default=os.environ.get('TOPIC','cat playing'))
     parser.add_argument('--title',default=os.environ.get('TITLE','황당한 동물들의 순간 TOP5'))
     parser.add_argument('--output',default='output')
@@ -759,7 +820,17 @@ def cli(argv=None):
     if Path(args.script).exists():
         settings=json.loads(Path(args.script).read_text(encoding='utf-8'))
         captions.update({str(k):str(v)[:85] for k,v in settings.get('captions',{}).items() if k in captions})
-    if args.mode=='local-test':
+    if args.mode=='selected-draft':
+        selected_config=Path('sample/selection.json')
+        if not selected_config.exists():
+            raise FileNotFoundError('sample/selection.json이 없습니다.')
+        entries=json.loads(selected_config.read_text(encoding='utf-8'))
+        selected=collect_editorial_selections(entries,out)
+        settings.setdefault('source_names',{}).update({
+            v['title']:v['display_name'] for v in entries if v.get('display_name')})
+        settings.setdefault('focus_overrides',{}).update({
+            v['title']:v['focus_x'] for v in entries if 'focus_x' in v})
+    elif args.mode=='local-test':
         if not args.local_manifest:
             parser.error('--local-manifest required for local-test')
         selected=json.loads(Path(args.local_manifest).read_text(encoding='utf-8'))
