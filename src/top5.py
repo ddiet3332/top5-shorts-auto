@@ -751,7 +751,7 @@ def make_approved_source_audio(clip, start, seconds, output_path):
     return outcome
 
 
-def create_transition_sfx(path, seconds=30, sample_rate=48000):
+def create_transition_sfx(path, seconds=30, sample_rate=48000, reactions=None):
     """Original synthesized tick/pop/whoosh cues; no third-party sound samples."""
     from array import array
     import sys as _sys
@@ -765,6 +765,32 @@ def create_transition_sfx(path, seconds=30, sample_rate=48000):
             env=(1-n/length)**2
             hz=(500-280*n/length) if ix in (0,6) else (680 if n<length//2 else 920)
             val=int(5200*env*math.sin(2*math.pi*hz*t))
+            j=2*(start+n)
+            if j+1<len(frames):
+                frames[j]=max(-32768,min(32767,frames[j]+val))
+                frames[j+1]=max(-32768,min(32767,frames[j+1]+val))
+    # V11: original synthesized reaction accents at verified on-screen actions.
+    # These are intentionally NOT taken from CC video or third-party sound banks.
+    for at,kind in (reactions or []):
+        if not isinstance(at,(int,float)) or not 0 <= at < seconds:
+            continue
+        if kind not in ('boing','whoosh','pop','swoop'):
+            continue
+        start=int(at*sample_rate)
+        length=int((0.32 if kind in ('boing','swoop') else 0.22)*sample_rate)
+        for n in range(length):
+            t=n/sample_rate
+            q=n/max(1,length)
+            env=(1-q)**2 * min(1.0,t*180)
+            if kind=='boing':
+                hz=280+400*math.exp(-13*q)
+            elif kind=='whoosh':
+                hz=250+350*q
+            elif kind=='swoop':
+                hz=800-520*q
+            else:
+                hz=980-410*q
+            val=int(3750*env*math.sin(2*math.pi*(hz*t)))
             j=2*(start+n)
             if j+1<len(frames):
                 frames[j]=max(-32768,min(32767,frames[j]+val))
@@ -806,6 +832,8 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     videos=[]
     audio_segments=[]
     shotlist=[]
+    reaction_cues=[]
+    elapsed_seconds=0.0
     names={str(rank):source_label(item['title'],name_overrides) for rank,item in zip([5,4,3,2,1],selected)}
     for ix,(name,length) in enumerate(SEGMENTS):
         clip=lookup[name]
@@ -832,6 +860,16 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
                          'requires_human_crop_and_action_review':True})
         videos.append(seg)
         audio_segments.append(sound)
+        # Reaction cue position is within this edited output segment (not original timeline).
+        if name.startswith('rank') and clip.get('reaction_sfx'):
+            try:
+                relative=float(clip.get('reaction_offset'))
+                if 0 <= relative < length:
+                    reaction_cues.append((round(elapsed_seconds+relative,3),
+                                          clip['reaction_sfx']))
+            except (TypeError,ValueError):
+                pass
+        elapsed_seconds+=length
     concat=tmp/'concat.txt'
     concat.write_text(''.join("file '"+str(f.resolve()).replace("'", "'\\''")+"'\n" for f in videos),encoding='utf-8')
     joined=tmp/'joined.mp4'
@@ -854,7 +892,11 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
         encoding='utf-8')
     # Original transition sounds, with optional externally licensed narration.
     sfx=tmp/'transitions.wav'
-    create_transition_sfx(sfx)
+    create_transition_sfx(sfx,reactions=reaction_cues)
+    (dest/'V11_REACTION_SFX.json').write_text(
+        json.dumps({'source':'original synthesis, no imported sound recordings',
+                    'effects':[{'output_second':at,'style':kind} for at,kind in reaction_cues]},
+                   ensure_ascii=False,indent=2),encoding='utf-8')
     voiceover_timeline(dest,captions)
     final=dest/f'TOP5_DRAFT_REVIEW_ONLY_{width}x{height}.mp4'
     audio_inputs=['-i',str(sfx),'-i',str(joined_sound)]+(['-i',str(narration)] if narration else [])
