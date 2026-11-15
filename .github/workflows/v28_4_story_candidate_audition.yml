@@ -1,0 +1,39 @@
+# Curated Wikimedia clips: metadata-gated, muted preview, never automatically publish.
+name: TOP5 V28.4 - story payoff candidate audition
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v28_4_commons_audition.yml'
+      - 'src/v28_4_story_candidate_audition.py'
+permissions:
+  contents: read
+concurrency:
+  group: v28-4-story-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup video tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum
+          python3 -m venv /tmp/candidate_env
+          /tmp/candidate_env/bin/pip install -q pillow numpy
+      - name: Download CC metadata-gated Commons and render muted editorial samples
+        run: /tmp/candidate_env/bin/python src/v28_4_story_candidate_audition.py
+      - name: Upload previews and incomplete rights log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TOP5-V28-4-story-candidates-${{ github.run_number }}
+          path: |
+            output/v28_4_story_candidates/previews/
+            output/v28_4_story_candidates/frames/
+            output/v28_4_story_candidates/V28_4_WIKIMEDIA_AUDITION.json
+          retention-days: 7
+          if-no-files-found: warn
