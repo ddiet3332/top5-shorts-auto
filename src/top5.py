@@ -33,6 +33,7 @@ CLIP_MIN_SEC = 5.25
 CLIP_MAX_SEC = 600
 SEGMENTS = [('hook', 2), ('rank5', 5), ('rank4', 5), ('rank3', 5), ('rank2', 5), ('rank1', 5), ('outro', 3)]
 V15_SEGMENTS = [('hook', 2), ('rank5', 5), ('rank4', 5), ('rank3', 3), ('rank2', 6), ('rank1', 6), ('outro', 3)]
+V16_SEGMENTS = [('hook', 2), ('rank5', 4), ('rank4', 5), ('rank3', 4), ('rank2', 6), ('rank1', 6), ('outro', 3)]
 DEFAULT_CAPTIONS = {
     'hook': '여러분이라면 어떤 장면이 1위인가요?',
     'rank5': '5위 — 어떤 행동이 나올까요?',
