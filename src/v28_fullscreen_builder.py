@@ -68,7 +68,7 @@ def cue(start,end,style,text,x,y,align=7,layer=5):
 def build_ass(path):
     cues=[]
     # One episode title, not a made-up channel name.
-    cues.append(cue(0,27,"Title","고양이 돌발 행동 TOP5",540,162,8))
+    cues.append(cue(0,2,"Title","고양이 돌발 행동 TOP5",540,162,8))
     # left ranking column: the current rank alone gets gold; no redundant explanations.
     position={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
     start=0.0
@@ -85,9 +85,7 @@ def build_ass(path):
                     cues.append(cue(start,end,"RankName",RANK_NAMES[rank-1],35,y+61))
         offset,caption=PAYOFFS[label]
         time=start+offset
-        if label=="outro":
-            cues.append(cue(time,end,"Outro",caption,510,1190,5))
-        else:
+        if label!="outro":
             cues.append(cue(time,end,"Caption",caption,504,1190,5))
         start=end
     path.write_text(ASS_HEAD+"\n".join(cues)+"\n",encoding="utf-8")
@@ -107,7 +105,7 @@ def render_endcard(selected,out):
     ft=lambda s: ImageFont.truetype(fontfile,s)
     d.rounded_rectangle((42,150,1038,435),radius=36,fill="#13202B")
     d.text((80,192),"5개의 순간",font=ft(70),fill="#F5D04E")
-    d.text((80,300),"어떤 장면이 가장 놀라웠나요?",font=ft(38),fill="white")
+    d.text((80,300),"당신의 1위는?",font=ft(46),fill="white")
     cards=[(1,selected[4],4.5),(2,selected[3],7.0),(3,selected[2],3.2),
            (4,selected[1],25.5),(5,selected[0],1.2)]
     places=[(50,455,521,980),(559,455,1030,980),
