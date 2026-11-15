@@ -1,0 +1,36 @@
+{
+  "captions": {
+    "hook": "고양이의 점프는 끝까지 봐야 합니다!",
+    "rank5": "5위, 스스로 상자 속으로!",
+    "rank4": "4위, 장난감 향해 점프",
+    "rank3": "3위, 의자로 단번에 도약",
+    "rank2": "2위, 렌즈 앞으로 돌진",
+    "rank1": "1위, 건물 사이를 단숨에!",
+    "outro": "여러분이라면 어떤 장면이 1위?"
+  },
+  "phases": {
+    "rank5": [
+      "5위, 상자 밖에서 달려오더니",
+      "폴짝! 상자 안으로 쏙!"
+    ],
+    "rank4": [
+      "4위, 장난감만 노려보더니",
+      "번쩍 점프! 다시 대기 자세"
+    ],
+    "rank3": [
+      "3위, 의자까지 닿을까?",
+      "한 번에 올라가 먹이를 확인!"
+    ],
+    "rank2": [
+      "2위, 저 멀리 다가오던 고양이",
+      "갑자기 렌즈 바로 앞으로!"
+    ],
+    "rank1": [
+      "1위, 건물 사이가 이렇게 넓은데",
+      "발 하나 안 헛디디고 성공!"
+    ]
+  },
+  "review_only": true,
+  "publication_approved": false,
+  "qa_note": "V22 two lower-ranked original videos replaced only after actual MP4-frame QA. All footage muted. Author, third-party rights, reused-content monetization not approved."
+}
