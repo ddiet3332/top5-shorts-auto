@@ -2,8 +2,8 @@
   "schema_version": 1,
   "repository": "ddiet3332/top5-shorts-auto",
   "workflow": ".github/workflows/top5.yml",
-  "run_id": 43668159612,
-  "run_number": 60,
+  "run_id": 43668838780,
+  "run_number": 61,
   "run_attempt": 1,
   "workflow_build_result": "success",
   "event": "push",
@@ -14,8 +14,8 @@
   "preview_file_count": 11,
   "license_and_content_human_review_complete": false,
   "approved_for_publication": false,
-  "artifact_name": "TOP5-shorts-review-60",
-  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43668159612#artifacts",
+  "artifact_name": "TOP5-shorts-review-61",
+  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43668838780#artifacts",
   "candidates": [
     {
       "title": "File:Cat jumping backwards.webm",
@@ -25,6 +25,17 @@
       "width": 1920,
       "height": 1080,
       "preview_count": 2,
+      "review_moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 6.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "duration_sec": 18.81,
       "action_group_filename_hint": "leap",
       "publication_approved": false
     },
@@ -36,6 +47,13 @@
       "width": 1920,
       "height": 1080,
       "preview_count": 1,
+      "review_moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 4.13
+        }
+      ],
+      "duration_sec": 4.33,
       "action_group_filename_hint": "leap",
       "publication_approved": false
     },
@@ -47,6 +65,13 @@
       "width": 720,
       "height": 1280,
       "preview_count": 1,
+      "review_moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "duration_sec": 7.9,
       "action_group_filename_hint": "reaction",
       "publication_approved": false
     },
@@ -58,6 +83,13 @@
       "width": 1920,
       "height": 1080,
       "preview_count": 1,
+      "review_moments": [
+        {
+          "start_sec": 2.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "duration_sec": 8.01,
       "action_group_filename_hint": "play",
       "publication_approved": false
     },
@@ -69,6 +101,17 @@
       "width": 1280,
       "height": 720,
       "preview_count": 2,
+      "review_moments": [
+        {
+          "start_sec": 20.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 60.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "duration_sec": 90.03,
       "action_group_filename_hint": "play",
       "publication_approved": false
     },
@@ -80,6 +123,13 @@
       "width": 1280,
       "height": 720,
       "preview_count": 1,
+      "review_moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "duration_sec": 6.14,
       "action_group_filename_hint": "other",
       "publication_approved": false
     },
@@ -91,6 +141,13 @@
       "width": 1920,
       "height": 1080,
       "preview_count": 1,
+      "review_moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "duration_sec": 6.16,
       "action_group_filename_hint": "other",
       "publication_approved": false
     },
@@ -102,6 +159,17 @@
       "width": 1920,
       "height": 1080,
       "preview_count": 2,
+      "review_moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 5.91,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "duration_sec": 11.01,
       "action_group_filename_hint": "other",
       "publication_approved": false
     }
