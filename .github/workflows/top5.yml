@@ -7,6 +7,8 @@ on:
       - '.github/workflows/top5.yml'
       - 'src/v17_discovery.py'
       - 'tests/test_v17_source_collection.py'
+      - 'src/publish_review_index.py'
+      - 'tests/test_review_index.py'
   workflow_dispatch:
     inputs:
       mode:
@@ -188,3 +190,51 @@ jobs:
             output/V17_FRAMES/V17_*_M*.jpg
           if-no-files-found: warn
           retention-days: 7
+
+  # Only this lightweight job receives write permission.
+  # Published index contains metadata and run IDs, NEVER preview MP4 bytes.
+  publish_review_index:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download same-run candidate audit (optional)
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: TOP5-shorts-review-${{ github.run_number }}
+          path: output
+      - name: Write latest review run pointer to repository
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch --quiet origin main
+            git checkout --quiet -B review-index origin/main
+            python3 src/publish_review_index.py \
+              --audit output/V17_CANDIDATE_AUDIT.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --run-id "$GITHUB_RUN_ID" \
+              --run-number "$GITHUB_RUN_NUMBER" \
+              --run-attempt "$GITHUB_RUN_ATTEMPT" \
+              --result "$BUILD_RESULT" \
+              --event "$GITHUB_EVENT_NAME"
+            git add -A review/
+            if git diff --cached --quiet; then
+              echo "No index update needed (a newer run may already exist)."
+              exit 0
+            fi
+            git commit -m "index: actions review run $GITHUB_RUN_NUMBER [$GITHUB_RUN_ID]"
+            if git push origin HEAD:main; then
+              echo "Latest run index available at review/latest.json"
+              exit 0
+            fi
+            echo "Concurrent update detected; retrying index commit $attempt/3"
+          done
+          echo "Could not push review/latest.json after three attempts" >&2
+          exit 1
