@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "version": "V23",
+  "workflow_run_id": 43676387587,
+  "video": "TOP5_V23_EDITORIAL_REVIEW_ONLY_1080x1920.mp4",
+  "review_only": true,
+  "finished_edited_video_reviewed": true,
+  "score_status": "HUMAN_EDITORIAL_QUALITATIVE",
+  "baseline": "V22.1",
+  "rubric": [
+    {
+      "id": "hook_first_2s",
+      "name": "첫 2초 후킹",
+      "maximum": 20,
+      "v22_1": 19,
+      "v23": 19
+    },
+    {
+      "id": "humor_payoff",
+      "name": "장면 재미·반전",
+      "maximum": 25,
+      "v22_1": 16,
+      "v23": 16
+    },
+    {
+      "id": "ranking_convincing",
+      "name": "TOP5 순위 설득력",
+      "maximum": 15,
+      "v22_1": 12,
+      "v23": 13
+    },
+    {
+      "id": "pacing_transitions",
+      "name": "컷 전환·흐름",
+      "maximum": 15,
+      "v22_1": 12,
+      "v23": 14
+    },
+    {
+      "id": "creative_captions",
+      "name": "코믹 자막·창작성",
+      "maximum": 10,
+      "v22_1": 7,
+      "v23": 9
+    },
+    {
+      "id": "sound_immersion",
+      "name": "사운드·몰입감",
+      "maximum": 10,
+      "v22_1": 8,
+      "v23": 8
+    },
+    {
+      "id": "rights_monetization_readiness",
+      "name": "저작권·수익화 준비",
+      "maximum": 5,
+      "v22_1": 2,
+      "v23": 2
+    }
+  ],
+  "score_total": 81,
+  "baseline_score": 76,
+  "production_target": 75,
+  "publishing_candidate_target": 85,
+  "actual_technical_qa": {
+    "duration": 30,
+    "format": "1080x1920 24fps H264/AAC",
+    "full_audio_video_decode": "PASS",
+    "loudness_lufs": -21.1,
+    "true_peak_dbfs": -4.3,
+    "source_audio_added": false
+  },
+  "scope_of_changes": [
+    "Original commentary notes at 5 ranks placed in unused black lower letterbox, no subject crop",
+    "Original five-footage side-by-side static endcard replaces 1st rank replay in last 3sec",
+    "AAC stream carried over byte-for-byte, no third-party music or original source audio"
+  ],
+  "independent_original_rights_verified": false,
+  "third_party_clearances_complete": false,
+  "youtube_reused_content_monetization_approved": false,
+  "original_narrated_audio_added": false,
+  "publication_approved": false,
+  "reason_for_hold": "81 below 85; humor 16/25; creator/source and third-party rights unresolved; original voiceover absent",
+  "note": "Human qualitative editorial score, not automated YouTube monetization approval."
+}
