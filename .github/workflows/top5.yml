@@ -9,6 +9,8 @@ on:
       - 'tests/test_v17_source_collection.py'
       - 'src/publish_review_index.py'
       - 'tests/test_review_index.py'
+      - 'src/qa_scorecard.py'
+      - 'tests/test_qa_scorecard.py'
   workflow_dispatch:
     inputs:
       mode:
@@ -135,6 +137,10 @@ jobs:
                   h.write(summary)
           print(summary)
           PY
+      - name: Export original TOP5 100-point scorecard (unscored until human QA)
+        if: always()
+        run: |
+          python3 src/qa_scorecard.py --output output --run "$GITHUB_RUN_NUMBER" --stage candidate_review
       - name: Upload MP4, candidates, attribution, rights review
         if: always()
         uses: actions/upload-artifact@v4
@@ -186,6 +192,8 @@ jobs:
             output/V17_REVIEW_QUEUE.csv
             output/V17_EDITORIAL_QUEUE.md
             output/V17_QA_SUMMARY.md
+            output/TOP5_100_POINT_SCORECARD.json
+            output/TOP5_100_POINT_SCORECARD.md
             output/V17_PREVIEWS/V17_*.mp4
             output/V17_FRAMES/V17_*_M*.jpg
           if-no-files-found: warn
