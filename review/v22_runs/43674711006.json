@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "repository": "ddiet3332/top5-shorts-auto",
+  "run_id": 43674711006,
+  "run_number": 2,
+  "build_result": "success",
+  "artifact_name": "TOP5-v22-audition-2",
+  "artifact_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43674711006#artifacts",
+  "candidate_pages": 3,
+  "preview_originals": 3,
+  "preview_windows": 7,
+  "candidates": [
+    {
+      "id": "PX-5495527",
+      "title": "A Cat Jumping in the Box",
+      "action_group": "box-in-out",
+      "page": "https://www.pexels.com/video/a-cat-jumping-in-the-box-5495527/",
+      "status": "PREVIEW_CREATED_HUMOR_NOT_VERIFIED",
+      "preview_count": 2,
+      "failure_code": null
+    },
+    {
+      "id": "PX-9208508",
+      "title": "Video of a Cat Playing",
+      "action_group": "toy-pounce",
+      "page": "https://www.pexels.com/video/video-of-a-cat-playing-9208508/",
+      "status": "PREVIEW_CREATED_HUMOR_NOT_VERIFIED",
+      "preview_count": 3,
+      "failure_code": null
+    },
+    {
+      "id": "PX-13358977",
+      "title": "Close up of Cats Playing",
+      "action_group": "two-cats-play",
+      "page": "https://www.pexels.com/video/close-up-of-cats-playing-13358977/",
+      "status": "PREVIEW_CREATED_HUMOR_NOT_VERIFIED",
+      "preview_count": 2,
+      "failure_code": null
+    }
+  ],
+  "actual_funny_editorial_approval": false,
+  "rights_verified": false,
+  "youtube_monetization_cleared": false,
+  "publication_approved": false
+}
