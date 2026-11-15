@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "disclaimer": "Editor evidence does not override model score, grant rights or approve publication.",
+  "reviewed": {
+    "File:Katzensprung in Zeitlupe.webm": {
+      "editor_scene_label": "풀숲을 뛰어 가로지르는 고양이",
+      "editor_observation": "V32 actual MP4 frame scan from 15.0 to 20.75 in 0.25 second steps: cat first appears 16.1s, airborne around 17.2-18.6s, landing/moving 19.0-20.7s.",
+      "model_failure": "X-CLIP suggests still-cat-in-grass alternative, despite actually visible movement; frame-level semantic mismatch is unresolved.",
+      "human_review_status": "VISIBLE_ACTION_BUT_MODEL_DISAGREES",
+      "true_action_verified_in_sampled_frames": true,
+      "comedic_payoff_verified": false,
+      "source_rights_verified": false,
+      "publication_approved": false
+    }
+  }
+}
