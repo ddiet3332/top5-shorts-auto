@@ -12,7 +12,7 @@ import urllib.parse
 
 from top5 import (
     fetch_json,extract_candidates,download_video,probe_duration,crop_risk,
-    render_video,write_rights_docs,DEFAULT_CAPTIONS,CLIP_MIN_SEC,CLIP_MAX_SEC,V15_SEGMENTS
+    render_video,write_rights_docs,DEFAULT_CAPTIONS,CLIP_MIN_SEC,CLIP_MAX_SEC,V15_SEGMENTS,V16_SEGMENTS
 )
 from v12_pexels_audition import download_single_pexels
 from v12_sources import allowed_page
@@ -123,6 +123,7 @@ def main():
     ap.add_argument('--script',default='sample/v12-mixed-script.json')
     ap.add_argument('--title',default='고양이의 예상 밖 행동 TOP5')
     ap.add_argument('--v15-pacing',action='store_true',help='3-second rank3, 6-second rank2/rank1')
+    ap.add_argument('--v16-pacing',action='store_true',help='4-sec rank5 and 4-sec rank3, total 30sec')
     args=ap.parse_args()
     catalog=json.loads(Path(args.sources).read_text(encoding='utf-8'))
     rows=validate_mixed_selection(
@@ -142,7 +143,7 @@ def main():
     mp4=render_video(selected,out,args.title,captions,
                      narration=None,size='1080x1920',name_overrides=labels,
                      caption_phases=caption_phases,
-                     segments=V15_SEGMENTS if args.v15_pacing else None)
+                     segments=V16_SEGMENTS if args.v16_pacing else (V15_SEGMENTS if args.v15_pacing else None))
     rights={'license_check':'METADATA_ONLY','source_audio_approved':False,
             'publication_approved':False,
             'source_counts':{'pexels':sum(x['provider']=='pexels' for x in selected),
