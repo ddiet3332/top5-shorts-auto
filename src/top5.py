@@ -771,7 +771,7 @@ def create_transition_sfx(path, seconds=30, sample_rate=48000, reactions=None, t
     from array import array
     import sys as _sys
     frames=array('h',[0])*(seconds*sample_rate*2)
-    transitions=(transitions if transitions is not None else [0.04,2.0,7.0,12.0,17.0,22.0,27.0])
+    transitions=(transitions if transitions is not None else [t for t in [0.04,2.0,7.0,12.0,17.0,22.0,27.0] if t<seconds])
     if any(not isinstance(p,(int,float)) or not 0<=p<seconds for p in transitions):
         raise ValueError('Invalid transition timestamp')
     for ix,at in enumerate(transitions):
