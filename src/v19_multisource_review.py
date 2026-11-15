@@ -163,7 +163,7 @@ def make_board(items, audition_rows, out, *, audition_enabled):
             '<p class="meta">'+es(row["provider"].upper())+' · '+es(row["license_label"])+'</p>'
             '<p>'+es(row.get("action_description_page",""))+'</p>'
             '<p><b>실제 영상 확인: 필요</b> / '+es(status)+'</p>'
-            ('<p>미리보기 파일: '+es(previews)+'</p>' if previews else '')
+            + ('<p>미리보기 파일: '+es(previews)+'</p>' if previews else '')
             +'<p><a href="'+es(row["page_url"])+'" target="_blank" rel="noopener noreferrer">원본 개별 페이지</a>'
             ' · <a href="'+es(row["license_url"])+'" target="_blank" rel="noopener noreferrer">이용 조건</a></p>'
             '</article>'
