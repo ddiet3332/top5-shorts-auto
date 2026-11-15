@@ -1,3 +1,4 @@
+# Exact, human-curated page URLs; this workflow does not crawl stock-provider pages.
 name: TOP5 V19 - multi-source curated review
 on:
   push:
