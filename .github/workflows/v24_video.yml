@@ -1,3 +1,4 @@
+# 30-second editorial A/B experiment only; all publication permissions remain false.
 # Strictly a private REVIEW MASTER. Never upload to YouTube automatically.
 name: TOP5 V24 - audited replacement source 30-second editorial experiment
 on:
@@ -9,8 +10,6 @@ on:
       - 'src/v24_editorial_finish.py'
       - 'src/publish_v24_video_index.py'
       - 'src/v22_audio_remaster.py'
-      - 'src/v24_editorial_finish.py'
-      - 'src/publish_v24_video_index.py'
       - 'tests/test_v24_action_sources.py'
       - 'sample/v24-sources.json'
       - 'sample/v24-mixed-selection.json'
@@ -62,9 +61,9 @@ jobs:
             --video output/TOP5_V24_AUDIO_REVIEW_ONLY_1080x1920.mp4
       - name: Create V24 original editorial notes and five-clip comparison endcard
         run: |
-          python3 -m venv /tmp/v23_editorial_env
-          /tmp/v23_editorial_env/bin/pip install --quiet pillow opencv-python-headless
-          /tmp/v23_editorial_env/bin/python src/v24_editorial_finish.py \
+          python3 -m venv /tmp/v24_editorial_env
+          /tmp/v24_editorial_env/bin/pip install --quiet pillow opencv-python-headless
+          /tmp/v24_editorial_env/bin/python src/v24_editorial_finish.py \
             --input output/TOP5_V24_AUDIO_REVIEW_ONLY_1080x1920.mp4 \
             --output output/TOP5_V24_EDITORIAL_REVIEW_ONLY_1080x1920.mp4 \
             --scratch output/v24_editorial_work
