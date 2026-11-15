@@ -33,7 +33,9 @@ class V28NoClutterLayoutTests(unittest.TestCase):
             p=Path(d)/"v28.ass"
             cues=build_ass(p)
             self.assertEqual(len([c for c in cues if ",Caption," in c]),6)
-            self.assertEqual(len([c for c in cues if ",Outro," in c]),1)
+            self.assertEqual(len([c for c in cues if ",Outro," in c]),0)
+            self.assertIn("0:00:02.00",text)
+            self.assertNotIn("0:00:27.00,Outro",text)
             text=p.read_text()
             self.assertIn("고양이 돌발 행동 TOP5",text)
             self.assertIn("퇴장은 내일 하시나요?ㅋㅋ",text)
