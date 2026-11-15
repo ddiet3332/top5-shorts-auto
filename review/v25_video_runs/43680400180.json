@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "repo": "ddiet3332/top5-shorts-auto",
+  "run_id": 43680400180,
+  "run_number": 6,
+  "workflow_status": "failure",
+  "video_qa_status": "FAILED_OR_NOT_VERIFIED",
+  "video_filename": null,
+  "video_duration_sec": null,
+  "audio_duration_sec": null,
+  "video_resolution": null,
+  "source_ids": [],
+  "artifact_name": "TOP5-v25-video-6",
+  "artifact_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43680400180#artifacts",
+  "rights_gate": "UNVERIFIED",
+  "rights_detail": "NOT_PROVEN",
+  "subjective_100_point_score": null,
+  "approved_for_publication": false,
+  "note": "Video file may be present, but rights, humor and YouTube monetization were not approved."
+}
