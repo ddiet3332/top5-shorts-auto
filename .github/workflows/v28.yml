@@ -1,0 +1,48 @@
+# V28 original-source, no narration. Never auto-publish or claim YPP approval.
+name: TOP5 V28 - original full-screen one-line review render
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v28.yml'
+      - 'src/v28_fullscreen_builder.py'
+      - 'tests/test_v28_layout.py'
+      - 'sample/v22-sources.json'
+      - 'sample/v22-mixed-selection.json'
+permissions:
+  contents: read
+concurrency:
+  group: v28-review-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup native video and Korean fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+          python3 -m pip install --quiet pillow numpy
+      - name: Run actual V28 layout and source-license gate tests
+        run: python3 -m unittest discover -s tests -p 'test_v28_layout.py' -v
+      - name: Download 5 exact provider originals and build new true full-screen 30s
+        run: python3 src/v28_fullscreen_builder.py --output output
+      - name: Verify full 30s decode of V28 final real-source video and audio
+        run: |
+          ffmpeg -hide_banner -v error -xerror -i output/TOP5_V28_FULLSCREEN_SINGLE_LINE_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+      - name: Export full 30s review video and original 12-frame contact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TOP5-v28-fullscreen-${{ github.run_number }}
+          path: |
+            output/TOP5_V28_FULLSCREEN_SINGLE_LINE_REVIEW_1080x1920.mp4
+            output/V28_ACTUAL_12FRAME_QA.jpg
+            output/V28_TECHNICAL_QA.json
+            output/v28_segments/editor_one_line_and_rank.ass
+            output/v28_segments/original_5_clip_endcard.jpg
+          retention-days: 7
+          if-no-files-found: warn
