@@ -6,6 +6,8 @@ on:
     paths:
       - '.github/workflows/v19.yml'
       - 'src/v19_multisource_review.py'
+      - 'src/v12_pexels_audition.py'
+      - 'tests/test_pexels_failure_codes.py'
       - 'src/publish_v19_index.py'
       - 'tests/test_v19_multisource_review.py'
       - 'tests/test_publish_v19_index.py'
