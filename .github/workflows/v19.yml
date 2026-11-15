@@ -71,11 +71,11 @@ jobs:
               --review-dir review \
               --repo "$GITHUB_REPOSITORY" \
               --run-id "$GITHUB_RUN_ID" \
-              --run-number "$GITHUB_${{ github.run_number }}" \
+              --run-number "$GITHUB_RUN_NUMBER" \
               --result "$AUDITION_RESULT"
             git add review/v19_latest.json review/v19_runs/
             if git diff --cached --quiet; then exit 0; fi
-            git commit -m "index: V19 run $GITHUB_${{ github.run_number }} [$GITHUB_RUN_ID]"
+            git commit -m "index: V19 run $GITHUB_RUN_NUMBER [$GITHUB_RUN_ID]"
             if git push origin HEAD:main; then exit 0; fi
           done
           exit 1
