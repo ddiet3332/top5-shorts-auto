@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import math
 from pathlib import Path
 from collections import Counter
 
@@ -97,6 +98,19 @@ def choose_topic(topics,requested):
         raise ValueError("Unknown topic")
     return found,by_topic[topic_id],standings
 
+def apply_curated_cut_shift(title,start,duration):
+    """Bounded adjustment from 40-frame human QA; never changes rights approval."""
+    location=BASE/"review/v31_cut_adjustments.json"
+    if not location.exists():
+        return round(float(start),2)
+    memory=json.loads(location.read_text(encoding="utf-8")).get("offsets",{})
+    if title not in memory:
+        return round(float(start),2)
+    shift=float(memory[title]["start_shift_seconds"])
+    if not math.isfinite(shift) or abs(shift)>2.5:
+        raise ValueError("Unreasonable editorial cut adjustment")
+    return round(max(0.0,min(float(start)+shift,float(duration)-6.08)),2)
+
 def select_sources(candidates,out):
     library=Path(out)/"originals"
     library.mkdir(parents=True,exist_ok=True)
@@ -117,6 +131,7 @@ def select_sources(candidates,out):
                 raise ValueError("video duration incompatible with TOP5 6-sec cut")
             at,motion=motion_highlight(target,dur,seconds=5)
             at=max(0.0,min(float(at),dur-6.08))
+            at=apply_curated_cut_shift(src["title"],at,dur)
             if motion<0.1:
                 raise ValueError("near-static motion")
             reviewed=evidence.get(src["title"])
