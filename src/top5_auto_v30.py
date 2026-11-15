@@ -62,7 +62,7 @@ def discover_for_topic(topic,discover=True):
         if evidence and evidence.get("story_strength",0)<MIN_STRONG:
             # Known weak / misleading shots cannot outrank unseen candidates again.
             continue
-        score=meta_score+(evidence.get("story_strength",0)*0.35 if evidence else 0)
+        score=meta_score+(10 if name in seeds else 0)+(evidence.get("story_strength",0)*0.35 if evidence else 0)
         scored.append({**row,"title_score":round(meta_score,2),
                        "discovery_rank":round(score,2)})
     scored.sort(key=lambda x:(-x["discovery_rank"],x["title"]))
