@@ -89,6 +89,24 @@ def add_challenger(topic,items,output):
            "failure_type":type(e).__name__})
         return items,audit
 
+def apply_rank_one_story_timing(items):
+    """Based on V33 visual review of original Salto 0-10s.
+
+    Source 2.03-8.03 sec contains pre-jump set-up + full jump with <0.3s
+    of empty tail. The 0-2sec hook stays mid-air, separate from rank 1.
+    This affects SOURCE TIMING, not the user-approved design geometry.
+    """
+    out=[]
+    for item in items:
+        row=dict(item)
+        if row["title"]=="File:Salto - Cat Jump.webm" and float(row["duration_sec"])>=8.1:
+            row["cut_start"]=2.03
+            row["hook_start"]=4.9
+            row["timing_basis"]="V33 actual source frames 0-10 seconds"
+            row["editorial_timing_reverified"]=True
+        out.append(row)
+    return out
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--topics",default="sample/top5_auto_topics_v30.json")
@@ -106,6 +124,7 @@ def main():
     if len(candidates)<5: raise RuntimeError("insufficient rights-metadata sources")
     selected,attempts=select_sources(candidates,output)
     final,audit=add_challenger(topic,selected,output)
+    final=apply_rank_one_story_timing(final)
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     write_gates(output,topic,final,attempts,recommendations)
