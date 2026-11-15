@@ -170,7 +170,7 @@ def render_preview(path,start,outfile,seconds=5.0):
         "-crf","30","-movflags","+faststart",str(outfile)],
         check=True,timeout=100,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
-def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=45*1024*1024):
+def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=55*1024*1024):
     out=Path(out)
     out.mkdir(parents=True,exist_ok=True)
     preview_dir=out/"V17_PREVIEWS"
@@ -203,7 +203,7 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=45*1024*1024):
             report["rejected"].append({"title":name,"reason":"EXTERNAL_REUPLOAD_UNVERIFIED"})
             continue
         if int(src.get("size_bytes",0))>max_file:
-            report["rejected"].append({"title":name,"reason":"DOWNLOAD_OVER_45MIB"})
+            report["rejected"].append({"title":name,"reason":"DOWNLOAD_OVER_55MIB"})
             continue
         # Include up to three clips even for generic filenames.
         # A missing action word is not proof a video lacks a good moment.
@@ -235,20 +235,22 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=45*1024*1024):
             entry.update({"duration_sec":round(duration,2),"width":w,"height":h})
             if not sufficient_resolution(w,h):
                 entry["status"]="REJECT_LOW_RESOLUTION"
-            elif not 5.4<=duration<=240:
+            elif not 4.0<=duration<=240:
                 entry["status"]="REJECT_DURATION"
             else:
-                windows=window_candidates(local,duration,seconds=5.0,count=2,max_scan=65)
+                preview_seconds=round(min(5.0,duration-0.2),2)
+                windows=window_candidates(local,duration,seconds=preview_seconds,count=2,max_scan=65)
                 for ordinal,window in enumerate(windows,1):
                     start=float(window["start"])
-                    if duration-start<5.0:
+                    if duration-start<preview_seconds:
                         continue
                     output=preview_dir/f"V17_{selected+1:02d}_M{ordinal}.mp4"
                     still=frames_dir/f"V17_{selected+1:02d}_M{ordinal}.jpg"
-                    render_preview(local,start,output)
-                    moment_photo(local,min(start+2.5,duration-0.15),still,width=320,height=210)
+                    render_preview(local,start,output,seconds=preview_seconds)
+                    moment_photo(local,min(start+preview_seconds/2,duration-0.15),still,width=320,height=210)
                     entry["moments"].append({
-                        "start_sec":start,"movement_score_not_funny_score":window["motion"],
+                        "start_sec":start,"preview_duration_sec":preview_seconds,
+                        "movement_score_not_funny_score":window["motion"],
                         "preview":str(output.relative_to(out)),
                         "frame":str(still.relative_to(out))})
                 entry["status"]="VIDEO_PREVIEW_READY_NOT_APPROVED" if entry["moments"] else "REJECT_NO_PREVIEW"
@@ -286,7 +288,7 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=45*1024*1024):
         "목표는 '재미있는 5개'를 검증하는 것이지 숫자 5를 무조건 채우는 게 아닙니다.",
         "‘움직임 점수’는 컷과 카메라 움직임에도 반응하므로 재미·웃음·반전을 뜻하지 않습니다.",
         "외부 YouTube·TikTok 재게시 파일은 저작자 권리가 미확인되어 우선 제외했습니다.",
-        "최소 해상도 720×480 수준 이상, 클립 길이 5.4초 이상, 원본 45MiB 이하.",
+        "최소 해상도 720×480 수준 이상, 원본 길이 4~240초, 원본 55MiB 이하.",
         "CC BY / CC0 메타데이터만 확인하며, 제3자 음원·초상·상표는 별도로 검토해야 합니다.",
         "실제 점프·사고·반전이 없으면 다음 쇼츠 장면으로 채택하면 안 됩니다.",
         ""
