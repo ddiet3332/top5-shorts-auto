@@ -69,7 +69,7 @@ class TestV17SourceCollection(unittest.TestCase):
             return [{"title": "File:Unknown pet.webm"}]
         def fake_category(category, per_query):
             return [{"title": "File:Unknown pet.webm"}]
-        with patch.object(v17, "query_candidates", side_effect=fake_query), \\
+        with patch.object(v17, "query_candidates", side_effect=fake_query), \
              patch.object(v17, "category_candidates", side_effect=fake_category):
             pool, _, _ = v17.collect_sources(
                 searches=("cat playing",), categories=("Videos of cats",),
