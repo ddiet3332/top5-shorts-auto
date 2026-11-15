@@ -42,7 +42,7 @@ jobs:
             -an -c:v libx264 -preset veryfast -crf 30 -movflags +faststart \
             output/V22_RANK2_UNCUT_SOURCE_QA.mp4
       - name: Decode every video frame and audio sample and verify 5 sources
-        run: python3 src/v22_qa.py --output output --selection sample/v22-mixed-selection.json
+        run: python3 src/v22_qa.py --output output --selection sample/v22-mixed-selection.json --video output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
       - name: Synthesize original comedic sound and master V22.1 audio loudness
         run: |
           python3 -m venv /tmp/v22_audio_env
