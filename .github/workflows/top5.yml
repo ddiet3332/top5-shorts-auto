@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V12 mixed verified clips QA - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V13 alternate 5th-rank source QA - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -21,6 +21,11 @@ on:
           - discover
           - draft
         default: source-audition
+      candidate_ids:
+        description: '최대 3개 큐레이션된 Pexels 후보 ID (쉼표 구분)'
+        required: false
+        default: 'PX-4807151,PX-6853903,PX-6853188'
+        type: string
       topic:
         description: '영어 검색 키워드 (예: cat playing / dog funny)'
         required: true
@@ -47,15 +52,16 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'mixed-draft' || 'source-audition') }}
+          MODE: ${{ inputs.mode || 'source-audition' }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          V13_IDS: ${{ inputs.candidate_ids || 'PX-4807151,PX-6853903,PX-6853188' }}
         run: |
           if [ "$MODE" = "mixed-draft" ]; then
             python3 src/v12_mixed_draft.py --output output
           elif [ "$MODE" = "source-audition" ]; then
-            python3 src/v12_pexels_audition.py --output output
+            python3 src/v12_pexels_audition.py --output output --ids "$V13_IDS"
           elif [ "$MODE" = "source-review" ]; then
             if [ -n "$PEXELS_API_KEY" ]; then
               python3 src/v12_sources.py --output output --existing-pexels-api
