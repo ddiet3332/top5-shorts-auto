@@ -7,6 +7,7 @@ on:
       - '.github/workflows/v22_video.yml'
       - 'src/v22_qa.py'
       - 'src/v22_audio_remaster.py'
+      - 'src/v23_editorial_finish.py'
       - 'src/publish_v22_video_index.py'
       - 'tests/test_v22_ranking.py'
       - 'sample/v22-sources.json'
@@ -57,6 +58,20 @@ jobs:
             --output output \
             --selection sample/v22-mixed-selection.json \
             --video output/TOP5_V22_1_REVIEW_ONLY_1080x1920.mp4
+      - name: Create V23 original editorial notes and five-clip comparison endcard
+        run: |
+          python3 -m venv /tmp/v23_editorial_env
+          /tmp/v23_editorial_env/bin/pip install --quiet pillow opencv-python-headless
+          /tmp/v23_editorial_env/bin/python src/v23_editorial_finish.py \
+            --input output/TOP5_V22_1_REVIEW_ONLY_1080x1920.mp4 \
+            --output output/TOP5_V23_EDITORIAL_REVIEW_ONLY_1080x1920.mp4 \
+            --scratch output/v23_editorial_work
+      - name: QA final V23 main video/audio streams and five unique source ranks
+        run: |
+          python3 src/v22_qa.py \
+            --output output \
+            --selection sample/v22-mixed-selection.json \
+            --video output/TOP5_V23_EDITORIAL_REVIEW_ONLY_1080x1920.mp4
       - name: Export fixed 100-point QA rubric (actual grade requires review)
         if: always()
         run: python3 src/qa_scorecard.py --output output --run "$GITHUB_RUN_NUMBER" --stage final_review_pending
@@ -68,6 +83,8 @@ jobs:
           path: |
             output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
             output/TOP5_V22_1_REVIEW_ONLY_1080x1920.mp4
+            output/TOP5_V23_EDITORIAL_REVIEW_ONLY_1080x1920.mp4
+            output/v23_editorial_work/V23_TECHNICAL_QA.json
             output/V22_TECHNICAL_QA.json
             output/V22_TECHNICAL_QA.md
             output/V12_MIXED_RIGHTS_AUDIT.json
