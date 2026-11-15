@@ -1,0 +1,82 @@
+name: TOP5 V22 - fresh comedy source audition
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v22.yml'
+      - 'src/v22_new_source_audition.py'
+      - 'src/publish_v22_index.py'
+      - 'tests/test_v22_new_source_audition.py'
+      - 'sample/v22-new-candidates.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Audition three exact Pexels cat action sources
+        run: python3 src/v22_new_source_audition.py --catalog sample/v22-new-candidates.json --output output
+      - name: Export fixed original 100-point scorecard
+        if: always()
+        run: python3 src/qa_scorecard.py --output output --run "$GITHUB_RUN_NUMBER" --stage new_source_audition
+      - name: Upload real muted review-only source previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-v22-audition-${{ github.run_number }}
+          path: |
+            output/V22_NEW_SOURCE_AUDIT.json
+            output/V22_NEW_SOURCE_QA.md
+            output/V22_PREVIEWS/V12_PEXELS_AUDITION.json
+            output/V22_PREVIEWS/V12_PEXELS_AUDITION.md
+            output/V22_PREVIEWS/V12_PEXELS_FRAMES/*.jpg
+            output/V22_PREVIEWS/V12_PEXELS_PREVIEWS/*.mp4
+            output/TOP5_100_POINT_SCORECARD.json
+            output/TOP5_100_POINT_SCORECARD.md
+          if-no-files-found: warn
+          retention-days: 7
+  index:
+    needs: audition
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download review metadata from same-run artifact
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: TOP5-v22-audition-${{ github.run_number }}
+          path: output
+      - name: Publish latest V22 run ID to GitHub, never source video
+        env:
+          AUDITION_RESULT: ${{ needs.audition.result }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for i in 1 2 3; do
+            git fetch --quiet origin main
+            git checkout --quiet -B v22-index origin/main
+            python3 src/publish_v22_index.py \
+              --audit output/V22_NEW_SOURCE_AUDIT.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --run-id "$GITHUB_RUN_ID" \
+              --run-number "$GITHUB_RUN_NUMBER" \
+              --build-result "$AUDITION_RESULT" \
+              --dir review
+            git add review/v22_latest.json review/v22_runs/
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "index: v22 first-source audition $GITHUB_RUN_NUMBER [$GITHUB_RUN_ID]"
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
