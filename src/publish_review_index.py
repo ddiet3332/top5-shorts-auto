@@ -27,6 +27,18 @@ def manifest_from_audit(audit: dict[str, Any] | None, *, repo: str,
         moments = row.get('moments', [])
         if not isinstance(moments, list):
             moments = []
+        safe_moments = []
+        for m in moments[:3]:
+            if not isinstance(m, dict):
+                continue
+            start = m.get('start_sec')
+            seconds = m.get('preview_duration_sec', 5.0)
+            if (type(start) in (int, float) and type(seconds) in (int, float)
+                    and 0 <= start <= 240 and 0 < seconds <= 5.0):
+                safe_moments.append({
+                    'start_sec': round(float(start), 2),
+                    'preview_duration_sec': round(float(seconds), 2),
+                })
         candidates.append({
             'title': str(row.get('title', ''))[:300],
             'source_page': str(row.get('source_page', ''))[:1200],
@@ -35,6 +47,8 @@ def manifest_from_audit(audit: dict[str, Any] | None, *, repo: str,
             'width': row.get('width'),
             'height': row.get('height'),
             'preview_count': len(moments),
+            'review_moments': safe_moments,
+            'duration_sec': row.get('duration_sec'),
             'action_group_filename_hint': str(row.get('group', 'other'))[:80],
             'publication_approved': False,
         })
