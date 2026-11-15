@@ -1,0 +1,20 @@
+{
+  "version": "V26_FREE",
+  "run_id": 43682904223,
+  "run_number": 1,
+  "build_result": "success",
+  "video_qa_verified": true,
+  "repo": "ddiet3332/top5-shorts-auto",
+  "artifact_name": "TOP5-v26-free-1",
+  "artifact_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43682904223#artifacts",
+  "video_filename": "TOP5_V26_FREE_EDITORIAL_UPLOAD_CANDIDATE.mp4",
+  "source_count": 5,
+  "creative_originality_improved": true,
+  "editorial_100_point_score": null,
+  "paid_stock_used": false,
+  "narration": false,
+  "free_source_license_page_evidence": "Pexels 3, CC0 1, CC BY 3.0 1; see review/V26_FREE_LICENSE_UPLOAD_README.md",
+  "third_party_copyright_independently_verified": false,
+  "youtube_monetization_approved": false,
+  "auto_publication_approved": false
+}
