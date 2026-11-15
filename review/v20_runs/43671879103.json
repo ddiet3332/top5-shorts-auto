@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "repo": "ddiet3332/top5-shorts-auto",
+  "run_id": 43671879103,
+  "run_number": 2,
+  "build_result": "failure",
+  "artifact_name": "TOP5-v20-review-2",
+  "artifact_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43671879103#artifacts",
+  "self_publication_metadata_pass_count": 0,
+  "preview_original_count": 0,
+  "preview_file_count": 0,
+  "final_five_selected": 0,
+  "approved_for_publication": false,
+  "candidates": [],
+  "note": "Self-published CC metadata and observed movement are not human comedy QA or monetization approval."
+}
