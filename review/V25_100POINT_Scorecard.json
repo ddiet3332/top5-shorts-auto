@@ -1,0 +1,100 @@
+{
+  "version": "V25",
+  "workflow_run_id": 43680684504,
+  "video": "TOP5_V25_SITUATION_CAPTIONS_REVIEW_ONLY_1080x1920.mp4",
+  "status": "ACTUAL_MP4_REVIEW_ONLY_30S",
+  "score_out_of_100": 82,
+  "v23_baseline": 81,
+  "score_basis": "Qualitative editorial evaluation of full final MP4 and actual source audio audit. No audience A/B test or revenue approval.",
+  "rubric": [
+    {
+      "key": "hook_first_2s",
+      "max": 20,
+      "score": 19
+    },
+    {
+      "key": "funny_payoff",
+      "max": 25,
+      "score": 16
+    },
+    {
+      "key": "ranking_integrity",
+      "max": 15,
+      "score": 13
+    },
+    {
+      "key": "pacing_and_action_sync",
+      "max": 15,
+      "score": 15
+    },
+    {
+      "key": "situational_caption_creativity",
+      "max": 10,
+      "score": 9
+    },
+    {
+      "key": "sound_and_engagement",
+      "max": 10,
+      "score": 8
+    },
+    {
+      "key": "rights_and_monetization",
+      "max": 5,
+      "score": 2
+    }
+  ],
+  "technical": {
+    "duration_seconds": 30,
+    "resolution": "1080x1920",
+    "fps": 24,
+    "video": "h264",
+    "audio": "aac",
+    "integrated_loudness_lufs": -21.13,
+    "true_peak_dbfs": -2.19,
+    "full_stream_decode": "PASS",
+    "tts": false,
+    "narration": false,
+    "original_footage_audio_mixed": false,
+    "only_original_synthesized_sound": true
+  },
+  "original_audio_review": [
+    {
+      "rank": 5,
+      "provider": "pexels",
+      "tracks": 1,
+      "mean_dbfs": -42.7,
+      "clearance": false
+    },
+    {
+      "rank": 4,
+      "provider": "pexels",
+      "tracks": 1,
+      "mean_dbfs": -63.3,
+      "clearance": false
+    },
+    {
+      "rank": 3,
+      "provider": "pexels",
+      "tracks": 0,
+      "clearance": false
+    },
+    {
+      "rank": 2,
+      "provider": "wikimedia",
+      "tracks": 1,
+      "mean_dbfs": -25.5,
+      "clearance": false
+    },
+    {
+      "rank": 1,
+      "provider": "wikimedia",
+      "tracks": 1,
+      "mean_dbfs": -58,
+      "clearance": false
+    }
+  ],
+  "rights_approved": false,
+  "reused_content_monetization_approved": false,
+  "publication_approved": false,
+  "important": "No source audio until music/voice and authorship rights verified; media provider licenses do not imply YouTube monetization."
+}
