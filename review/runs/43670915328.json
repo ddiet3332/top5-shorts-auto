@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "repository": "ddiet3332/top5-shorts-auto",
+  "workflow": ".github/workflows/top5.yml",
+  "run_id": 43670915328,
+  "run_number": 70,
+  "run_attempt": 1,
+  "workflow_build_result": "failure",
+  "event": "push",
+  "review_status": "WORKFLOW_ERROR_OR_MISSING_AUDIT",
+  "raw_cc_metadata_pool": 0,
+  "cat_relevance_candidate_pool": 0,
+  "candidate_count": 0,
+  "preview_file_count": 0,
+  "license_and_content_human_review_complete": false,
+  "approved_for_publication": false,
+  "artifact_name": "TOP5-shorts-review-70",
+  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43670915328#artifacts",
+  "candidates": [],
+  "notice": "Public metadata index only. Source video previews remain in Actions artifact. Metadata licenses and motion scores do not establish ownership, humor, or YouTube monetization eligibility."
+}
