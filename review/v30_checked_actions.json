@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "basis": "Actual V30 MP4 30s sampled frames at 2fps plus 12-frame contact; qualitative editorial assessment; not full rights approval",
+  "reviewed": {
+    "File:Cat in a Bag.webm": {
+      "story_strength": 57,
+      "label": "쇼핑백 점령",
+      "reaction": "이 안이 그렇게 좋니?",
+      "notes": "Rank 5 2–6s: tabby repeatedly interacts with a paper bag, clear closeup and playful movement; no big reversal."
+    },
+    "File:Moomin1.webm": {
+      "story_strength": 62,
+      "label": "면봉 사냥",
+      "reaction": "이 작은 면봉이 재밌어?",
+      "notes": "Rank 4 6–11s: hand with cotton bud teases cat, paw reaches and cat follows; more event than the two-cat clip."
+    },
+    "File:Larry the cat and Chloé playing (100111224612).webm": {
+      "story_strength": 51,
+      "label": "둘의 눈치싸움",
+      "reaction": "둘 중 누가 먼저 움직일까?",
+      "notes": "Rank 3 11–15s: two cats are visible from above with modest movement; no strong surprise, should rank below bag and cotton bud."
+    }
+  },
+  "publication_approved": false,
+  "rights_cleared": false
+}
