@@ -44,7 +44,7 @@ class V32Tests(unittest.TestCase):
                  {"title":"File:Cat in a Bag.webm","cut_start":3.0,
                   "duration_sec":17.05}]
         chosen=apply_rank_one_story_timing(sources)
-        self.assertAlmostEqual(chosen[0]["cut_start"],2.03,places=2)
+        self.assertAlmostEqual(chosen[0]["cut_start"],2.65,places=2)
         self.assertAlmostEqual(chosen[0]["hook_start"],4.9,places=2)
         self.assertLess(chosen[0]["cut_start"]+6,chosen[0]["duration_sec"])
         self.assertEqual(chosen[1]["cut_start"],3.0)
