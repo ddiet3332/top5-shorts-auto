@@ -209,11 +209,22 @@ def build_dynamic_subtitles(path,topic,items):
                     subtitle_lines.append(cue(start,end,"RankName",
                               rank_titles[rank],35,y+61))
             rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
-            reaction=(items[rank_index[label]].get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
-            time=start + (0.0 if label=="hook" else
-                 min(1.1,sec*.22))
-            # Original V28.3 x/y, color, font, and align remain unchanged.
-            subtitle_lines.append(cue(time,end,"Caption",reaction,504,1190,5))
+            row=items[rank_index[label]] if label!="hook" else {}
+            reaction=(row.get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
+            if label!="hook" and row.get("caption_sequence"):
+                # V37 original scene commentary: setup -> observed payoff.
+                # One line at a time in the LOCKED 60pt x/y design.
+                stages=row["caption_sequence"]
+                if (len(stages)!=2 or not 0.6<float(stages[1][0])<sec-0.7
+                    or float(stages[0][0])<0):
+                    raise ValueError("Two-stage original commentary timing invalid")
+                for i,(offset,words) in enumerate(stages):
+                    stop=start+(float(stages[i+1][0]) if i+1<len(stages) else sec)
+                    subtitle_lines.append(cue(start+float(offset),stop,"Caption",
+                                              str(words),504,1190,5))
+            else:
+                time=start + (0.0 if label=="hook" else min(1.1,sec*.22))
+                subtitle_lines.append(cue(time,end,"Caption",reaction,504,1190,5))
         start=end
     path.write_text(ASS_HEAD+"\n".join(subtitle_lines)+"\n",encoding="utf-8")
     return subtitle_lines
