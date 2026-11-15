@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V17 diverse source-first quality review - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V17.2 cat action source review - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -30,7 +30,7 @@ on:
           - selected-draft
           - discover
           - draft
-        default: source-audition
+        default: v17-discover
       candidate_ids:
         description: '최대 3개 큐레이션된 Pexels 후보 ID (쉼표 구분)'
         required: false
