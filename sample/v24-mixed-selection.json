@@ -1,0 +1,54 @@
+[
+  {
+    "provider": "pexels",
+    "id": "PX-5495527",
+    "start_sec": 0,
+    "display_name": "상자 잠입",
+    "reaction_sfx": "pop",
+    "reaction_offset": 1.15,
+    "audio_approved": false,
+    "editorial_note": "V22 #1 actual preview: cat jumps into box in first 2 seconds; no cat emerges during 0-4s rank"
+  },
+  {
+    "provider": "pexels",
+    "id": "PX-5991137",
+    "start_sec": 12,
+    "display_name": "높은 곳에서 착지",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 1.1,
+    "audio_approved": false,
+    "editorial_note": "V24 run1 5sec preview starting 12.0: striped cat descends from high ledge to lower container/rim; monochrome; comic payoff unproven"
+  },
+  {
+    "provider": "pexels",
+    "id": "PX-7680667",
+    "start_sec": 1.9,
+    "display_name": "의자 점프",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 1.6,
+    "audio_approved": false,
+    "editorial_note": "V21 verified sphynx jumps on stool; fairly dim but clear movement"
+  },
+  {
+    "provider": "wikimedia",
+    "title": "File:Cat Jumpscare.webm",
+    "start_sec": 4.2,
+    "display_name": "카메라 돌진",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 2.9,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "CC0 Panini! and V21 full-10s source verified rapid close approach at global 17.5–18.1s"
+  },
+  {
+    "provider": "wikimedia",
+    "title": "File:Salto - Cat Jump.webm",
+    "start_sec": 2.5,
+    "display_name": "건물 사이 점프",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 3.1,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "Vimeo-origin CC BY metadata, author rights and third-party rights unresolved; review only"
+  }
+]
