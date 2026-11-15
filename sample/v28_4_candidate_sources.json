@@ -1,0 +1,53 @@
+[
+  {
+    "id": "PX-6931535",
+    "provider": "pexels",
+    "title": "Tabby Cat Jumps from the Bench",
+    "page_url": "https://www.pexels.com/video/tabby-cat-jumps-from-the-bench-6931535/",
+    "creator": "Artyom Saqib",
+    "license_label": "Pexels License",
+    "license_url": "https://www.pexels.com/license/",
+    "individual_page_checked": true,
+    "license_checked_on": "2026-11-15",
+    "duration_page_sec": 6,
+    "action_group": "bench-jump",
+    "actual_video_watched": false,
+    "third_party_rights_verified": false,
+    "publication_approved": false,
+    "editorial_status": "SHORTLIST_ONLY"
+  },
+  {
+    "id": "PX-6853903",
+    "provider": "pexels",
+    "title": "A Ginger Cat Jumping Up And Down A Chair",
+    "page_url": "https://www.pexels.com/video/a-ginger-cat-jumping-up-and-down-a-chair-6853903/",
+    "creator": "cottonbro studio",
+    "license_label": "Pexels License",
+    "license_url": "https://www.pexels.com/license/",
+    "individual_page_checked": true,
+    "license_checked_on": "2026-11-15",
+    "duration_page_sec": 32,
+    "action_group": "chair-up-down",
+    "actual_video_watched": false,
+    "third_party_rights_verified": false,
+    "publication_approved": false,
+    "editorial_status": "SHORTLIST_ONLY"
+  },
+  {
+    "id": "PX-6853902",
+    "provider": "pexels",
+    "title": "A Cat Hopping On A Chair",
+    "page_url": "https://www.pexels.com/video/a-cat-hopping-on-a-chair-6853902/",
+    "creator": "cottonbro studio",
+    "license_label": "Pexels License",
+    "license_url": "https://www.pexels.com/license/",
+    "individual_page_checked": true,
+    "license_checked_on": "2026-11-15",
+    "duration_page_sec": 9,
+    "action_group": "chair-hop",
+    "actual_video_watched": false,
+    "third_party_rights_verified": false,
+    "publication_approved": false,
+    "editorial_status": "SHORTLIST_ONLY"
+  }
+]
