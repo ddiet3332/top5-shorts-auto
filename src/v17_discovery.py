@@ -193,14 +193,22 @@ def render_preview(path,start,outfile,seconds=5.0):
         "-crf","30","-movflags","+faststart",str(outfile)],
         check=True,timeout=100,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
-def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=55*1024*1024):
+def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=55*1024*1024,source_override=None):
     out=Path(out)
     out.mkdir(parents=True,exist_ok=True)
     preview_dir=out/"V17_PREVIEWS"
     preview_dir.mkdir(exist_ok=True)
     frames_dir=out/"V17_FRAMES"
     frames_dir.mkdir(exist_ok=True)
-    candidates,queries,errors=collect_sources()
+    if source_override is None:
+        candidates,queries,errors=collect_sources()
+    else:
+        if not isinstance(source_override,list) or len(source_override)>20:
+            raise ValueError("Explicit curated candidates must be a list up to 20")
+        candidates=[dict(item) for item in source_override]
+        queries=[{"type":"curated_exact_file_titles","term":"creator-first source audit",
+                  "found":len(candidates)}]
+        errors=[]
     raw_count=len(candidates)
     irrelevant=[src for src in candidates if not likely_cat_candidate(src)]
     candidates=[src for src in candidates if likely_cat_candidate(src)]
