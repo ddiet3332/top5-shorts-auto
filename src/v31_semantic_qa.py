@@ -16,6 +16,11 @@ RANKS=[(5,2.,6.),(4,6.,11.),(3,11.,15.),(2,15.,21.),(1,21.,27.)]
 # The first English description is the expected subject/action.
 # Other descriptions are deliberately plausible alternatives.
 SCENES=[
+ (("소파","sofa","34689563"),[
+ "A white cat hides under a sofa then reaches out to grab a pink toy.",
+ "A white cat sleeps motionless under a sofa.",
+ "A white cat calmly walks past a sofa without playing.",
+ "An empty sofa with no cat underneath."]),
  (("구르기","rolling","40826295"),[
  "A video of a cat rolling and playing on its back on a sidewalk.",
  "A video of a cat sitting still on a city sidewalk.",
