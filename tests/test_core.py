@@ -6,6 +6,7 @@ from v8_moments import window_candidates
 from v12_sources import allowed_page, validate_catalog, parse_pexels_results, make_report
 from v12_pexels_audition import official_video_id
 from v12_mixed_draft import validate_mixed_selection
+from v17_discovery import sufficient_resolution, is_external_reupload, action_group, editorial_priority
 from v11_candidate_review import validate_titles
 from top5 import supported_license, clean_html, ass_timestamp, create_subtitles, DEFAULT_CAPTIONS, source_label, candidate_relevance, create_transition_sfx, voiceover_timeline, verify_editorial_selections, stage_geometry, render_segment, probe_dimensions, original_audio_available, make_approved_source_audio
 
@@ -336,6 +337,21 @@ class BasicTests(unittest.TestCase):
             self.assertIn('0:00:15.00,0:00:21.00,Active',t)
             self.assertIn('0:00:21.00,0:00:27.00,Active',t)
             self.assertIn('0:00:30.00',t)
+
+    def test_v17_low_resolution_and_risky_external_sources_rejected(self):
+        self.assertFalse(sufficient_resolution(320,240))
+        self.assertFalse(sufficient_resolution(720,360))
+        self.assertTrue(sufficient_resolution(720,480))
+        self.assertTrue(sufficient_resolution(1080,1920))
+        self.assertEqual(action_group("File:Cat jumping backwards.webm"),"leap")
+        self.assertEqual(action_group("File:Cat opening door.webm"),"object")
+        external={'title':'File:Cat opening door.webm',
+                  'source_claim':'YouTube: some channel',
+                  'review_flags':['외부 재게시 원본 권리 확인 필요']}
+        original=dict(external,source_claim='Own work',review_flags=[])
+        self.assertTrue(is_external_reupload(external))
+        self.assertFalse(is_external_reupload(original))
+        self.assertLess(editorial_priority(external),editorial_priority(original))
 
     def test_ass(self):
         import tempfile
