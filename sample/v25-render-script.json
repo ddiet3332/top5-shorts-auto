@@ -27,7 +27,7 @@
     ],
     "rank1": [
       "1위 · 건물 사이를 건넌다고?",
-      "도약 성공! 착지까지 완벽!"
+      "저 틈, 그대로 날아간다!"
     ]
   },
   "review_only": true,
@@ -37,6 +37,13 @@
   "allow_original_sound": false,
   "sfx_synthesized_only": true,
   "rights_gate": "Separate provider and third-party rights audit required before publication",
-  "frame_qa_requirements": "Real action must match setup/payoff and avoid implying false outcomes. Rebuilt from source originals, not written over existing hard subtitles.",
-  "compare_version": "V23 81/100"
+  "frame_qa_requirements": "Real action must match setup/payoff and avoid implying false outcomes. Rebuilt from source originals, not written over existing hard subtitles. Payoff text must appear at the observed action moment; not at an arbitrary midpoint.",
+  "compare_version": "V23 81/100",
+  "phase_offsets": {
+    "rank5": 0.4,
+    "rank4": 1.1,
+    "rank3": 1.35,
+    "rank2": 2.5,
+    "rank1": 2.2
+  }
 }
