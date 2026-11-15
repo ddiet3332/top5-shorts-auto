@@ -131,11 +131,16 @@ def main():
         raise ValueError('This workflow intentionally cannot grant publication approval')
     captions=dict(DEFAULT_CAPTIONS)
     captions.update({k:str(v)[:72] for k,v in notes.get('captions',{}).items() if k in captions})
+    caption_phases=notes.get('phases',{})
+    if not isinstance(caption_phases,dict) or any(
+        key not in ('rank5','rank4','rank3','rank2','rank1') for key in caption_phases):
+        raise ValueError('V14 caption phases must be named by ranked segment')
     out=Path(args.output);out.mkdir(parents=True,exist_ok=True)
     selected,labels=fetch_mixed_sources(rows,catalog,out)
     write_rights_docs(selected,out)
     mp4=render_video(selected,out,args.title,captions,
-                     narration=None,size='1080x1920',name_overrides=labels)
+                     narration=None,size='1080x1920',name_overrides=labels,
+                     caption_phases=caption_phases)
     rights={'license_check':'METADATA_ONLY','source_audio_approved':False,
             'publication_approved':False,
             'source_counts':{'pexels':sum(x['provider']=='pexels' for x in selected),
