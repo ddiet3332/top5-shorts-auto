@@ -1,0 +1,175 @@
+[
+  {
+    "topic_id": "cat_surprises",
+    "headline": "고양이 돌발 행동",
+    "video_subject": "고양이들의 예상 밖 행동 TOP5",
+    "category": "동물",
+    "emotion": "comedy",
+    "relevance": [
+      "cat",
+      "kitten",
+      "gato",
+      "felis",
+      "katz",
+      "кошк",
+      "chat ",
+      "mačka"
+    ],
+    "actions": [
+      "jump",
+      "jumpscare",
+      "chase",
+      "playing",
+      "fall",
+      "surpris",
+      "pounce",
+      "attack",
+      "spring",
+      "salto"
+    ],
+    "search": [
+      "cat jumping",
+      "cat chasing",
+      "cat playing"
+    ],
+    "seeds": [
+      "File:Cat chasing a pigeon.webm",
+      "File:Cat Jumpscare.webm",
+      "File:Cat jumping backwards.webm",
+      "File:Salto - Cat Jump.webm",
+      "File:Moomin1.webm",
+      "File:Katzensprung in Zeitlupe.webm",
+      "File:Sammy springt.webm"
+    ]
+  },
+  {
+    "topic_id": "dog_surprises",
+    "headline": "강아지 돌발 행동",
+    "video_subject": "강아지들의 예상 밖 행동 TOP5",
+    "category": "동물",
+    "emotion": "comedy",
+    "relevance": [
+      "dog",
+      "puppy",
+      "puppies",
+      "hund",
+      "perro",
+      "chien"
+    ],
+    "actions": [
+      "jump",
+      "chase",
+      "playing",
+      "fall",
+      "surpris",
+      "trick",
+      "run",
+      "fetch",
+      "roll"
+    ],
+    "search": [
+      "dog playing",
+      "dog jumping",
+      "dog chasing"
+    ],
+    "seeds": []
+  },
+  {
+    "topic_id": "nature_moments",
+    "headline": "자연의 놀라운 순간",
+    "video_subject": "자연이 만든 놀라운 순간 TOP5",
+    "category": "자연",
+    "emotion": "wonder",
+    "relevance": [
+      "waterfall",
+      "lightning",
+      "storm",
+      "volcano",
+      "wave",
+      "nature",
+      "cloud",
+      "snow"
+    ],
+    "actions": [
+      "eruption",
+      "strike",
+      "crash",
+      "flow",
+      "storm",
+      "wave",
+      "surge",
+      "rain"
+    ],
+    "search": [
+      "storm lightning",
+      "volcano eruption",
+      "waterfall"
+    ],
+    "seeds": []
+  },
+  {
+    "topic_id": "objects_oddities",
+    "headline": "사물의 놀라운 순간",
+    "video_subject": "사물과 물리의 예상 밖 순간 TOP5",
+    "category": "사물",
+    "emotion": "wonder",
+    "relevance": [
+      "domino",
+      "machine",
+      "marble",
+      "toy",
+      "object",
+      "physics",
+      "pendulum",
+      "ball"
+    ],
+    "actions": [
+      "fall",
+      "bounce",
+      "roll",
+      "drop",
+      "run",
+      "chain",
+      "move",
+      "spin"
+    ],
+    "search": [
+      "domino chain reaction",
+      "marble machine",
+      "bouncing ball"
+    ],
+    "seeds": []
+  },
+  {
+    "topic_id": "human_moments",
+    "headline": "사람들의 놀라운 순간",
+    "video_subject": "사람들의 예상 밖 순간 TOP5",
+    "category": "사람",
+    "emotion": "wonder",
+    "relevance": [
+      "person",
+      "human",
+      "people",
+      "dance",
+      "gymnast",
+      "skate",
+      "acrobat"
+    ],
+    "actions": [
+      "jump",
+      "dance",
+      "flip",
+      "spin",
+      "run",
+      "fall",
+      "catch",
+      "trick"
+    ],
+    "search": [
+      "gymnast jump",
+      "acrobat trick",
+      "skate trick"
+    ],
+    "seeds": []
+  }
+]
