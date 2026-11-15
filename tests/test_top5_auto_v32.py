@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"src"))
-from top5_auto_v32 import CHALLENGER,add_challenger,challenger_row
+from top5_auto_v32 import CHALLENGER,add_challenger,challenger_row,apply_rank_one_story_timing
 from v12_sources import allowed_page
 from v28_fullscreen_builder import ASS_HEAD,W,H,FPS,SEGMENTS
 
@@ -37,6 +37,19 @@ class V32Tests(unittest.TestCase):
             self.assertEqual(len(result),5)
             self.assertEqual(len({x["title"] for x in result}),5)
             self.assertFalse(result[1]["rights_verified"])
+    def test_salto_has_distinct_hook_and_story_segment(self):
+        sources=[{"title":"File:Salto - Cat Jump.webm",
+                  "cut_start":3.99,"duration_sec":10.07,
+                  "editorial_quality_heuristic":95},
+                 {"title":"File:Cat in a Bag.webm","cut_start":3.0,
+                  "duration_sec":17.05}]
+        chosen=apply_rank_one_story_timing(sources)
+        self.assertAlmostEqual(chosen[0]["cut_start"],2.03,places=2)
+        self.assertAlmostEqual(chosen[0]["hook_start"],4.9,places=2)
+        self.assertLess(chosen[0]["cut_start"]+6,chosen[0]["duration_sec"])
+        self.assertEqual(chosen[1]["cut_start"],3.0)
+        self.assertEqual(sources[0]["cut_start"],3.99)
+
     def test_unrelated_topic_is_unchanged(self):
         items=[{"title":str(i)} for i in range(5)]
         with TemporaryDirectory() as tmp:
