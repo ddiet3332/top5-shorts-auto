@@ -4,10 +4,14 @@
   "description": "Human-reviewed 40-frame timing adjustments; not model automatic copyright, humor or ranking approval.",
   "offsets": {
     "File:Katzensprung in Zeitlupe.webm": {
-      "start_shift_seconds": 1.4,
+      "start_shift_seconds": 0,
       "basis": "V30.1 actual 8-frame rank2 contact: main jump develops in late half of 15-21s segment; V31 X-CLIP mismatch flag supports reviewing timing, not declaring label false.",
       "type": "editorial_cut_only",
-      "publication_approved": false
+      "publication_approved": false,
+      "previous_test_shift_seconds": 1.4,
+      "status": "REVERTED_AFTER_AB_COMPARISON",
+      "reversal_reason": "V31.1 40-frame A/B: shifting +1.4s brought jump earlier but created longer empty-grass tail; X-CLIP relative mismatch persisted (margin -0.9158 to -0.8377). Do not promote as creative improvement.",
+      "user_approved_publishing": false
     }
   }
 }
