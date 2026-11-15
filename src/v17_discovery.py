@@ -73,7 +73,13 @@ def editorial_priority(item):
     return base
 
 def collect_sources(searches=SEARCHES,categories=CATEGORIES,max_pool=160):
-    collected={}
+    """Sample every search/category before capping the pool.
+
+    The previous implementation could hit the 160-item cap after two queries,
+    never reaching later action searches or the curated categories. Alternating
+    between search buckets preserves source diversity, not humor/rights claims.
+    """
+    batches=[]
     failures=[]
     searched=[]
     for kind,names in (("query",searches),("category",categories)):
@@ -81,23 +87,36 @@ def collect_sources(searches=SEARCHES,categories=CATEGORIES,max_pool=160):
             try:
                 results=(query_candidates(phrase,100) if kind=="query" else
                          category_candidates(phrase,100))
-                new=0
+                batch=[]
+                local_seen=set()
                 for cand in results:
                     key=cand["title"].casefold()
-                    if key not in collected:
-                        collected[key]=cand
-                        new+=1
-                searched.append({"type":kind,"term":phrase,"new":new})
-                print(f"[V17 {kind}] {phrase}: {new} new, {len(collected)} total",flush=True)
+                    if key not in local_seen:
+                        batch.append(cand)
+                        local_seen.add(key)
+                batches.append(batch)
+                searched.append({"type":kind,"term":phrase,"found":len(batch)})
+                print(f"[V17 {kind}] {phrase}: {len(batch)} candidates",flush=True)
             except Exception as err:
-                # No need to kill a multi-source audit when one API query is unavailable.
                 failures.append({"type":kind,"term":phrase,"error":type(err).__name__})
                 print(f"[V17 unavailable] {kind} {phrase}: {type(err).__name__}",flush=True)
-            if len(collected)>=max_pool:
+
+    pooled={}
+    offsets=[0]*len(batches)
+    while len(pooled)<max_pool:
+        read_any=False
+        for index,batch in enumerate(batches):
+            if offsets[index]>=len(batch):
+                continue
+            candidate=batch[offsets[index]]
+            offsets[index]+=1
+            read_any=True
+            pooled.setdefault(candidate["title"].casefold(),candidate)
+            if len(pooled)>=max_pool:
                 break
-        if len(collected)>=max_pool:
+        if not read_any:
             break
-    return list(collected.values()), searched, failures
+    return list(pooled.values()), searched, failures
 
 def archived_titles(base="sample"):
     old=set()
