@@ -1,0 +1,37 @@
+name: TOP5 V36 - Curated cat action source contact sheets
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v36_cat_audition.yml'
+      - 'src/v36_cat_audition.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v36-cat-source-audition-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit-real-originals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install free open-source video tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python3 -m venv /tmp/v36
+          /tmp/v36/bin/pip install -q pillow
+      - name: Download permitted candidate originals and sample actual frames
+        run: /tmp/v36/bin/python src/v36_cat_audition.py
+      - name: Retain source evidence (no publication or promotion)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V36-cat-source-audition-${{ github.run_number }}
+          path: |
+            output/v36_audition/*_timeline_*.jpg
+            output/v36_audition/V36_AUDITION.json
+          retention-days: 7
+          if-no-files-found: warn
