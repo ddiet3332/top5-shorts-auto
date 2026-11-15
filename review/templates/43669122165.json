@@ -1,0 +1,182 @@
+{
+  "source_run_id": 43669122165,
+  "review_status": "AWAITING_VIDEO_QA",
+  "hook_caption": "",
+  "outro_caption": "",
+  "candidates": [
+    {
+      "title": "File:Cat jumping backwards.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Cat_jumping_backwards.webm",
+      "moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 6.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Kitten jumping on bamboo mat.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Kitten_jumping_on_bamboo_mat.webm",
+      "moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 4.13
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Cat discovers it was being spied on.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Cat_discovers_it_was_being_spied_on.webm",
+      "moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Kitten playing - Tokyo - Jan 7 2020.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Kitten_playing_-_Tokyo_-_Jan_7_2020.webm",
+      "moments": [
+        {
+          "start_sec": 2.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Cat playing in Taiwan.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Cat_playing_in_Taiwan.webm",
+      "moments": [
+        {
+          "start_sec": 20.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 60.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:We're all out of chicken, go get the cat.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:We%27re_all_out_of_chicken%2C_go_get_the_cat.webm",
+      "moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Sophy the Cat is Really High On A Ledge.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Sophy_the_Cat_is_Really_High_On_A_Ledge.webm",
+      "moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:2022-10-18 LJUBLJANA Doma CARNIVORA Felis catus DOMAČA MAČKA 4.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:2022-10-18_LJUBLJANA_Doma_CARNIVORA_Felis_catus_DOMA%C4%8CA_MA%C4%8CKA_4.webm",
+      "moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 5.91,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    }
+  ],
+  "publication_approved": false,
+  "instructions": "Watch the actual MP4 preview from the referenced Actions run. Only after five different clips show a clear, distinct payoff may you mark ranks 5-1. Rights and YouTube monetization remain separate gates."
+}
