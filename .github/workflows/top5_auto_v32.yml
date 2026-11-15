@@ -21,8 +21,11 @@ on:
     paths:
       - '.github/workflows/top5_auto_v32.yml'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_auto_v29.py'
+      - 'src/v37_cat_audition.py'
       - 'tests/test_top5_auto_v32.py'
       - 'tests/test_v36_action_sources.py'
+      - 'tests/test_v37_story.py'
 permissions:
   contents: read
 concurrency:
@@ -45,6 +48,7 @@ jobs:
           /tmp/v32/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
           /tmp/v32/bin/python -m unittest discover -s tests -p 'test_top5_auto_v30.py' -v
           /tmp/v32/bin/python -m unittest discover -s tests -p 'test_v36_action_sources.py' -v
+          /tmp/v32/bin/python -m unittest discover -s tests -p 'test_v37_story.py' -v
       - name: Choose topic, add valid video challenger and render original 30s TOP5
         env:
           TOPIC: ${{ github.event.inputs.topic || 'auto' }}
@@ -64,6 +68,8 @@ jobs:
             output/v32_auto/V32_CHALLENGER_SELECTION.json
             output/v32_auto/V35_SOFA_CHALLENGER_QA.json
             output/v32_auto/V36_CANDIDATE_REPLACEMENTS_QA.json
+            output/v32_auto/V37_STORY_AND_RIGHTS_QA.json
+            output/v32_auto/V37_ATTRIBUTION_AND_PUBLISH_GATES.md
             output/v32_auto/TOPIC_RECOMMENDATIONS_V32.json
             output/v32_auto/SOURCE_SELECTION_REVIEW.json
             output/v32_auto/SOURCE_CREDITS_REVIEW.md
