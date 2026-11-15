@@ -1,0 +1,36 @@
+{
+  "captions": {
+    "hook": "건물 사이를 뛰어넘는 고양이를 보셨나요?",
+    "rank5": "5위, 레이저를 쫓는 발!",
+    "rank4": "4위, 잔디 위 추격전",
+    "rank3": "3위, 의자로 한 번에 도약",
+    "rank2": "2위, 카메라를 향해 돌진",
+    "rank1": "1위, 건물 사이의 긴 점프!",
+    "outro": "다섯 장면 중 가장 놀라운 행동은?"
+  },
+  "phases": {
+    "rank5": [
+      "5위, 빨간 점이 나타나면",
+      "앞발이 바로 따라간다!"
+    ],
+    "rank4": [
+      "4위, 잔디 위에서 움직이더니",
+      "방향을 바꾸며 계속 추적!"
+    ],
+    "rank3": [
+      "3위, 저 의자까지 갈 수 있을까?",
+      "곧바로 올라가 먹이를 확인!"
+    ],
+    "rank2": [
+      "2위, 저 멀리 고양이가 보인다",
+      "순식간에 카메라 앞으로!"
+    ],
+    "rank1": [
+      "1위, 저 공간을 건널 수 있을까?",
+      "건물 사이를 한 번에 점프!"
+    ]
+  },
+  "review_only": true,
+  "publication_approved": false,
+  "qa_note": "V21 actual 5 independent 720+ source videos. Full edit QA required. Not copyright, author rights or YouTube reused-content approved. Never auto publish."
+}
