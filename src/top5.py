@@ -631,7 +631,7 @@ def choose_focus_x(path, start, seconds, width=1080, height=1920):
         return 0.5
 
 
-def create_subtitles(path, title, captions, rank_names=None, caption_phases=None, segments=None):
+def create_subtitles(path, title, captions, rank_names=None, caption_phases=None, segments=None, caption_phase_offsets=None):
     """Positioned ASS overlays; include caption in lower central area and fixed ranking column."""
     header='''[Script Info]
 Title: TOP5 ranking draft
@@ -681,7 +681,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if not isinstance(pair,(list,tuple)) or len(pair)!=2 or any(
                     not isinstance(x,str) or not x.strip() or len(x)>32 for x in pair):
                 raise ValueError('V14 두 단계 코미디 자막은 1~32자 문자열 2개여야 합니다.')
-            mid=current+min(2.45,length*0.50)
+            offset=(caption_phase_offsets or {}).get(name)
+            if offset is None:
+                mid=current+min(2.45,length*0.50)
+            else:
+                if type(offset) not in (int,float) or not 0.25<=offset<=length-0.4:
+                    raise ValueError('Timed caption phase must stay inside its actual ranked segment')
+                mid=current+float(offset)
             event(current,mid,'Caption',pair[0],'{\\an5\\pos(540,1248)}',5)
             event(mid,end,'Caption',pair[1],'{\\an5\\pos(540,1248)}',5)
         else:
@@ -838,7 +844,7 @@ def voiceover_timeline(dest, captions, segments=None):
     return lines
 
 
-def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None, caption_phases=None, segments=None):
+def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None, caption_phases=None, segments=None, caption_phase_offsets=None):
     width,height=map(int,size.lower().split('x'))
     if width <= 0 or height <= 0 or width*16!=height*9:
         raise ValueError('9:16 해상도만 허용')
@@ -901,7 +907,7 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0',
          '-i',str(source_audio_list),'-c:a','pcm_s16le',str(joined_sound)])
     ass=tmp/'ranking.ass'
-    create_subtitles(ass,title,captions,rank_names=names,caption_phases=caption_phases,segments=segment_plan)
+    create_subtitles(ass,title,captions,rank_names=names,caption_phases=caption_phases,segments=segment_plan,caption_phase_offsets=caption_phase_offsets)
     (dest/'SHOTLIST_FOR_REVIEW.json').write_text(json.dumps(shotlist,ensure_ascii=False,indent=2),encoding='utf-8')
     approvals=[f"{x['segment']}: {x['source_title']} → {x['source_audio_status']}" for x in shotlist]
     (dest/'AUDIO_RIGHTS_REVIEW.md').write_text(
