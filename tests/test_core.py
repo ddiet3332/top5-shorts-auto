@@ -316,6 +316,27 @@ class BasicTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 create_transition_sfx(root/'invalid.wav',transitions=[31])
 
+    def test_v16_two_cuts_dynamic_timecodes(self):
+        import tempfile
+        from top5 import V16_SEGMENTS
+        self.assertEqual(sum(d for _,d in V16_SEGMENTS),30)
+        self.assertEqual(dict(V16_SEGMENTS)['rank5'],4)
+        self.assertEqual(dict(V16_SEGMENTS)['rank3'],4)
+        self.assertEqual(dict(V16_SEGMENTS)['rank2'],6)
+        with tempfile.TemporaryDirectory() as d:
+            out=Path(d)/'v16.ass'
+            create_subtitles(out,'고양이 돌발행동 TOP5',DEFAULT_CAPTIONS,
+                             segments=V16_SEGMENTS,caption_phases={
+                                 'rank5':['면봉을 보자','훌쩍 뛰네!'],
+                                 'rank3':['어깨에서 출발','고양이 착지!']})
+            t=out.read_text(encoding='utf-8')
+            self.assertIn('pos(540,1248)',t)
+            self.assertIn('0:00:02.00,0:00:06.00,Active',t)
+            self.assertIn('0:00:11.00,0:00:15.00,Active',t)
+            self.assertIn('0:00:15.00,0:00:21.00,Active',t)
+            self.assertIn('0:00:21.00,0:00:27.00,Active',t)
+            self.assertIn('0:00:30.00',t)
+
     def test_ass(self):
         import tempfile
         with tempfile.TemporaryDirectory() as d:
