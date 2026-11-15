@@ -59,7 +59,7 @@ class V26RigorousLicenseGate(unittest.TestCase):
         r=triage(c,private)
         self.assertEqual(r["rights_ready_for_full_visual_review"],0)
         self.assertFalse(r["candidates"][0]["may_download_unwatermarked_master"])
-        self.assertIn("ORIGINAL_MASTER_SHA256_MISSING",r["candidates"][0]["rights_gate_reasons"])
+        self.assertIn("CAMERA_ORIGINAL_SHA256_MISSING",r["candidates"][0]["rights_gate_reasons"])
 
     def test_even_full_metadata_does_not_claim_publication(self):
         c=catalog()
