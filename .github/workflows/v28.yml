@@ -25,11 +25,12 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
-          python3 -m pip install --quiet pillow numpy
+          python3 -m venv /tmp/v28_env
+          /tmp/v28_env/bin/pip install --quiet pillow numpy
       - name: Run actual V28 layout and source-license gate tests
-        run: python3 -m unittest discover -s tests -p 'test_v28_layout.py' -v
+        run: /tmp/v28_env/bin/python -m unittest discover -s tests -p 'test_v28_layout.py' -v
       - name: Download 5 exact provider originals and build new true full-screen 30s
-        run: python3 src/v28_fullscreen_builder.py --output output
+        run: /tmp/v28_env/bin/python src/v28_fullscreen_builder.py --output output
       - name: Verify full 30s decode of V28 final real-source video and audio
         run: |
           ffmpeg -hide_banner -v error -xerror -i output/TOP5_V28_FULLSCREEN_SINGLE_LINE_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
