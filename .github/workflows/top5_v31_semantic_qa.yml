@@ -32,11 +32,16 @@ jobs:
     timeout-minutes: 32
     steps:
       - uses: actions/checkout@v4
+      - name: Set known-compatible Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Install ffmpeg CPU PyTorch and video-language model libraries
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg
-          python3 -m venv /tmp/v31_env
+          python -m venv /tmp/v31_env
+          /tmp/v31_env/bin/pip install -q --upgrade pip
           /tmp/v31_env/bin/pip install -q 'torch==2.7.1' --index-url https://download.pytorch.org/whl/cpu
           /tmp/v31_env/bin/pip install -q 'transformers==4.51.3' 'safetensors>=0.4.3' pillow numpy
       - name: Run deterministic semantic-veto unit tests
