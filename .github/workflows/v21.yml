@@ -1,0 +1,98 @@
+name: TOP5 V21 - produce full 30-second source-accurate review edit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v21.yml'
+      - 'src/v21_qa.py'
+      - 'src/publish_v21_index.py'
+      - 'tests/test_v21_qa.py'
+      - 'sample/v21-sources.json'
+      - 'sample/v21-mixed-selection.json'
+      - 'sample/v21-script.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg and Korean caption fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+      - name: Run source and editorial safety regression tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Download five exact curated originals and render full 30s H264 AAC
+        run: |
+          python3 src/v12_mixed_draft.py \
+            --sources sample/v21-sources.json \
+            --selection sample/v21-mixed-selection.json \
+            --script sample/v21-script.json \
+            --title '고양이 돌발 행동 TOP5' --v16-pacing --output output
+      - name: Decode every video frame and audio sample and verify 5 sources
+        run: python3 src/v21_qa.py --output output --selection sample/v21-mixed-selection.json
+      - name: Export fixed 100-point QA rubric (actual grade requires review)
+        if: always()
+        run: python3 src/qa_scorecard.py --output output --run "$GITHUB_RUN_NUMBER" --stage final_review_pending
+      - name: Upload actual 30s review video, rights, evidence and QA
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: TOP5-v21-review-${{ github.run_number }}
+          path: |
+            output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
+            output/V21_TECHNICAL_QA.json
+            output/V21_TECHNICAL_QA.md
+            output/V12_MIXED_RIGHTS_AUDIT.json
+            output/SHOTLIST_FOR_REVIEW.json
+            output/VOICEOVER_TIMELINE.json
+            output/NARRATION_REQUIRED.md
+            output/V11_REACTION_SFX.json
+            output/YOUTUBE_CREDITS.txt
+            output/RIGHTS_CHECKLIST.md
+            output/QA_CONTACT_SHEET.jpg
+            output/TOP5_100_POINT_SCORECARD.json
+            output/TOP5_100_POINT_SCORECARD.md
+          if-no-files-found: warn
+          retention-days: 7
+  index:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download only same-run QA metadata, never commit licensed source video
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: TOP5-v21-review-${{ github.run_number }}
+          path: output
+      - name: Publish latest run ID for direct ChatGPT artifact download
+        env:
+          RENDER_RESULT: ${{ needs.render.result }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git fetch --quiet origin main
+            git checkout --quiet -B v21-index origin/main
+            python3 src/publish_v21_index.py \
+              --qa output/V21_TECHNICAL_QA.json \
+              --rights output/V12_MIXED_RIGHTS_AUDIT.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --run-id "$GITHUB_RUN_ID" \
+              --run-number "$GITHUB_RUN_NUMBER" \
+              --result "$RENDER_RESULT" \
+              --review review
+            git add review/v21_latest.json review/v21_runs/
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "index: v21 rendered review video $GITHUB_RUN_NUMBER [$GITHUB_RUN_ID]"
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          echo 'V21 index push failed after retries' >&2
+          exit 1
