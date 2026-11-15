@@ -102,6 +102,14 @@ def write_index(manifest: dict[str, Any], directory: Path) -> bool:
     runs = directory / 'runs'
     runs.mkdir(exist_ok=True)
     (runs / f"{manifest['run_id']}.json").write_text(payload, encoding='utf-8')
+    # Human-editable template is regenerated only for the matching run.
+    # Neither this template nor the source index authorizes publication.
+    from v18_editorial_handoff import review_template
+    editorial = json.dumps(review_template(manifest), ensure_ascii=False, indent=2) + '\n'
+    (directory / 'latest_editorial_template.json').write_text(editorial, encoding='utf-8')
+    templates = directory / 'templates'
+    templates.mkdir(exist_ok=True)
+    (templates / f"{manifest['run_id']}.json").write_text(editorial, encoding='utf-8')
     print(f"INDEXED: #{manifest['run_number']} run_id={manifest['run_id']} "
           f"candidate_count={manifest['candidate_count']}")
     return True
