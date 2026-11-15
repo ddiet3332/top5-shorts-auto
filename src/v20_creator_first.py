@@ -15,6 +15,21 @@ from top5 import fetch_json,extract_candidates
 from v17_discovery import make_review
 
 
+def own_work_claim_from_wikitext(content):
+    """Check current file-page source parameter, not the missing API extmetadata Source."""
+    if not isinstance(content,str):
+        return None
+    match=re.search(r"(?im)^\s*\|\s*source\s*=\s*([^\r\n]+)",content)
+    if not match:
+        return None
+    line=match.group(1).strip()
+    if re.search(r'youtube|tiktok|vimeo|instagram|flickr|facebook|https?://',line,re.I):
+        return None
+    if re.search(r'\{\{\s*own\b',line,re.I) or re.search(r'\bown\s+work\b',line,re.I):
+        return "Own work (current Commons file-page wikitext)"
+    return None
+
+
 def valid_metadata(items, allowed):
     """Compare current MediaWiki metadata against previously inspected file pages."""
     if not isinstance(allowed,list) or not 1 <= len(allowed) <= 8:
@@ -43,8 +58,12 @@ def valid_metadata(items, allowed):
                 reason="SELF_PUBLICATION_NOT_CLAIMED"
             else:
                 source_claim=re.sub(r"\s+"," ",str(item.get("source_claim",""))).casefold()
-                if "own work" not in source_claim and "self" not in source_claim:
+                wiki_claim=own_work_claim_from_wikitext(item.get("file_page_wikitext",""))
+                if "own work" not in source_claim and not wiki_claim:
                     reason="NO_CURRENT_OWN_WORK_METADATA"
+                elif wiki_claim and "own work" not in source_claim:
+                    item=dict(item)
+                    item["source_claim"]=wiki_claim
                 author=str(item.get("author","")).casefold()
                 if reason is None and str(row.get("expected_author","")).casefold() not in author:
                     reason="CREATOR_MISMATCH"
@@ -74,8 +93,23 @@ def fetch_exact(allowed):
     data=fetch_json({"action":"query","format":"json","formatversion":"2",
                      "titles":"|".join(titles),"prop":"imageinfo",
                      "iiprop":"url|size|mime|extmetadata"})
-    return list(extract_candidates(data))
-
+    files=list(extract_candidates(data))
+    revisions=fetch_json({
+        "action":"query","format":"json","formatversion":"2",
+        "titles":"|".join(titles),"prop":"revisions",
+        "rvprop":"content","rvslots":"main"})
+    current_source={}
+    for page in revisions.get("query",{}).get("pages",[]):
+        versions=page.get("revisions",[])
+        if not versions:
+            continue
+        main=(versions[0].get("slots") or {}).get("main") or {}
+        raw=main.get("content","") if isinstance(main,dict) else ""
+        if isinstance(raw,str):
+            current_source[page.get("title","")]=raw
+    for item in files:
+        item["file_page_wikitext"]=current_source.get(item["title"],"")
+    return files
 
 def audit(allowed,origin,out):
     out=Path(out)
