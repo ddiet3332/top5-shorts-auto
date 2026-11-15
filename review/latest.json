@@ -2,8 +2,8 @@
   "schema_version": 1,
   "repository": "ddiet3332/top5-shorts-auto",
   "workflow": ".github/workflows/top5.yml",
-  "run_id": 43668838780,
-  "run_number": 61,
+  "run_id": 43668952086,
+  "run_number": 62,
   "run_attempt": 1,
   "workflow_build_result": "success",
   "event": "push",
@@ -14,8 +14,8 @@
   "preview_file_count": 11,
   "license_and_content_human_review_complete": false,
   "approved_for_publication": false,
-  "artifact_name": "TOP5-shorts-review-61",
-  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43668838780#artifacts",
+  "artifact_name": "TOP5-shorts-review-62",
+  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43668952086#artifacts",
   "candidates": [
     {
       "title": "File:Cat jumping backwards.webm",
