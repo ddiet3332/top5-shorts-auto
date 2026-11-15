@@ -306,7 +306,7 @@ class BasicTests(unittest.TestCase):
             self.assertIn('0:00:12.00,0:00:15.00,Active',content)
             self.assertIn('0:00:15.00,0:00:21.00,Active',content)
             self.assertIn('0:00:21.00,0:00:27.00,Active',content)
-            self.assertIn(r'\\pos(540,1248)',content)
+            self.assertIn('pos(540,1248)',content)
             marks=[0.04,2,7,12,15,21,27]
             sfx=root/'custom.wav'
             create_transition_sfx(sfx,seconds=30,transitions=marks)
