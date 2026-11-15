@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V16 stronger 3rd rank and quicker 5th cut - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V16 corrected action labels final QA - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
