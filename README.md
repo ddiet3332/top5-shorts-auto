@@ -273,3 +273,18 @@ Pixabay/Pexels/Mixkit 동영상의 **사용 라이선스**와 실제 동영상�
 - Mixkit Free Video: https://mixkit.co/license/modal/videoFree/
 - Mixkit Restricted Video: https://mixkit.co/license/modal/videoRestricted/
 - YouTube 재사용/비진정성 콘텐츠: https://support.google.com/youtube/answer/1311392
+
+
+## V12 혼합 쇼츠 실제 편집 (검수용)
+
+2026-11-15 테스트에서 공식 Pexels 무료 다운로드 경로로 **소수의 미리 선정한 영상 3개**의 실제 5초 동작을 확인했습니다. 이 중 상자 고양이·피아노 고양이 두 컷을 검수용 편집에 사용하고, Wikimedia Commons CC 원본 3개를 유지했습니다.
+
+- \`sample/v12-mixed-selection.json\`: 출처·원본 시작 시각·자막용 순위 이름·자체 제작 리액션 사운드 효과를 5위 → 1위 순서로 지정
+- \`sample/v12-mixed-script.json\`: 한국어 장면별 문구 지정
+- \`src/v12_mixed_draft.py\`: 정식 Pexels 무료 다운로드 액션을 통과한 **개별 큐레이션 영상** + 위키미디어 CC BY/CC0 메타데이터 재검수 결과를 합침
+- GitHub Actions → \`Run workflow\` → \`mode=mixed-draft\`: 30초 H.264/AAC 검수 영상을 출력
+- \`V12_MIXED_RIGHTS_AUDIT.json\`: 공급사/창작자/사용 조건/미승인 제3자 권리 기록
+
+**경고:** Pexels는 일반적인 다운로드와 상업적 편집을 허용하지만, 무단 스크래핑·데이터 수집·대규모 복제는 제한합니다. Pexels의 공식 'Free Download' 기능 외에 비공식 영상 데이터 추출을 시도하지 않으며, 하나의 목적에 필요한 소수 영상만 시험합니다. 개별 소스의 정당한 업로드·제3자 권리·오디오 권리까지 보장하지 않습니다. 실패한 접근은 우회하지 않고 제외합니다.
+
+**현재 버전은 게시용 아님**: 5초 안에 재미가 약한 컷이 남아 있습니다. 자동적으로 85점 이상 재미를 판정할 수 없으며, YouTube 재사용 콘텐츠 수익화도 보장하지 않습니다. 원본 소리는 기본 제외, 자체 제작 전환·반응 효과음만 사용하며 검은색 9:16 캔버스 및 자막 65%를 유지합니다.
