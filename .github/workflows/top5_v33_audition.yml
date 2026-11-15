@@ -1,0 +1,38 @@
+name: TOP5 V33 - test source action and jump landing windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v33_audition.yml'
+      - 'src/v33_targeted_original_audition.py'
+permissions:
+  contents: read
+concurrency:
+  group: v33-targeted-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-action:
+    runs-on: ubuntu-latest
+    timeout-minutes: 27
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare open source visual tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum
+          python3 -m venv /tmp/v33
+          /tmp/v33/bin/pip install -q pillow numpy
+      - name: Sample actual Salto initial action plus Pexels candidate source windows
+        run: /tmp/v33/bin/python src/v33_targeted_original_audition.py
+      - name: Export six-second muted previews and full origin audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V33-original-audition-${{ github.run_number }}
+          path: |
+            output/v33_original_review/*_contact.jpg
+            output/v33_original_review/*_v*.mp4
+            output/v33_original_review/V33_CANDIDATE_ACTION_REVIEW.json
+          retention-days: 7
+          if-no-files-found: warn
