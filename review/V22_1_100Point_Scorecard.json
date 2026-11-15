@@ -1,0 +1,68 @@
+{
+  "version": "V22.1",
+  "run_id": 43675250951,
+  "status": "ACTUAL_EDIT_EDITORIAL_REVIEW_COMPLETED",
+  "score": 76,
+  "maximum": 100,
+  "previous_V21_2_score": 71,
+  "rubric": [
+    {
+      "key": "hook_first_2s",
+      "maximum": 20,
+      "score": 19
+    },
+    {
+      "key": "humor_payoff",
+      "maximum": 25,
+      "score": 16
+    },
+    {
+      "key": "ranking_convincing",
+      "maximum": 15,
+      "score": 12
+    },
+    {
+      "key": "pacing_transitions",
+      "maximum": 15,
+      "score": 12
+    },
+    {
+      "key": "creative_captions",
+      "maximum": 10,
+      "score": 7
+    },
+    {
+      "key": "sound_immersion",
+      "maximum": 10,
+      "score": 8
+    },
+    {
+      "key": "rights_monetization_readiness",
+      "maximum": 5,
+      "score": 2
+    }
+  ],
+  "video": {
+    "filename": "TOP5_V22_1_REVIEW_ONLY_1080x1920.mp4",
+    "resolution": "1080x1920",
+    "fps": 24,
+    "codec": "H264/AAC",
+    "duration_seconds": 30,
+    "full_decoding": "PASS",
+    "integrated_loudness_lufs": -21.1,
+    "true_peak_dbfs": -4.3
+  },
+  "target_production": 75,
+  "target_publishing_candidate": 85,
+  "rights_verified": false,
+  "reused_content_monetization_approved": false,
+  "published": false,
+  "license_review": "METADATA_ONLY",
+  "key_blockers": [
+    "Rank5 static after box entry",
+    "Rank4 cat pounces once then stands still",
+    "Rank1 repeated as outro",
+    "No substantial new voiceover/analysis",
+    "Vimeo-origin CC BY 3.0 source rights not independently confirmed"
+  ]
+}
