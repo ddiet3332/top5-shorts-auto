@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V15 verify stronger rank-3 candidate videos - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V15 CC0 short kitten action QA - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -12,6 +12,7 @@ on:
         required: true
         type: choice
         options:
+          - v15-short
           - v15-candidates
           - v14-draft
           - v13-draft
@@ -55,13 +56,15 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'v15-candidates' || 'source-audition') }}
+          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'v15-short' || 'source-audition') }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           V13_IDS: ${{ inputs.candidate_ids || 'PX-4807151,PX-6853903,PX-6853188' }}
         run: |
-          if [ "$MODE" = "v15-candidates" ]; then
+          if [ "$MODE" = "v15-short" ]; then
+            python3 src/v15_short_review.py
+          elif [ "$MODE" = "v15-candidates" ]; then
             python3 src/v11_candidate_review.py --candidates sample/v15-candidates.json --output output
           elif [ "$MODE" = "v14-draft" ]; then
             python3 src/v12_mixed_draft.py --output output --selection sample/v14-mixed-selection.json --script sample/v14-script.json --title '고양이 돌발행동 TOP5'
@@ -126,5 +129,7 @@ jobs:
             output/V12_PEXELS_FRAMES/*.jpg
             output/V12_PEXELS_PREVIEWS/*.mp4
             output/V12_MIXED_RIGHTS_AUDIT.json
+            output/V15_SHORT_PREVIEW.mp4
+            output/V15_SHORT_AUDIT.json
           if-no-files-found: warn
           retention-days: 7
