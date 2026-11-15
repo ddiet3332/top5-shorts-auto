@@ -78,6 +78,27 @@ class TestV17SourceCollection(unittest.TestCase):
         self.assertTrue(pool[0]["cat_category_evidence"])
         self.assertTrue(v17.likely_cat_candidate(pool[0]))
 
+    def test_reaction_stories_are_not_dropped_as_generic(self):
+        self.assertEqual(
+            v17.action_group("File:Cat discovers it was being spied on.webm"),
+            "reaction")
+        self.assertGreater(
+            v17.editorial_priority({
+                "title": "File:Cat discovers it was being spied on.webm",
+                "source_claim": "Own work",
+                "review_flags": []
+            }),
+            v17.editorial_priority({
+                "title": "File:Cat at home.webm",
+                "source_claim": "",
+                "review_flags": []
+            }))
+
+    def test_media_budget_allows_larger_hd_cat_sources(self):
+        defaults = v17.make_review.__defaults__
+        self.assertEqual(defaults[2], 45*1024*1024)
+        self.assertGreaterEqual(defaults[1], 180*1024*1024)
+
     def test_minimum_source_quality(self):
         self.assertFalse(v17.sufficient_resolution(320, 240))
         self.assertTrue(v17.sufficient_resolution(720, 480))
