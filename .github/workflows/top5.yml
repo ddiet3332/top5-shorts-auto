@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V15 3-second weak clip and boosted TOP2 QA - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V15 corrected 3/6/6 pacing QA - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
