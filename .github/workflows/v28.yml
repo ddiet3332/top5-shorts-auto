@@ -46,3 +46,53 @@ jobs:
             output/v28_segments/original_5_clip_endcard.jpg
           retention-days: 7
           if-no-files-found: warn
+
+  index:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record V28 run and artifact for direct mobile retrieval
+        env:
+          V28_RENDER_STATUS: ${{ needs.render.result }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git fetch --quiet origin main
+            git checkout --quiet -B v28-index origin/main
+            mkdir -p review/v28_runs
+            python3 - <<'PY'
+          import json,os,pathlib
+          repo=os.environ["GITHUB_REPOSITORY"]
+          run=int(os.environ["GITHUB_RUN_ID"])
+          number=int(os.environ["GITHUB_RUN_NUMBER"])
+          status=os.environ["V28_RENDER_STATUS"]
+          record={
+            "version":"V28_FULLSCREEN",
+            "run_id":run,"run_number":number,
+            "render_result":status,
+            "video_status":"RENDER_SUCCESS_REVIEW_ONLY" if status=="success" else "FAILED_OR_CANCELLED",
+            "artifact_name":f"TOP5-v28-fullscreen-{number}",
+            "artifact_url":f"https://github.com/{repo}/actions/runs/{run}#artifacts",
+            "filename":"TOP5_V28_FULLSCREEN_SINGLE_LINE_REVIEW_1080x1920.mp4" if status=="success" else None,
+            "source_count":5,
+            "no_voiceover":True,"no_tts":True,
+            "individual_original_source_rights_verified":False,
+            "youtube_monetization_approved":False,
+            "publication_approved":False,
+            "full_comedy_editorial_score":None
+          }
+          data=json.dumps(record,ensure_ascii=False,indent=2)+"\n"
+          pathlib.Path("review/v28_latest.json").write_text(data,encoding="utf-8")
+          pathlib.Path(f"review/v28_runs/{run}.json").write_text(data,encoding="utf-8")
+          PY
+            git add review/v28_latest.json review/v28_runs/
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "index: V28 full-screen 30s source-video review $GITHUB_RUN_NUMBER"
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
