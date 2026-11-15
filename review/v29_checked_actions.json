@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "source": "2026-11-15 actual V29 MP4 sampled-frame review; NOT exhaustive original footage rights/quality approval",
+  "reviewed": {
+    "File:Salto - Cat Jump.webm": {
+      "story_strength": 95,
+      "label": "건물 사이 점프",
+      "reaction": "이걸 진짜 뛰어넘네!",
+      "note": "2.2-5.6s edited output: clear major jump; previously ranked #5 inappropriately. Put highest.",
+      "reviewed_output_seconds": [
+        2.2,
+        5.6
+      ]
+    },
+    "File:Katzensprung in Zeitlupe.webm": {
+      "story_strength": 64,
+      "label": "풀숲 질주",
+      "reaction": "풀숲을 가로질러!",
+      "note": "6.2-10.2s output: white cat moves across grass; clear but no humorous reversal.",
+      "reviewed_output_seconds": [
+        6.2,
+        10.2
+      ]
+    },
+    "File:Cat Jumpscare.webm": {
+      "story_strength": 42,
+      "label": "카메라 접근",
+      "reaction": "가까이 다가오잖아!",
+      "note": "21.2-26.5s output: kitten approaches the camera; cute but too weak for #1.",
+      "reviewed_output_seconds": [
+        21.2,
+        26.5
+      ]
+    },
+    "File:Cat jumping backwards.webm": {
+      "story_strength": 25,
+      "label": "실내 깜짝 반응",
+      "reaction": "카메라도 놀랐네!",
+      "note": "11.2-14.8s output: shaky bedroom shot with an unclear small cat action.",
+      "reviewed_output_seconds": [
+        11.2,
+        14.8
+      ]
+    },
+    "File:Cat chasing a pigeon.webm": {
+      "story_strength": 10,
+      "label": "거리의 고양이",
+      "reaction": "어디 가는 걸까?",
+      "note": "15.2-20.4s output: cat walking outside, pigeon chase not established within chosen cut; avoid false pursuit label.",
+      "reviewed_output_seconds": [
+        15.2,
+        20.4
+      ]
+    }
+  },
+  "notes": [
+    "Rank strength is editorial, separate from motion proxy",
+    "All 5 remain publishing-blocked until independent rights and creative review"
+  ]
+}
