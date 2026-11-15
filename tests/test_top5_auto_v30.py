@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"src"))
-from top5_auto_v30 import discover_for_topic,write_gates,checked_scenes
+from top5_auto_v30 import discover_for_topic,write_gates,checked_scenes,apply_curated_cut_shift
 from v28_fullscreen_builder import ASS_HEAD,SEGMENTS,W,H,FPS
 
 class V30QA(unittest.TestCase):
@@ -45,6 +45,12 @@ class V30QA(unittest.TestCase):
         self.assertNotIn("File:Cat chasing a pigeon.webm",selected)
         self.assertIn("File:Salto - Cat Jump.webm",selected)
         self.assertIn("File:Moomin1.webm",selected)
+
+    def test_curated_cut_only_moves_reviewed_source_and_clamps(self):
+        shifted=apply_curated_cut_shift("File:Katzensprung in Zeitlupe.webm",9.0,23.9)
+        self.assertAlmostEqual(shifted,10.4,places=1)
+        untouched=apply_curated_cut_shift("File:Unreviewed Source.webm",3.1,25.0)
+        self.assertEqual(untouched,3.1)
 
     def test_rights_never_autocleared(self):
         with TemporaryDirectory() as td:
