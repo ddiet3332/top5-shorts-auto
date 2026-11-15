@@ -284,7 +284,8 @@ def assemble_video(topic,items,output):
     segment_files=[]
     first=items[-1]
     hook=work/"part_00.mp4"
-    hook_at=min(first["duration_sec"]-2.1,first["cut_start"]+1.3)
+    hook_at=max(0.0,min(first["duration_sec"]-2.1,
+                          float(first.get("hook_start",first["cut_start"]+1.3))))
     create_scene(first["local_path"],max(0,hook_at),2,hook)
     segment_files.append(hook)
     for number,(name,sec) in enumerate(SEGMENTS[1:-1],1):
