@@ -15,7 +15,7 @@ on:
         required: false
         type: string
   workflow_run:
-    workflows: ["TOP5 V30 - Auto discovery quality-gated MP4"]
+    workflows: ["TOP5 V30 - Auto discovery quality-gated MP4", "TOP5 V32 - Auto stronger original 30s MP4"]
     types: [completed]
   push:
     branches: [main]
@@ -59,7 +59,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           V30_RUN: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || github.event.inputs.source_run || '43731723388' }}
-          V30_ARTIFACT: ${{ github.event_name == 'workflow_run' && format('TOP5-V30-auto-review-{0}', github.event.workflow_run.run_number) || github.event.inputs.artifact_name || 'TOP5-V30-auto-review-2' }}
+          V30_ARTIFACT: ${{ github.event_name == 'workflow_run' && (github.event.workflow_run.name == 'TOP5 V32 - Auto stronger original 30s MP4' && format('TOP5-V32-auto-review-{0}', github.event.workflow_run.run_number) || format('TOP5-V30-auto-review-{0}', github.event.workflow_run.run_number)) || github.event.inputs.artifact_name || 'TOP5-V30-auto-review-2' }}
         run: |
           mkdir -p input
           if [[ ! "$V30_RUN" =~ ^[0-9]{8,20}$ ]]; then echo 'Invalid run ID'; exit 1; fi
