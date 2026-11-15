@@ -1,0 +1,32 @@
+[
+  {
+    "title": "File:Cat Jumpscare.webm",
+    "page_url": "https://commons.wikimedia.org/wiki/File:Cat_Jumpscare.webm",
+    "expected_author": "Panini!",
+    "expected_license": "CC0",
+    "expected_source": "Own work",
+    "license_page_reviewed_on": "2026-11-15",
+    "editorial_test": "Fast cat approaches camera, check visible surprise and subject clarity, first-2s hook",
+    "content_not_verified": true
+  },
+  {
+    "title": "File:Ocicat on Cat Wheel.webm",
+    "page_url": "https://commons.wikimedia.org/wiki/File:Ocicat_on_Cat_Wheel.webm",
+    "expected_author": "Oldperson",
+    "expected_license": "CC0",
+    "expected_source": "Own work",
+    "license_page_reviewed_on": "2026-11-15",
+    "editorial_test": "Cat running on exercise wheel, check if speed changes or a memorable payoff occurs",
+    "content_not_verified": true
+  },
+  {
+    "title": "File:Black and white cat growl and hiss.webm",
+    "page_url": "https://commons.wikimedia.org/wiki/File:Black_and_white_cat_growl_and_hiss.webm",
+    "expected_author": "Abujoy",
+    "expected_license": "CC BY 4.0",
+    "expected_source": "Own work",
+    "license_page_reviewed_on": "2026-11-15",
+    "editorial_test": "Cat growls then hisses at another unseen cat; avoid misleading aggressive or fearful behavior as amusing",
+    "content_not_verified": true
+  }
+]
