@@ -96,7 +96,7 @@ class TestV17SourceCollection(unittest.TestCase):
 
     def test_media_budget_allows_larger_hd_cat_sources(self):
         defaults = v17.make_review.__defaults__
-        self.assertEqual(defaults[2], 45*1024*1024)
+        self.assertEqual(defaults[2], 55*1024*1024)
         self.assertGreaterEqual(defaults[1], 180*1024*1024)
 
     def test_minimum_source_quality(self):
