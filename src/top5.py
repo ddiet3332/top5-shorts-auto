@@ -629,7 +629,7 @@ def choose_focus_x(path, start, seconds, width=1080, height=1920):
         return 0.5
 
 
-def create_subtitles(path, title, captions, rank_names=None):
+def create_subtitles(path, title, captions, rank_names=None, caption_phases=None):
     """Positioned ASS overlays; include caption in lower central area and fixed ranking column."""
     header='''[Script Info]
 Title: TOP5 ranking draft
@@ -669,8 +669,19 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             label = label[:5] + ('…' if len(label)>5 else '')
             event(current,end,'ActiveName' if r==ranking else 'RankName',label,
                   '{\\an7\\pos(43,'+str(y+69)+')}',3)
-        event(current,end,'Caption',captions.get(name,DEFAULT_CAPTIONS[name]),
-              '{\\an5\\pos(540,1248)}',5)
+        # V14: creative setup → payoff timed to the actual action in each 5s rank.
+        # Never change the agreed-on center position at y=1248 (65% of 1920).
+        pair=(caption_phases or {}).get(name)
+        if name.startswith('rank') and pair is not None:
+            if not isinstance(pair,(list,tuple)) or len(pair)!=2 or any(
+                    not isinstance(x,str) or not x.strip() or len(x)>32 for x in pair):
+                raise ValueError('V14 두 단계 코미디 자막은 1~32자 문자열 2개여야 합니다.')
+            mid=current+2.45
+            event(current,mid,'Caption',pair[0],'{\\an5\\pos(540,1248)}',5)
+            event(mid,end,'Caption',pair[1],'{\\an5\\pos(540,1248)}',5)
+        else:
+            event(current,end,'Caption',captions.get(name,DEFAULT_CAPTIONS[name]),
+                  '{\\an5\\pos(540,1248)}',5)
         current=end
     Path(path).write_text(''.join(lines),encoding='utf-8')
 
@@ -820,7 +831,7 @@ def voiceover_timeline(dest, captions):
     return lines
 
 
-def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None):
+def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None, caption_phases=None):
     width,height=map(int,size.lower().split('x'))
     if width <= 0 or height <= 0 or width*16!=height*9:
         raise ValueError('9:16 해상도만 허용')
@@ -880,7 +891,7 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0',
          '-i',str(source_audio_list),'-c:a','pcm_s16le',str(joined_sound)])
     ass=tmp/'ranking.ass'
-    create_subtitles(ass,title,captions,rank_names=names)
+    create_subtitles(ass,title,captions,rank_names=names,caption_phases=caption_phases)
     (dest/'SHOTLIST_FOR_REVIEW.json').write_text(json.dumps(shotlist,ensure_ascii=False,indent=2),encoding='utf-8')
     approvals=[f"{x['segment']}: {x['source_title']} → {x['source_audio_status']}" for x in shotlist]
     (dest/'AUDIO_RIGHTS_REVIEW.md').write_text(
