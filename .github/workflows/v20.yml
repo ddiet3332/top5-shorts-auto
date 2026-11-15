@@ -1,0 +1,86 @@
+name: TOP5 V20 - creator first actual video review
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v20.yml'
+      - 'src/v20_creator_first.py'
+      - 'src/publish_v20_index.py'
+      - 'tests/test_v20_creator_first.py'
+      - 'src/v17_discovery.py'
+      - 'sample/v20-creator-first.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Run unit safety tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Validate current creator license and download exact original footage
+        run: python3 src/v20_creator_first.py --catalog sample/v20-creator-first.json --output output
+      - name: Export 100-point QA rubric without fabricated scores
+        if: always()
+        run: python3 src/qa_scorecard.py --output output --run "$GITHUB_RUN_NUMBER" --stage candidate_review
+      - name: Save real preview MP4s and creator license evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-v20-review-${{ github.run_number }}
+          path: |
+            output/V20_CREATOR_LICENSE_AUDIT.json
+            output/V20_CREATOR_PREVIEW_REPORT.json
+            output/V17_CANDIDATE_AUDIT.json
+            output/V17_CONTACT_SHEET.jpg
+            output/V17_EDITORIAL_QUEUE.md
+            output/V17_REVIEW_QUEUE.csv
+            output/V17_PREVIEWS/V17_*.mp4
+            output/V17_FRAMES/V17_*_M*.jpg
+            output/TOP5_100_POINT_SCORECARD.json
+            output/TOP5_100_POINT_SCORECARD.md
+          if-no-files-found: warn
+          retention-days: 7
+  index:
+    needs: review
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download same-run rights and video review metadata
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: TOP5-v20-review-${{ github.run_number }}
+          path: output
+      - name: Publish V20 run ID, source proof and preview counts
+        env:
+          PREVIEW_JOB_RESULT: ${{ needs.review.result }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git fetch --quiet origin main
+            git checkout --quiet -B v20-index origin/main
+            python3 src/publish_v20_index.py \
+              --output output \
+              --repo "$GITHUB_REPOSITORY" \
+              --run-id "$GITHUB_RUN_ID" \
+              --run-number "$GITHUB_RUN_NUMBER" \
+              --result "$PREVIEW_JOB_RESULT" \
+              --review-dir review
+            git add review/v20_latest.json review/v20_runs/
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "index: V20 self-published cat video audit $GITHUB_RUN_NUMBER [$GITHUB_RUN_ID]"
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          echo 'V20 index push failed after three attempts' >&2
+          exit 1
