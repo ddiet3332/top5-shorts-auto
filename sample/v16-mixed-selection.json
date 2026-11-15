@@ -3,12 +3,12 @@
     "provider": "wikimedia",
     "title": "File:Moomin1.webm",
     "start_sec": 1.8,
-    "display_name": "면봉점프",
+    "display_name": "면봉놀이",
     "reaction_sfx": "boing",
     "reaction_offset": 2.4,
     "audio_approved": false,
     "manual_content_review": true,
-    "editorial_note": "Shortened to four seconds; cat reaches to cotton swab but no strong comedic reversal."
+    "editorial_note": "Cat reaches and paws at swab; no verified jump"
   },
   {
     "provider": "pexels",
