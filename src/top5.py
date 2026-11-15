@@ -32,6 +32,7 @@ REVIEW_POOL = 9
 CLIP_MIN_SEC = 5.25
 CLIP_MAX_SEC = 600
 SEGMENTS = [('hook', 2), ('rank5', 5), ('rank4', 5), ('rank3', 5), ('rank2', 5), ('rank1', 5), ('outro', 3)]
+V15_SEGMENTS = [('hook', 2), ('rank5', 5), ('rank4', 5), ('rank3', 3), ('rank2', 6), ('rank1', 6), ('outro', 3)]
 DEFAULT_CAPTIONS = {
     'hook': '여러분이라면 어떤 장면이 1위인가요?',
     'rank5': '5위 — 어떤 행동이 나올까요?',
@@ -629,7 +630,7 @@ def choose_focus_x(path, start, seconds, width=1080, height=1920):
         return 0.5
 
 
-def create_subtitles(path, title, captions, rank_names=None, caption_phases=None):
+def create_subtitles(path, title, captions, rank_names=None, caption_phases=None, segments=None):
     """Positioned ASS overlays; include caption in lower central area and fixed ranking column."""
     header='''[Script Info]
 Title: TOP5 ranking draft
@@ -656,7 +657,10 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         lines.append(f'Dialogue: {layer},{ass_timestamp(start)},{ass_timestamp(end)},{style},,0,0,0,,{extra}{ass_escape(txt)}\n')
     event(0,30,'Title', title,'{\\an8\\pos(540,130)}',5)
     event(0,30,'Brand','TOP5 · DRAFT / RIGHTS REVIEW REQUIRED','{\\an7\\pos(40,1830)}',2)
-    for name,length in SEGMENTS:
+    segment_plan=segments if segments is not None else SEGMENTS
+    if sum(length for _,length in segment_plan)!=30:
+        raise ValueError('쇼츠 타임라인은 정확히 30초여야 합니다.')
+    for name,length in segment_plan:
         end=current+length
         ranking = int(name[-1]) if name.startswith('rank') else 0
         for r in range(1,6):
@@ -676,7 +680,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if not isinstance(pair,(list,tuple)) or len(pair)!=2 or any(
                     not isinstance(x,str) or not x.strip() or len(x)>32 for x in pair):
                 raise ValueError('V14 두 단계 코미디 자막은 1~32자 문자열 2개여야 합니다.')
-            mid=current+2.45
+            mid=current+min(2.45,length*0.50)
             event(current,mid,'Caption',pair[0],'{\\an5\\pos(540,1248)}',5)
             event(mid,end,'Caption',pair[1],'{\\an5\\pos(540,1248)}',5)
         else:
@@ -762,12 +766,14 @@ def make_approved_source_audio(clip, start, seconds, output_path):
     return outcome
 
 
-def create_transition_sfx(path, seconds=30, sample_rate=48000, reactions=None):
+def create_transition_sfx(path, seconds=30, sample_rate=48000, reactions=None, transitions=None):
     """Original synthesized tick/pop/whoosh cues; no third-party sound samples."""
     from array import array
     import sys as _sys
     frames=array('h',[0])*(seconds*sample_rate*2)
-    transitions=[0.04,2.0,7.0,12.0,17.0,22.0,27.0]
+    transitions=(transitions if transitions is not None else [0.04,2.0,7.0,12.0,17.0,22.0,27.0])
+    if any(not isinstance(p,(int,float)) or not 0<=p<seconds for p in transitions):
+        raise ValueError('Invalid transition timestamp')
     for ix,at in enumerate(transitions):
         start=int(at*sample_rate)
         length=int((0.34 if ix in (0,6) else 0.14)*sample_rate)
@@ -812,11 +818,11 @@ def create_transition_sfx(path, seconds=30, sample_rate=48000, reactions=None):
         wav.writeframes(frames.tobytes())
 
 
-def voiceover_timeline(dest, captions):
+def voiceover_timeline(dest, captions, segments=None):
     """Per-shot Korean script for a licensed TTS tool; no unlicensed generated speech."""
     t=0
     lines=[]
-    for name,length in SEGMENTS:
+    for name,length in (segments if segments is not None else SEGMENTS):
         lines.append({'segment':name,'start':t,'end':t+length,
                       'narration_suggestion':captions.get(name,DEFAULT_CAPTIONS[name]),
                       'voice_file_supplied':False})
@@ -831,7 +837,7 @@ def voiceover_timeline(dest, captions):
     return lines
 
 
-def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None, caption_phases=None):
+def render_video(selected, dest, title, captions, narration=None, size='1080x1920', name_overrides=None, focus_overrides=None, caption_phases=None, segments=None):
     width,height=map(int,size.lower().split('x'))
     if width <= 0 or height <= 0 or width*16!=height*9:
         raise ValueError('9:16 해상도만 허용')
@@ -840,13 +846,16 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     lookup={'hook':selected[-1], 'outro':selected[-1]}
     for number,item in zip([5,4,3,2,1],selected):
         lookup[f'rank{number}']=item
+    segment_plan=segments if segments is not None else SEGMENTS
+    if sum(length for _,length in segment_plan)!=30 or [n for n,_ in segment_plan]!=[n for n,_ in SEGMENTS]:
+        raise ValueError('V15 rank timeline must be 30s with all seven slots')
     videos=[]
     audio_segments=[]
     shotlist=[]
     reaction_cues=[]
     elapsed_seconds=0.0
     names={str(rank):source_label(item['title'],name_overrides) for rank,item in zip([5,4,3,2,1],selected)}
-    for ix,(name,length) in enumerate(SEGMENTS):
+    for ix,(name,length) in enumerate(segment_plan):
         clip=lookup[name]
         duration=clip['duration']
         base=max(0.0,min(float(clip.get('highlight_start',0.0)),duration-5.2))
@@ -891,7 +900,7 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
     run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','concat','-safe','0',
          '-i',str(source_audio_list),'-c:a','pcm_s16le',str(joined_sound)])
     ass=tmp/'ranking.ass'
-    create_subtitles(ass,title,captions,rank_names=names,caption_phases=caption_phases)
+    create_subtitles(ass,title,captions,rank_names=names,caption_phases=caption_phases,segments=segment_plan)
     (dest/'SHOTLIST_FOR_REVIEW.json').write_text(json.dumps(shotlist,ensure_ascii=False,indent=2),encoding='utf-8')
     approvals=[f"{x['segment']}: {x['source_title']} → {x['source_audio_status']}" for x in shotlist]
     (dest/'AUDIO_RIGHTS_REVIEW.md').write_text(
@@ -903,12 +912,17 @@ def render_video(selected, dest, title, captions, narration=None, size='1080x192
         encoding='utf-8')
     # Original transition sounds, with optional externally licensed narration.
     sfx=tmp/'transitions.wav'
-    create_transition_sfx(sfx,reactions=reaction_cues)
+    transition_marks=[0.04]
+    cumulative=0
+    for _,length in segment_plan[:-1]:
+        cumulative+=length
+        transition_marks.append(float(cumulative))
+    create_transition_sfx(sfx,reactions=reaction_cues,transitions=transition_marks)
     (dest/'V11_REACTION_SFX.json').write_text(
         json.dumps({'source':'original synthesis, no imported sound recordings',
                     'effects':[{'output_second':at,'style':kind} for at,kind in reaction_cues]},
                    ensure_ascii=False,indent=2),encoding='utf-8')
-    voiceover_timeline(dest,captions)
+    voiceover_timeline(dest,captions,segments=segment_plan)
     final=dest/f'TOP5_DRAFT_REVIEW_ONLY_{width}x{height}.mp4'
     # The previous mux could generate a 30s video but only 17s of AAC audio
     # when the concat-demuxed silent WAV had unstable timestamps.
