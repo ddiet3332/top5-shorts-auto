@@ -280,7 +280,7 @@ class BasicTests(unittest.TestCase):
             data=target.read_text(encoding='utf-8')
             self.assertIn('면봉을 보여줬더니',data)
             self.assertIn('갑자기 점프!',data)
-            self.assertIn(r'\\pos(540,1248)',data)
+            self.assertIn(r'\pos(540,1248)',data)
             self.assertEqual(data.count('Dialogue:'),1+1+7*11+2)
             self.assertIn('0:00:04.45',data)
             with self.assertRaises(ValueError):
