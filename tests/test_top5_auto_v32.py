@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"src"))
-from top5_auto_v32 import CHALLENGER,add_challenger,challenger_row,apply_rank_one_story_timing
+from top5_auto_v32 import CHALLENGER,add_challenger,challenger_row,apply_rank_one_story_timing,add_sofa_challenger,SOFA_CHALLENGER
 from v12_sources import allowed_page
 from v28_fullscreen_builder import ASS_HEAD,W,H,FPS,SEGMENTS
 
@@ -49,6 +49,26 @@ class V32Tests(unittest.TestCase):
         self.assertLess(chosen[0]["cut_start"]+6,chosen[0]["duration_sec"])
         self.assertEqual(chosen[1]["cut_start"],3.0)
         self.assertEqual(sources[0]["cut_start"],3.99)
+
+    def test_sofa_candidate_replaces_existing_toy_without_rights_clearance(self):
+        self.assertTrue(allowed_page(SOFA_CHALLENGER))
+        items=[
+          {"title":"File:Cat in a Bag.webm","editorial_quality_heuristic":57},
+          {"title":"Pexels PX-40826295","editorial_quality_heuristic":59},
+          {"title":"File:Moomin1.webm","editorial_quality_heuristic":62},
+          {"title":"File:Katzensprung in Zeitlupe.webm","editorial_quality_heuristic":64},
+          {"title":"File:Salto - Cat Jump.webm","editorial_quality_heuristic":95}]
+        with TemporaryDirectory() as td,patch(
+            "top5_auto_v32.download_single_pexels",
+            return_value={"duration_sec":15.32}):
+            output,audit=add_sofa_challenger(
+                {"topic_id":"cat_surprises"},items,td)
+        self.assertTrue(audit["selected"])
+        self.assertFalse(audit["publication_approved"])
+        self.assertEqual(len(output),5)
+        self.assertEqual(output[2]["label"],"소파 속 매복")
+        self.assertAlmostEqual(output[2]["cut_start"],9.29)
+        self.assertFalse(output[2]["rights_verified"])
 
     def test_unrelated_topic_is_unchanged(self):
         items=[{"title":str(i)} for i in range(5)]
