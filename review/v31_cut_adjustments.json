@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "updated": "2026-11-16 KST",
+  "description": "Human-reviewed 40-frame timing adjustments; not model automatic copyright, humor or ranking approval.",
+  "offsets": {
+    "File:Katzensprung in Zeitlupe.webm": {
+      "start_shift_seconds": 1.4,
+      "basis": "V30.1 actual 8-frame rank2 contact: main jump develops in late half of 15-21s segment; V31 X-CLIP mismatch flag supports reviewing timing, not declaring label false.",
+      "type": "editorial_cut_only",
+      "publication_approved": false
+    }
+  }
+}
