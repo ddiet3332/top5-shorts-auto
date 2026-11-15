@@ -10,9 +10,9 @@ import argparse,json,subprocess,re
 from pathlib import Path
 
 ITEMS=[
- ("rank5","pexels","PX-5495527","mixed_01.webm","Pexels License"),
- ("rank4","pexels","PX-9208508","mixed_02.webm","Pexels License"),
- ("rank3","pexels","PX-7680667","mixed_03.webm","Pexels License"),
+ ("rank5","pexels","PX-5495527","mixed_01.mp4","Pexels License"),
+ ("rank4","pexels","PX-9208508","mixed_02.mp4","Pexels License"),
+ ("rank3","pexels","PX-7680667","mixed_03.mp4","Pexels License"),
  ("rank2","wikimedia","File:Cat Jumpscare.webm","mixed_04.webm","CC0 1.0"),
  ("rank1","wikimedia","File:Salto - Cat Jump.webm","mixed_05.webm","CC BY 3.0"),
 ]
