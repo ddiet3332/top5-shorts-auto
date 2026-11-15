@@ -89,6 +89,56 @@ def add_challenger(topic,items,output):
            "failure_type":type(e).__name__})
         return items,audit
 
+SOFA_CHALLENGER={
+    "id":"PX-34689563","provider":"pexels",
+    "title":"Playful Cat Under Sofa with Toy Ball",
+    "page_url":"https://www.pexels.com/video/playful-cat-under-sofa-with-toy-ball-34689563/",
+    "creator":"nilay ortanca",
+    "license_label":"Pexels License",
+    "license_url":"https://www.pexels.com/license/",
+}
+
+def add_sofa_challenger(topic,items,output):
+    """Original six-second candidate visually inspected in V34 contacts.
+
+    For this format the selected rank3 is only four seconds:
+    9.29-13.29 original shows hidden kitten -> reaches for pink toy.
+    Rights remain unverified; no Pexels footage used as original audio.
+    """
+    audit={"attempted":False,"selected":False,"publication_approved":False,
+           "source_rights_independently_verified":False}
+    if topic["topic_id"]!="cat_surprises" or not any(
+        row["title"]=="File:Moomin1.webm" for row in items):
+        audit["reason"]="No compatible original-to-replace"
+        return items,audit
+    audit["attempted"]=True
+    temp=Path(output)/"curated_pexels_sofa.mp4"
+    try:
+        if not allowed_page(SOFA_CHALLENGER):
+            raise ValueError("Unapproved original license page")
+        info=download_single_pexels(SOFA_CHALLENGER,temp,
+                                    max_bytes=125*1024*1024)
+        row=challenger_row(SOFA_CHALLENGER,temp,info)
+        if float(info["duration_sec"])<13.5:
+            raise ValueError("Audited action 9.29-13.29 not present")
+        row.update({"cut_start":9.29,"editorial_quality_heuristic":63.0,
+                    "label":"소파 속 매복",
+                    "caption":"숨어 있다가 장난감 급습!ㅋㅋ",
+                    "review_basis":"V34 actual 9.29-13.29 original source 24-frame QA",
+                    "storytelling_setup_action_payoff_in_rank3":True})
+        chosen=[x for x in items if x["title"]!="File:Moomin1.webm"]+[row]
+        chosen.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
+        audit.update({"selected":True,"replaced":"File:Moomin1.webm",
+           "added":SOFA_CHALLENGER["page_url"],"rank3_start":9.29,
+           "original_author_metadata":SOFA_CHALLENGER["creator"],
+           "Pexels_terms_not_YouTube_monetization":True})
+        return chosen,audit
+    except Exception as ex:
+        temp.unlink(missing_ok=True)
+        audit.update({"failure_type":type(ex).__name__,
+             "reason":"Candidate rejected; retain original 3rd"})
+        return items,audit
+
 def apply_rank_one_story_timing(items):
     """Based on V33 visual review of original Salto 0-10s.
 
@@ -137,6 +187,9 @@ def main():
     if len(candidates)<5: raise RuntimeError("insufficient rights-metadata sources")
     selected,attempts=select_sources(candidates,output)
     final,audit=add_challenger(topic,selected,output)
+    final,sofa_audit=add_sofa_challenger(topic,final,output)
+    (output/"V35_SOFA_CHALLENGER_QA.json").write_text(json.dumps(
+        sofa_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     final=apply_rank_one_story_timing(final)
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
