@@ -275,8 +275,8 @@ def apply_v37_story_and_door(topic,items,output):
             license_data=commons_download(src,p)
             from top5 import probe_duration
             duration=float(probe_duration(p))
-            if duration<21.40:
-                raise ValueError("V37 exact 15.35-21.35 story window unavailable")
+            if duration<22.05:
+                raise ValueError("V37 exact 15.9-21.9 story window unavailable")
             row={"title":src["title"],
                  "source_page":src["page_url"],
                  "author":license_data["author"],
@@ -284,11 +284,11 @@ def apply_v37_story_and_door(topic,items,output):
                  "license_url":license_data["license_url"],
                  "source_claim":"Creator self-identifies on Commons; independent ownership check pending",
                  "local_path":str(p),"duration_sec":duration,
-                 "cut_start":15.35,"motion_proxy":0,
+                 "cut_start":15.9,"motion_proxy":0,
                  "editorial_quality_heuristic":66.0,
                  "label":"앞발 문열기",
                  "caption":"진짜 문까지 열었다!",
-                 "review_basis":"V37 original 0-22s 0.5s frame audit confirms jump, handle, door opening at 20.5-21s",
+                 "review_basis":"V37 source at 15.9-21.9 shows jump, handle and visibly opening door with >1s ending",
                  "rights_verified":False,"publication_approved":False,
                  "provenance_independently_verified":False,
                  "source_audio_approved":False,
@@ -302,7 +302,7 @@ def apply_v37_story_and_door(topic,items,output):
         "File:Cat Jumpscare.webm":[[0.1,"태평하게 누워 있더니"],[1.7,"카메라로 갑자기 돌진!"]],
         "Pexels PX-40826295":[[0.1,"길가에서 멈춰 서더니"],[2.1,"아예 바닥을 뒹군다ㅋㅋ"]],
         "Pexels PX-34689563":[[0.1,"소파 아래가 수상한데?"],[1.8,"장난감 낚아채기 성공!"]],
-        "File:Cat opening door.webm":[[0.12,"문 앞에서 뭘 하려나?"],[2.45,"손잡이를 건드리더니"],[5.15,"진짜 열렸다!"]],
+        "File:Cat opening door.webm":[[0.12,"손잡이에 도전 중!"],[2.35,"앞발로 밀고 기다리니"],[4.62,"진짜 열렸다!"]],
         "Pexels PX-17536779":[[0.1,"상자 안을 지키는 고양이"],[3.1,"밖에서 앞발 대결ㅋㅋ"]],
         "File:Salto - Cat Jump.webm":[[0.12,"지붕 사이 거리 재는 중"],[2.4,"망설임 없이 도약!"]],
     }
