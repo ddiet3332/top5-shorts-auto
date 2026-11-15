@@ -45,6 +45,24 @@ def action_group(title):
             return group
     return "other"
 
+def has_feline_title_evidence(title):
+    """Conservative filename hint; never an actual visual verification."""
+    name=str(title).casefold()
+    return (bool(re.search(
+        r'(?<![a-z])(cats?|kittens?|kitties|kitty|felines?|gatos?|gatas?|'
+        r'katzen|katze|katz|neko|gatti|gatto)(?![a-z])',name))
+        or "猫" in name)
+
+
+def likely_cat_candidate(item):
+    """Cat filename OR membership in a cat-specific Commons category.
+
+    Matching a broad 'cat trick' text search alone is NOT animal evidence.
+    """
+    return (has_feline_title_evidence(item.get("title",""))
+            or bool(item.get("cat_category_evidence",False)))
+
+
 def sufficient_resolution(w,h,minimum_short_edge=480,minimum_long_edge=720):
     return (isinstance(w,int) and isinstance(h,int) and
             min(w,h)>=minimum_short_edge and max(w,h)>=minimum_long_edge)
@@ -80,6 +98,7 @@ def collect_sources(searches=SEARCHES,categories=CATEGORIES,max_pool=160):
     between search buckets preserves source diversity, not humor/rights claims.
     """
     batches=[]
+    cat_category_titles=set()
     failures=[]
     searched=[]
     for kind,names in (("query",searches),("category",categories)):
@@ -91,6 +110,8 @@ def collect_sources(searches=SEARCHES,categories=CATEGORIES,max_pool=160):
                 local_seen=set()
                 for cand in results:
                     key=cand["title"].casefold()
+                    if kind=="category":
+                        cat_category_titles.add(key)
                     if key not in local_seen:
                         batch.append(cand)
                         local_seen.add(key)
@@ -111,7 +132,13 @@ def collect_sources(searches=SEARCHES,categories=CATEGORIES,max_pool=160):
             candidate=batch[offsets[index]]
             offsets[index]+=1
             read_any=True
-            pooled.setdefault(candidate["title"].casefold(),candidate)
+            key=candidate["title"].casefold()
+            if key not in pooled:
+                entry=dict(candidate)
+                entry["cat_category_evidence"]=key in cat_category_titles
+                pooled[key]=entry
+            elif key in cat_category_titles:
+                pooled[key]["cat_category_evidence"]=True
             if len(pooled)>=max_pool:
                 break
         if not read_any:
@@ -149,11 +176,17 @@ def make_review(out,limit=10,byte_budget=115*1024*1024,max_file=30*1024*1024):
     frames_dir=out/"V17_FRAMES"
     frames_dir.mkdir(exist_ok=True)
     candidates,queries,errors=collect_sources()
+    raw_count=len(candidates)
+    irrelevant=[src for src in candidates if not likely_cat_candidate(src)]
+    candidates=[src for src in candidates if likely_cat_candidate(src)]
     used=archived_titles()
     report={"status":"NEEDS_MANUAL_REVIEW","automated_humor_rating":None,
             "license_review_complete":False,"approved_for_publication":False,
-            "queries":queries,"query_errors":errors,"raw_license_filtered_pool":len(candidates),
-            "previously_used_title_count":len(used),"rejected":[],"candidates":[]}
+            "queries":queries,"query_errors":errors,"raw_license_filtered_pool":raw_count,
+            "cat_relevance_pool":len(candidates),
+            "previously_used_title_count":len(used),
+            "rejected":[{"title":x["title"],"reason":"REJECT_NOT_CAT_RELEVANT"}
+                        for x in irrelevant],"candidates":[]}
     candidates.sort(key=lambda x:(editorial_priority(x),-int(x.get("size_bytes",0))),reverse=True)
     selected=0
     bytes_read=0
@@ -212,7 +245,7 @@ def make_review(out,limit=10,byte_budget=115*1024*1024,max_file=30*1024*1024):
                     output=preview_dir/f"V17_{selected+1:02d}_M{ordinal}.mp4"
                     still=frames_dir/f"V17_{selected+1:02d}_M{ordinal}.jpg"
                     render_preview(local,start,output)
-                    moment_photo(local,min(start+2.5,duration-0.15),still)
+                    moment_photo(local,min(start+2.5,duration-0.15),still,width=320,height=210)
                     entry["moments"].append({
                         "start_sec":start,"movement_score_not_funny_score":window["motion"],
                         "preview":str(output.relative_to(out)),
@@ -246,7 +279,9 @@ def make_review(out,limit=10,byte_budget=115*1024*1024,max_file=30*1024*1024):
     guide=[
         "# V17 행동 중심 검수 대기 목록","",
         f"기존 클립 제외 후 실제 영상 미리보기: **{selected}개**",
-        f"위키미디어 CC BY/CC0 1차 메타데이터 통과 원본: **{len(candidates)}개**",
+        f"위키미디어 CC BY/CC0 1차 메타데이터 통과 원본: **{raw_count}개**",
+        f"고양이 관련 파일명·분류 근거 후보: **{len(candidates)}개** (실제 고양이 등장 여부는 재생 검수)",
+        f"비고양이 관련성 차단: **{len(irrelevant)}개**",
         "목표는 '재미있는 5개'를 검증하는 것이지 숫자 5를 무조건 채우는 게 아닙니다.",
         "‘움직임 점수’는 컷과 카메라 움직임에도 반응하므로 재미·웃음·반전을 뜻하지 않습니다.",
         "외부 YouTube·TikTok 재게시 파일은 저작자 권리가 미확인되어 우선 제외했습니다.",
