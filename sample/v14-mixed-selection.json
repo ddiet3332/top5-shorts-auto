@@ -1,0 +1,56 @@
+[
+  {
+    "provider": "wikimedia",
+    "title": "File:Moomin1.webm",
+    "start_sec": 1.8,
+    "display_name": "면봉점프",
+    "reaction_sfx": "boing",
+    "reaction_offset": 2.7,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "Cat hops toward dangling cotton swab"
+  },
+  {
+    "provider": "pexels",
+    "id": "PX-6853319",
+    "start_sec": 0.1,
+    "display_name": "피아노냥",
+    "reaction_sfx": "pop",
+    "reaction_offset": 3.9,
+    "audio_approved": false,
+    "editorial_note": "Cat on keyboard then leaves, no sustained playing"
+  },
+  {
+    "provider": "wikimedia",
+    "title": "File:Cat Jumpscare.webm",
+    "start_sec": 5,
+    "display_name": "숨바꼭질",
+    "reaction_sfx": "swoop",
+    "reaction_offset": 1.8,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "Cat rolls toward lens and then retreats underneath furniture"
+  },
+  {
+    "provider": "wikimedia",
+    "title": "File:Katzensprung in Zeitlupe.webm",
+    "start_sec": 17.8,
+    "display_name": "연못점프",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 3.1,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "Full length visible jump over pond"
+  },
+  {
+    "provider": "wikimedia",
+    "title": "File:Salto - Cat Jump.webm",
+    "start_sec": 2.5,
+    "display_name": "공중비행",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 0.8,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "Cat leaps building-to-building"
+  }
+]
