@@ -99,6 +99,13 @@ class TestV17SourceCollection(unittest.TestCase):
         self.assertEqual(defaults[2], 55*1024*1024)
         self.assertGreaterEqual(defaults[1], 180*1024*1024)
 
+    def test_short_but_complete_cat_moments_remain_reviewable(self):
+        self.assertEqual(v17.audition_seconds(4.333), 4.13)
+        self.assertEqual(v17.audition_seconds(5.0), 4.8)
+        self.assertEqual(v17.audition_seconds(5.5), 5.0)
+        self.assertEqual(v17.audition_seconds(3.5), 0.0)
+        self.assertEqual(v17.audition_seconds(241.0), 0.0)
+
     def test_minimum_source_quality(self):
         self.assertFalse(v17.sufficient_resolution(320, 240))
         self.assertTrue(v17.sufficient_resolution(720, 480))
