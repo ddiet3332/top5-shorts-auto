@@ -1,0 +1,17 @@
+{
+  "version": "V28_FULLSCREEN",
+  "run_id": 43722338244,
+  "run_number": 15,
+  "render_result": "success",
+  "video_status": "RENDER_SUCCESS_REVIEW_ONLY",
+  "artifact_name": "TOP5-v28-fullscreen-15",
+  "artifact_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43722338244#artifacts",
+  "filename": "TOP5_V28_FULLSCREEN_SINGLE_LINE_REVIEW_1080x1920.mp4",
+  "source_count": 5,
+  "no_voiceover": true,
+  "no_tts": true,
+  "individual_original_source_rights_verified": false,
+  "youtube_monetization_approved": false,
+  "publication_approved": false,
+  "full_comedy_editorial_score": null
+}
