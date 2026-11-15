@@ -1,0 +1,41 @@
+# Candidate audition only. No public posting, no automated rights clearance.
+name: TOP5 V28.4 - curated action source audition
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v28_4_source_audition.yml'
+      - 'sample/v28_4_candidate_sources.json'
+permissions:
+  contents: read
+concurrency:
+  group: v28-4-audition-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum
+          python3 -m venv /tmp/audition_env
+          /tmp/audition_env/bin/pip install -q pillow numpy
+      - name: Audition 3 exact licensed-page candidate videos
+        run: |
+          /tmp/audition_env/bin/python src/v12_pexels_audition.py --catalog sample/v28_4_candidate_sources.json --output output/v28_4_candidates
+      - name: Export review-only visual candidates and rights status
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V28-4-candidate-audition-${{ github.run_number }}
+          path: |
+            output/v28_4_candidates/V12_PEXELS_PREVIEWS/
+            output/v28_4_candidates/V12_PEXELS_FRAMES/
+            output/v28_4_candidates/V12_PEXELS_AUDITION.json
+            output/v28_4_candidates/V12_PEXELS_AUDITION.md
+          if-no-files-found: warn
+          retention-days: 7
