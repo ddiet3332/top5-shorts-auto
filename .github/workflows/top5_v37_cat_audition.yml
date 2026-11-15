@@ -1,0 +1,37 @@
+name: TOP5 V37 - Alternate events preproduction audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v37_cat_audition.yml'
+      - 'src/v37_cat_audition.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v37-audition-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contact-sheets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install audio-video inspection tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python3 -m venv /tmp/v37
+          /tmp/v37/bin/pip install -q pillow
+      - name: Inspect original video candidates frame-by-frame
+        run: /tmp/v37/bin/python src/v37_cat_audition.py
+      - name: Retain audit and contact sheet evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V37-alternate-actions-${{ github.run_number }}
+          path: |
+            output/v37_audition/*_timeline_*.jpg
+            output/v37_audition/V37_AUDITION.json
+          retention-days: 7
+          if-no-files-found: warn
