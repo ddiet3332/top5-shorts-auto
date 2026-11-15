@@ -11,6 +11,8 @@ on:
       - 'tests/test_review_index.py'
       - 'src/qa_scorecard.py'
       - 'tests/test_qa_scorecard.py'
+      - 'src/v18_editorial_handoff.py'
+      - 'tests/test_v18_editorial_handoff.py'
   workflow_dispatch:
     inputs:
       mode:
@@ -19,6 +21,7 @@ on:
         type: choice
         options:
           - v17-discover
+          - v18-selected-draft
           - v16-draft
           - v16-candidates
           - v15-draft
@@ -74,6 +77,12 @@ jobs:
         run: |
           if [ "$MODE" = "v17-discover" ]; then
             python3 src/v17_discovery.py --output output --limit 10
+          elif [ "$MODE" = "v18-selected-draft" ]; then
+            # Never infer the five winners: the explicit editorial review file must exist.
+            test -f review/v18_decisions.json || { echo "V18 BLOCKED: real footage editorial review not completed"; exit 2; }
+            REVIEW_RUN_ID=$(python3 -c 'import json; print(int(json.load(open("review/v18_decisions.json"))["source_run_id"]))')
+            test -f "review/runs/${REVIEW_RUN_ID}.json" || { echo "V18 BLOCKED: reviewed source index is missing"; exit 2; }
+            python3 src/v18_editorial_handoff.py --index "review/runs/${REVIEW_RUN_ID}.json" --decisions review/v18_decisions.json --render --output output --title "$TITLE"
           elif [ "$MODE" = "v16-draft" ]; then
             python3 src/v12_mixed_draft.py --output output --selection sample/v16-mixed-selection.json --script sample/v16-script.json --title '고양이 돌발행동 TOP5' --v16-pacing
           elif [ "$MODE" = "v16-candidates" ]; then
@@ -194,6 +203,9 @@ jobs:
             output/V17_QA_SUMMARY.md
             output/TOP5_100_POINT_SCORECARD.json
             output/TOP5_100_POINT_SCORECARD.md
+            output/V18_EDITORIAL_SELECTION.json
+            output/V18_EDITORIAL_SCRIPT.json
+            output/V18_EDITORIAL_EVIDENCE.json
             output/V17_PREVIEWS/V17_*.mp4
             output/V17_FRAMES/V17_*_M*.jpg
           if-no-files-found: warn
@@ -203,7 +215,7 @@ jobs:
   # Published index contains metadata and run IDs, NEVER preview MP4 bytes.
   publish_review_index:
     needs: build
-    if: always()
+    if: ${{ always() && (github.event_name == 'push' || inputs.mode == 'v17-discover') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
