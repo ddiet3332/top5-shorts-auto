@@ -1,0 +1,90 @@
+# No downloaded copyrighted media. Licensing quote request requires user action.
+name: TOP5 V26 - signed rights and actual comedy source triage
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v26.yml'
+      - 'sample/v26-licensed-ugc-candidates.json'
+      - 'src/v26_rights_first.py'
+      - 'src/publish_v26_index.py'
+      - 'tests/test_v26_rights_first.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: top5-v26-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run complete preexisting unit tests and new rights regressions
+        run: python3 -m unittest discover -s tests -v
+      - name: Audit six official provider source pages without downloading copyrighted videos
+        run: |
+          python3 src/v26_rights_first.py \
+            --catalog sample/v26-licensed-ugc-candidates.json \
+            --output output
+      - name: Ensure V25 82-point benchmark is retained, no clip falsely approved
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("output/V26_RIGHTS_AND_HUMOR_TRIAGE.json").read_text(encoding="utf-8"))
+          assert r["candidate_count"] == 6
+          assert r["baseline_version"] == "V25" and r["baseline_score"]==82
+          assert r["rights_ready_for_full_visual_review"] == 0
+          assert r["final_V26_video_100_point_score"] is None
+          assert not r["publication_approved"] and not r["new_source_video_rendered"]
+          assert all(not row["approved_for_publication"] for row in r["candidates"])
+          print("V26 source marketing pages cannot be silently promoted to editing rights")
+          PY
+      - name: Save phone-friendly traceable source and rights reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-v26-rights-${{ github.run_number }}
+          path: |
+            output/V26_RIGHTS_AND_HUMOR_TRIAGE.json
+            output/V26_RIGHTS_AND_HUMOR_TRIAGE.md
+          if-no-files-found: warn
+          retention-days: 14
+  index:
+    needs: verify
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve same-run rights metadata only
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: TOP5-v26-rights-${{ github.run_number }}
+          path: output
+      - name: Index V26 run results, keeping paid preview media out of public repo
+        env:
+          V26_BUILD_RESULT: ${{ needs.verify.result }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git fetch --quiet origin main
+            git checkout --quiet -B v26-index origin/main
+            python3 src/publish_v26_index.py \
+              --audit output/V26_RIGHTS_AND_HUMOR_TRIAGE.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --run-id "$GITHUB_RUN_ID" \
+              --run-number "$GITHUB_RUN_NUMBER" \
+              --build-result "$V26_BUILD_RESULT" --review-dir review
+            git add review/v26_latest.json review/v26_runs/
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "index: V26 rights-first source triage $GITHUB_RUN_NUMBER [$GITHUB_RUN_ID]"
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          echo "V26 index push failed" >&2
+          exit 1
