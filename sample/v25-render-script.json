@@ -1,0 +1,42 @@
+{
+  "captions": {
+    "hook": "저 틈을 진짜 뛰어넘는다고?",
+    "rank5": "5위 · 상자 잠입",
+    "rank4": "4위 · 장난감 점프",
+    "rank3": "3위 · 의자 착지",
+    "rank2": "2위 · 카메라 돌진",
+    "rank1": "1위 · 건물 점프",
+    "outro": "당신이라면 몇 위를 뽑겠어요?"
+  },
+  "phases": {
+    "rank5": [
+      "5위 · 저 상자에 뭐가 있길래?",
+      "일단 들어가고 생각하자!"
+    ],
+    "rank4": [
+      "4위 · 장난감에 시선 고정",
+      "점프 한 번! 다시 대기!"
+    ],
+    "rank3": [
+      "3위 · 저 의자까지 닿을까?",
+      "올라가는 건 순식간!"
+    ],
+    "rank2": [
+      "2위 · 점점 가까워지는데…",
+      "잠깐! 렌즈 바로 앞까지!"
+    ],
+    "rank1": [
+      "1위 · 건물 사이를 건넌다고?",
+      "도약 성공! 착지까지 완벽!"
+    ]
+  },
+  "review_only": true,
+  "publication_approved": false,
+  "no_narration": true,
+  "no_tts": true,
+  "allow_original_sound": false,
+  "sfx_synthesized_only": true,
+  "rights_gate": "Separate provider and third-party rights audit required before publication",
+  "frame_qa_requirements": "Real action must match setup/payoff and avoid implying false outcomes. Rebuilt from source originals, not written over existing hard subtitles.",
+  "compare_version": "V23 81/100"
+}
