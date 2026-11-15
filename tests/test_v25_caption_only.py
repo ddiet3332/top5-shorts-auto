@@ -49,9 +49,9 @@ class V25CaptionOnly(unittest.TestCase):
             self.assertIn("점프 한 번! 다시 대기!",content)
             self.assertIn("저 틈, 그대로 날아간다!",content)
             # For rank5 2.0-6.0, 2.40 must be the payoff start.
-            self.assertRegex(content,r"0:00:02\\.40[^\\n]*일단 들어가고 생각하자!")
+            self.assertRegex(content,r"0:00:02[.]40.*일단 들어가고 생각하자!")
             # For rank4 6.0-11.0, 7.10 must be its payoff.
-            self.assertRegex(content,r"0:00:07\\.10[^\\n]*점프 한 번! 다시 대기!")
+            self.assertRegex(content,r"0:00:07[.]10.*점프 한 번! 다시 대기!")
 
     def test_source_audio_absence_does_not_imply_reuse_permission(self):
         with TemporaryDirectory() as td:
