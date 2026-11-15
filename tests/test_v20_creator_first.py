@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
-from v20_creator_first import valid_metadata, audit
+from v20_creator_first import valid_metadata, audit, own_work_claim_from_wikitext
 
 
 def fixture():
@@ -45,6 +45,25 @@ class TestCreatorFirst(unittest.TestCase):
         accepted,rejected=valid_metadata(src,req)
         self.assertEqual(len(accepted),1)
         self.assertEqual(rejected[0]["reason"],"NO_CURRENT_OWN_WORK_METADATA")
+
+    def test_completely_missing_api_source_can_use_current_own_wikitext(self):
+        req,src=fixture()
+        src[0]["source_claim"]=""
+        src[0]["file_page_wikitext"]="{{Information\n|description=cat runs\n|source={{own}}\n|author=Panini!\n}}"
+        accepted,rejected=valid_metadata(src,req)
+        self.assertEqual(len(accepted),2)
+        self.assertEqual(rejected,[])
+        self.assertIn("current Commons file-page",accepted[0]["source_claim"])
+
+    def test_wikitext_external_repost_never_counts_as_own_work(self):
+        req,src=fixture()
+        src[0]["source_claim"]=""
+        src[0]["file_page_wikitext"]="{{Information\n|source=https://youtube.com/watch?v=abc {{Own}}\n}}"
+        accepted,rejected=valid_metadata(src,req)
+        self.assertEqual(len(accepted),1)
+        self.assertEqual(rejected[0]["reason"],"NO_CURRENT_OWN_WORK_METADATA")
+        self.assertIsNone(own_work_claim_from_wikitext(
+            "|source=https://vimeo.com/example"))
 
     def test_author_mismatch_or_license_change_blocked(self):
         req,src=fixture()
