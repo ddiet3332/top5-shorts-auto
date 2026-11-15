@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "version": "V21.2",
+  "file": "TOP5_V21_2_REVIEW_ONLY_1080x1920.mp4",
+  "scoring_method": "Human editorial assessment of actual 30s video frames and sound technical QA",
+  "rubric": [
+    {
+      "key": "hook_first_2s",
+      "maximum": 20,
+      "score": 19,
+      "reason": "Roof-to-roof jump visible from the first second"
+    },
+    {
+      "key": "humor_payoff",
+      "maximum": 25,
+      "score": 14,
+      "reason": "Ranks 1 and 2 deliver; ranks 4 and 5 lack a distinctive comedic payoff"
+    },
+    {
+      "key": "ranking_convincing",
+      "maximum": 15,
+      "score": 11,
+      "reason": "Five unique sources, but weaker differentiation in lower ranks"
+    },
+    {
+      "key": "pacing_transitions",
+      "maximum": 15,
+      "score": 12,
+      "reason": "Precisely 30s, 17.5-18.1s jump-scare synchronized, repeated rank1 in outro"
+    },
+    {
+      "key": "creative_captions",
+      "maximum": 10,
+      "score": 6,
+      "reason": "Setup/payoff captions are factual but lack original commentary"
+    },
+    {
+      "key": "sound_immersion",
+      "maximum": 10,
+      "score": 7,
+      "reason": "Original synth sound and -21.1 LUFS audio master, no licensed third-party audio"
+    },
+    {
+      "key": "rights_monetization_readiness",
+      "maximum": 5,
+      "score": 2,
+      "reason": "Provider license metadata only, Vimeo origin and third-party rights still unverified"
+    }
+  ],
+  "total_score": 71,
+  "production_threshold": 75,
+  "publishing_candidate_threshold": 85,
+  "complete_edited_video_reviewed": true,
+  "rights_approved": false,
+  "youtube_monetization_approved": false,
+  "publication_approved": false,
+  "note": "Content rating is human subjective editorial QA, not auto scoring; no publishing without original/third-party rights and policy clearance."
+}
