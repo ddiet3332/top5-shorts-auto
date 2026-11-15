@@ -203,16 +203,12 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=45*1024*1024):
             report["rejected"].append({"title":name,"reason":"EXTERNAL_REUPLOAD_UNVERIFIED"})
             continue
         if int(src.get("size_bytes",0))>max_file:
-            report["rejected"].append({"title":name,"reason":"DOWNLOAD_OVER_30MB"})
+            report["rejected"].append({"title":name,"reason":"DOWNLOAD_OVER_45MIB"})
             continue
+        # Include up to three clips even for generic filenames.
+        # A missing action word is not proof a video lacks a good moment.
         if group_used.get(group,0)>=3:
             report["rejected"].append({"title":name,"reason":"DUPLICATE_ACTION_CATEGORY"})
-            continue
-        # A generic filename can still contain a strong visible payoff.
-        # Review at most three such clips, but do not discard them solely
-        # because five other (potentially boring) previews were collected.
-        if group=="other" and group_used.get("other",0)>=3:
-            report["rejected"].append({"title":name,"reason":"GENERAL_TITLE_REVIEW_LIMIT"})
             continue
         if bytes_read+int(src.get("size_bytes",0))>byte_budget:
             report["rejected"].append({"title":name,"reason":"SESSION_BYTES_CAP"})
