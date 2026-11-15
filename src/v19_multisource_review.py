@@ -108,6 +108,7 @@ def make_board(items, audition_rows, out, *, audition_enabled):
                                          if detail else "PAGE_LINK_ONLY")
         prepared["preview_windows"]=(detail.get("windows",[]) if detail else [])
         prepared["video_preview_failure_type"]=(detail.get("failure_type") if detail else None)
+        prepared["video_preview_failure_code"]=(detail.get("failure_code") if detail else None)
         prepared["actual_video_watched"]=False  # Full human visual QA pending
         prepared["publication_approved"]=False
         rows.append(prepared)
@@ -155,6 +156,7 @@ def make_board(items, audition_rows, out, *, audition_enabled):
                   f"- URL: {row['page_url']}",
                   f"- 라이선스 확인: {row['license_label']} / {row['license_checked_on']}",
                   f"- 원본 재생 검수: 미완료, 자동 미리보기 상태: {status}",
+                  f"- 다운로드 제한·실패 코드: {row.get('video_preview_failure_code') or '해당 없음'}",
                   f"- 목적: {row['review_goal']}", ""]
         es=lambda t:html.escape(str(t),quote=True)
         previews=", ".join(w.get("preview_file","") for w in row["preview_windows"])
