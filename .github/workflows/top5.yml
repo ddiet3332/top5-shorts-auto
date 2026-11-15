@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V14 reorder-and-payoff commentary QA - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V14 corrected two-phase caption regression - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
