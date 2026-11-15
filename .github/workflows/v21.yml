@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/v21.yml'
       - 'src/v21_qa.py'
+      - 'src/v21_audio_remaster.py'
       - 'src/publish_v21_index.py'
       - 'tests/test_v21_qa.py'
       - 'sample/v21-sources.json'
@@ -42,6 +43,20 @@ jobs:
             output/V21_RANK2_UNCUT_SOURCE_QA.mp4
       - name: Decode every video frame and audio sample and verify 5 sources
         run: python3 src/v21_qa.py --output output --selection sample/v21-mixed-selection.json
+      - name: Synthesize original comedic sound and master V21.2 audio loudness
+        run: |
+          python3 -m venv /tmp/v21_audio_env
+          /tmp/v21_audio_env/bin/pip install --quiet numpy
+          /tmp/v21_audio_env/bin/python src/v21_audio_remaster.py \
+            --input output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4 \
+            --output output/TOP5_V21_2_REVIEW_ONLY_1080x1920.mp4 \
+            --scratch output/v21_audio_temp
+      - name: Validate improved full 30s A/V remaster source and ranking
+        run: |
+          python3 src/v21_qa.py \
+            --output output \
+            --selection sample/v21-mixed-selection.json \
+            --video output/TOP5_V21_2_REVIEW_ONLY_1080x1920.mp4
       - name: Export fixed 100-point QA rubric (actual grade requires review)
         if: always()
         run: python3 src/qa_scorecard.py --output output --run "$GITHUB_RUN_NUMBER" --stage final_review_pending
@@ -52,6 +67,7 @@ jobs:
           name: TOP5-v21-review-${{ github.run_number }}
           path: |
             output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
+            output/TOP5_V21_2_REVIEW_ONLY_1080x1920.mp4
             output/V21_TECHNICAL_QA.json
             output/V21_TECHNICAL_QA.md
             output/V12_MIXED_RIGHTS_AUDIT.json
