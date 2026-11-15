@@ -1,0 +1,38 @@
+name: TOP5 V32 - audition stronger original animal video actions
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v32_challenger_audition.yml'
+      - 'src/v32_challenger_audition.py'
+permissions:
+  contents: read
+concurrency:
+  group: top5-v32-challenger-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  review-actions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup video library without paid APIs
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum
+          python3 -m venv /tmp/v32
+          /tmp/v32/bin/pip install -q pillow numpy
+      - name: Audition official Pexels and license-gated Wikimedia candidate
+        run: /tmp/v32/bin/python src/v32_challenger_audition.py
+      - name: Upload muted 6s source previews and six-frame rows
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V32-CHALLENGER-AUDITION-${{ github.run_number }}
+          path: |
+            output/v32_challengers/*_contact.jpg
+            output/v32_challengers/*_window_*.mp4
+            output/v32_challengers/V32_CHALLENGER_QA.json
+          retention-days: 7
+          if-no-files-found: warn
