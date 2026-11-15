@@ -126,6 +126,11 @@ def recommend_topics(topics, forced=None):
     return next(t for t in topics if t["topic_id"]==chosen_id),catalog[chosen_id],recommendations
 
 def select_sources(candidates,output,limit=11):
+    # Reuse prior actual MP4 scene inspection where available. Untested
+    # originals retain lower-confidence metadata/motion proxy selection.
+    evidence_file=Path("review/v29_checked_actions.json")
+    checked=(json.loads(evidence_file.read_text(encoding="utf-8"))
+             .get("reviewed",{}) if evidence_file.exists() else {})
     sources=output/"source_assets"
     sources.mkdir(parents=True,exist_ok=True)
     eligible=[]
@@ -147,10 +152,15 @@ def select_sources(candidates,output,limit=11):
             start=max(0,min(float(cut),dur-6.05))
             if motion < 0.1:
                 raise ValueError("Near-static source in motion screening")
+            review=checked.get(title,{})
             eligible.append({**cand,
                 "local_path":str(target),"duration_sec":round(dur,2),
                 "cut_start":round(start,2),"motion_proxy":round(float(motion),3),
-                "label":story_label(title),
+                "label":review.get("label",story_label(title)),
+                "editorial_quality_heuristic":review.get("story_strength",
+                        round(float(motion)+cand["title_score"]*.15,2)),
+                "caption":review.get("reaction"),
+                "review_basis":"sampled previous MP4 frames" if review else "metadata and motion proxy only",
                 "rights_verified":False,"publication_approved":False,
                 "comic_action_verified":False})
         except Exception as e:
@@ -166,7 +176,7 @@ def select_sources(candidates,output,limit=11):
     # Distinctness constraint: not more than two identical label categories.
     used=[]
     label_counts={}
-    for row in sorted(eligible,key=lambda x:(x["motion_proxy"]+x["title_score"]*0.15),reverse=True):
+    for row in sorted(eligible,key=lambda x:x["editorial_quality_heuristic"],reverse=True):
         if label_counts.get(row["label"],0)>=2:
             continue
         used.append(row)
@@ -177,7 +187,7 @@ def select_sources(candidates,output,limit=11):
         used=eligible[:5]
     # Ordered from 5th to 1st by technical/editing heuristic, not an
     # objective ranking of how funny real-world events are.
-    used.sort(key=lambda x:(x["motion_proxy"]+x["title_score"]*.15,x["title"]))
+    used.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
     return used,attempts
 
 def build_dynamic_subtitles(path,topic,items):
@@ -198,7 +208,8 @@ def build_dynamic_subtitles(path,topic,items):
                 if rank==active:
                     subtitle_lines.append(cue(start,end,"RankName",
                               rank_titles[rank],35,y+61))
-            reaction=REACTIONS[label]
+            rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
+            reaction=(items[rank_index[label]].get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
             time=start + (0.0 if label=="hook" else
                  min(1.1,sec*.22))
             # Original V28.3 x/y, color, font, and align remain unchanged.
@@ -254,7 +265,8 @@ def save_license_and_status(topic,items,recommendations,attempts,output):
         ])
         evidence.append({k:row.get(k) for k in
             ("title","source_page","author","license","license_url",
-             "cut_start","duration_sec","motion_proxy","label")})
+             "cut_start","duration_sec","motion_proxy","label","editorial_quality_heuristic",
+             "review_basis")})
     (output/"SOURCE_CREDITS_REVIEW.md").write_text("\n".join(credits),encoding="utf-8")
     (output/"TOPIC_RECOMMENDATIONS.json").write_text(json.dumps(
         {"chosen_topic":topic["topic_id"],"rankings":recommendations,
