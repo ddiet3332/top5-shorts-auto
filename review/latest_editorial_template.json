@@ -1,9 +1,130 @@
 {
-  "source_run_id": 43670915328,
+  "source_run_id": 43670928899,
   "review_status": "AWAITING_VIDEO_QA",
   "hook_caption": "",
   "outro_caption": "",
-  "candidates": [],
+  "candidates": [
+    {
+      "title": "File:Cat jumping backwards.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Cat_jumping_backwards.webm",
+      "moments": [
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 6.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Cat playing in Taiwan.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Cat_playing_in_Taiwan.webm",
+      "moments": [
+        {
+          "start_sec": 20.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 60.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Felis silvestris catus (Monarca).ogv",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Felis_silvestris_catus_(Monarca).ogv",
+      "moments": [
+        {
+          "start_sec": 6.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:Cat behaviour - self-grooming.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Cat_behaviour_-_self-grooming.webm",
+      "moments": [
+        {
+          "start_sec": 56.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 0.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    },
+    {
+      "title": "File:2022-10-18 LJUBLJANA Doma CARNIVORA Felis catus DOMAČA MAČKA 2.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:2022-10-18_LJUBLJANA_Doma_CARNIVORA_Felis_catus_DOMA%C4%8CA_MA%C4%8CKA_2.webm",
+      "moments": [
+        {
+          "start_sec": 18.0,
+          "preview_duration_sec": 5.0
+        },
+        {
+          "start_sec": 24.0,
+          "preview_duration_sec": 5.0
+        }
+      ],
+      "editorial_selected_rank": null,
+      "reviewed_real_preview": false,
+      "visible_behavior": "",
+      "why_funny_or_surprising": "",
+      "rank_display_name": "",
+      "caption_setup": "",
+      "caption_payoff": "",
+      "chosen_start_sec": null,
+      "rights_review_completed": false,
+      "publication_approved": false
+    }
+  ],
   "publication_approved": false,
   "instructions": "Watch the actual MP4 preview from the referenced Actions run. Only after five different clips show a clear, distinct payoff may you mark ranks 5-1. Rights and YouTube monetization remain separate gates."
 }
