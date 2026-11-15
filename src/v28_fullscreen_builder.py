@@ -43,6 +43,8 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
 Style: Title,NanumSquare,72,&H0000D9FF,&H00FFFFFF,&H00201B15,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,10,10,10,1
+Style: Upper,NanumSquare,52,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,12,12,12,1
+Style: SmallRank,NanumSquare,62,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,12,12,12,1
 Style: Rank,NanumSquare,50,&H00FFFFFF,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,10,10,10,1
 Style: Active,NanumSquare,55,&H0000B8FF,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,7,10,10,10,1
 Style: RankName,NanumGothic,22,&H00F5F5F5,&H00F5F5F5,&H00090909,&H00000000,-1,0,0,0,100,100,0,0,1,3,1,7,10,10,10,1
@@ -69,6 +71,8 @@ def build_ass(path):
     cues=[]
     # One episode title, not a made-up channel name.
     cues.append(cue(0,2,"Title","고양이 돌발 행동 TOP5",540,162,8))
+    cues.append(cue(2,27,"Upper","고양이 돌발",37,205,7))
+    cues.append(cue(2,27,"SmallRank","TOP5",37,270,7))
     # left ranking column: the current rank alone gets gold; no redundant explanations.
     position={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
     start=0.0
