@@ -27,13 +27,13 @@
     },
     {
       "start_sec": 2,
-      "end_sec": 3.1,
+      "end_sec": 2.4,
       "segment": "rank5_setup",
       "caption": "5위 · 저 상자에 뭐가 있길래?",
       "evidence": "Cat approaches the box"
     },
     {
-      "start_sec": 3.1,
+      "start_sec": 2.4,
       "end_sec": 6,
       "segment": "rank5_payoff",
       "caption": "일단 들어가고 생각하자!",
@@ -41,13 +41,13 @@
     },
     {
       "start_sec": 6,
-      "end_sec": 7.15,
+      "end_sec": 7.1,
       "segment": "rank4_setup",
       "caption": "4위 · 장난감에 시선 고정",
       "evidence": "Cat watches the object"
     },
     {
-      "start_sec": 7.15,
+      "start_sec": 7.1,
       "end_sec": 11,
       "segment": "rank4_payoff",
       "caption": "점프 한 번! 다시 대기!",
@@ -83,16 +83,16 @@
     },
     {
       "start_sec": 21,
-      "end_sec": 23.3,
+      "end_sec": 23.2,
       "segment": "rank1_setup",
       "caption": "1위 · 건물 사이를 건넌다고?",
       "evidence": "Building gap visible; no unsupported measured width"
     },
     {
-      "start_sec": 23.3,
+      "start_sec": 23.2,
       "end_sec": 27,
       "segment": "rank1_payoff",
-      "caption": "도약 성공! 착지까지 완벽!",
+      "caption": "저 틈, 그대로 날아간다!",
       "evidence": "Visible jump and landing, avoid claiming safety beyond scene"
     },
     {
