@@ -70,9 +70,11 @@ def cue(start,end,style,text,x,y,align=7,layer=5):
 def build_ass(path):
     cues=[]
     # One episode title, not a made-up channel name.
-    cues.append(cue(0,2,"Title","고양이 돌발 행동 TOP5",540,162,8))
-    cues.append(cue(2,27,"Upper","고양이 돌발",37,205,7))
-    cues.append(cue(2,27,"SmallRank","TOP5",37,270,7))
+    # V28.2: stable position and size for the entire ranked sequence.
+    # A hook-sized centered heading moving to the upper-left at second 2
+    # distracted viewers; keep one consistent unobtrusive upper-left lockup.
+    cues.append(cue(0,27,"Upper","고양이 돌발",37,205,7))
+    cues.append(cue(0,27,"SmallRank","TOP5",37,270,7))
     # left ranking column: the current rank alone gets gold; no redundant explanations.
     position={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
     start=0.0
