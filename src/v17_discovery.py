@@ -35,7 +35,9 @@ CUE_WORDS={
     "object":("box","bag","door","drawer","shelf","keyboard","piano","opening"),
     "chase":("chase","mouse","laser","catch","run","attack","follow"),
     "trick":("trick","training","climb","scramble","skate","acrobat"),
-    "play":("playing","play","kitten","puppy","toy","game","fight")
+    "play":("playing","play","kitten","puppy","toy","game","fight"),
+    "reaction":("discovers","surprised","surprise","spied","reacts","reaction",
+                "unexpected","scared","afraid","startled","caught","curious")
 }
 # No semantic claim: 'jump' in metadata does not prove any jump is visible.
 def action_group(title):
@@ -77,7 +79,7 @@ def editorial_priority(item):
     # Only a scheduling heuristic. Never infer comedic value or rights.
     title=item.get("title","").casefold()
     group=action_group(title)
-    base={"leap":6,"object":5,"chase":5,"trick":4,"play":3,"other":0}[group]
+    base={"leap":6,"object":5,"chase":5,"reaction":5,"trick":4,"play":3,"other":1}[group]
     if re.search(r'(cat|kitten|feline|katz|gato)',title):
         base+=1
     if re.search(r'(dog|puppy|goat|fox)',title):
@@ -168,7 +170,7 @@ def render_preview(path,start,outfile,seconds=5.0):
         "-crf","30","-movflags","+faststart",str(outfile)],
         check=True,timeout=100,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
 
-def make_review(out,limit=10,byte_budget=115*1024*1024,max_file=30*1024*1024):
+def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=45*1024*1024):
     out=Path(out)
     out.mkdir(parents=True,exist_ok=True)
     preview_dir=out/"V17_PREVIEWS"
@@ -206,8 +208,11 @@ def make_review(out,limit=10,byte_budget=115*1024*1024,max_file=30*1024*1024):
         if group_used.get(group,0)>=3:
             report["rejected"].append({"title":name,"reason":"DUPLICATE_ACTION_CATEGORY"})
             continue
-        if group=="other" and selected>=max(3,limit//2):
-            report["rejected"].append({"title":name,"reason":"NO_EXPLICIT_ACTION_IN_TITLE"})
+        # A generic filename can still contain a strong visible payoff.
+        # Review at most three such clips, but do not discard them solely
+        # because five other (potentially boring) previews were collected.
+        if group=="other" and group_used.get("other",0)>=3:
+            report["rejected"].append({"title":name,"reason":"GENERAL_TITLE_REVIEW_LIMIT"})
             continue
         if bytes_read+int(src.get("size_bytes",0))>byte_budget:
             report["rejected"].append({"title":name,"reason":"SESSION_BYTES_CAP"})
@@ -285,7 +290,7 @@ def make_review(out,limit=10,byte_budget=115*1024*1024,max_file=30*1024*1024):
         "목표는 '재미있는 5개'를 검증하는 것이지 숫자 5를 무조건 채우는 게 아닙니다.",
         "‘움직임 점수’는 컷과 카메라 움직임에도 반응하므로 재미·웃음·반전을 뜻하지 않습니다.",
         "외부 YouTube·TikTok 재게시 파일은 저작자 권리가 미확인되어 우선 제외했습니다.",
-        "최소 해상도 720×480 수준 이상, 클립 길이 5.4초 이상, 원본 30MB 이하.",
+        "최소 해상도 720×480 수준 이상, 클립 길이 5.4초 이상, 원본 45MiB 이하.",
         "CC BY / CC0 메타데이터만 확인하며, 제3자 음원·초상·상표는 별도로 검토해야 합니다.",
         "실제 점프·사고·반전이 없으면 다음 쇼츠 장면으로 채택하면 안 됩니다.",
         ""
