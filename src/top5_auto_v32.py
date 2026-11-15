@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse,json,shutil
 from pathlib import Path
 from v12_sources import allowed_page
+from top5 import fetch_json, extract_candidates, download_video
 from v12_pexels_audition import download_single_pexels
 from top5_auto_v30 import (choose_topic,select_sources,write_gates)
 from top5_auto_v29 import (save_license_and_status,assemble_video,technical_qa)
@@ -139,6 +140,114 @@ def add_sofa_challenger(topic,items,output):
              "reason":"Candidate rejected; retain original 3rd"})
         return items,audit
 
+
+# V36 manually inspected source windows. Editorial evidence is limited to
+# real source contact sheets; no source-rights or YouTube approval is implied.
+V36_JUMPSCARE_TITLE="File:Cat Jumpscare.webm"
+V36_PAIR_SOURCE={
+    "id":"PX-17536779", "provider":"pexels",
+    "title":"Playful Kitten Interacts with Cat in Cardboard Box",
+    "page_url":"https://www.pexels.com/video/cat-fight-17536779/",
+    "creator":"aslı aydoğdu", "license_label":"Pexels License",
+    "license_url":"https://www.pexels.com/license/"
+}
+
+def add_v36_action_clips(topic,items,output):
+    """Try a real CC0 rush and an original vertical paw-play interaction.
+
+    Exact names and source windows are fixed from original 0.5s contact sheets.
+    Never claim the action is funny, legally cleared, or revenue-safe solely
+    because these frame sheets show motion.
+    """
+    audit={"version":"V36","publication_approved":False,
+           "rights_independently_verified":False,
+           "youtube_reused_content_approved":False,
+           "jumpscare_added":False,"pair_added":False,
+           "attempts":[]}
+    if topic["topic_id"]!="cat_surprises":
+        audit["reason"]="New clips were not auditioned for this topic"
+        return items,audit
+    rows=[dict(t) for t in items]
+    if any(r["title"]=="File:Cat in a Bag.webm" for r in rows):
+        path=Path(output)/"v36_cat_jumpscare.webm"
+        try:
+            data=fetch_json({
+                "action":"query","format":"json","formatversion":"2",
+                "titles":V36_JUMPSCARE_TITLE,
+                "prop":"imageinfo","iiprop":"url|size|mime|extmetadata"})
+            matches=[c for c in extract_candidates(data)
+                     if c["title"]==V36_JUMPSCARE_TITLE]
+            if len(matches)!=1 or matches[0]["license"]!="CC0":
+                raise ValueError("CC0 provider metadata missing or ambiguous")
+            original=matches[0]
+            download_video(original,path)
+            from top5 import probe_duration
+            duration=float(probe_duration(path))
+            if duration<8.2:
+                raise ValueError("Audited rush event 4.0-8.0 unavailable")
+            replacement={
+                "title":V36_JUMPSCARE_TITLE,
+                "source_page":original["source_page"],
+                "author":original["author"],
+                "license":original["license"],
+                "license_url":original["license_url"],
+                "source_claim":original["source_claim"],
+                "local_path":str(path),"duration_sec":duration,
+                "cut_start":4.0, "motion_proxy":0,
+                "editorial_quality_heuristic":58.0,
+                "review_basis":"V36 original 0-10s 0.5s source frames; 4-8s action",
+                "label":"기습 카메라 돌진",
+                "caption":"굴러가다 갑자기 돌진!ㅋㅋ",
+                "rights_verified":False,"publication_approved":False,
+                "provenance_independently_verified":False,
+                "source_audio_approved":False}
+            rows=[replacement if z["title"]=="File:Cat in a Bag.webm" else z
+                  for z in rows]
+            audit["jumpscare_added"]=True
+            audit["attempts"].append({
+                "replaced":"File:Cat in a Bag.webm","added":V36_JUMPSCARE_TITLE,
+                "start":4.0,"duration":4.0,"candidate_evidence":"V36 contact sheet",
+                "license_metadata":"CC0; independent ownership not proven"})
+        except Exception as ex:
+            path.unlink(missing_ok=True)
+            audit["attempts"].append({
+                "added":V36_JUMPSCARE_TITLE,"failed_type":type(ex).__name__,
+                "selected":False})
+    if any(r["title"]=="File:Katzensprung in Zeitlupe.webm" for r in rows):
+        path=Path(output)/"v36_pexels_two_cats.mp4"
+        try:
+            if not allowed_page(V36_PAIR_SOURCE):
+                raise ValueError("Pexels individual source validation failed")
+            info=download_single_pexels(V36_PAIR_SOURCE,path,
+                                         max_bytes=125*1024*1024)
+            if float(info["duration_sec"])<38.0:
+                raise ValueError("Audited interaction 31.4-37.4 absent")
+            replacement=challenger_row(V36_PAIR_SOURCE,path,info)
+            replacement.update({
+                "cut_start":31.4,"editorial_quality_heuristic":64.0,
+                "label":"상자 앞발 대결",
+                "caption":"상자 수비수, 앞발로 딱!ㅋㅋ",
+                "review_basis":"V36 original 30-40s 0.5s source frames; 31.4-37.4s",
+                "actual_rank2_interval_contact_sheet_reviewed":True})
+            rows=[replacement if z["title"]=="File:Katzensprung in Zeitlupe.webm"
+                  else z for z in rows]
+            audit["pair_added"]=True
+            audit["attempts"].append({
+                "replaced":"File:Katzensprung in Zeitlupe.webm",
+                "added":V36_PAIR_SOURCE["page_url"],
+                "start":31.4,"duration":6.0,
+                "candidate_evidence":"V36 source 30-40s contact sheet",
+                "license_metadata":"Pexels License only; rights and YPP not proven"})
+        except Exception as ex:
+            path.unlink(missing_ok=True)
+            audit["attempts"].append({
+                "added":V36_PAIR_SOURCE["page_url"],
+                "failed_type":type(ex).__name__,"selected":False})
+    rows.sort(key=lambda r:(r["editorial_quality_heuristic"],r["title"]))
+    if len(rows)!=5 or len({r["title"] for r in rows})!=5:
+        raise RuntimeError("V36 five distinct sources required")
+    return rows,audit
+
 def apply_rank_one_story_timing(items):
     """Based on V33 visual review of original Salto 0-10s.
 
@@ -190,6 +299,9 @@ def main():
     final,sofa_audit=add_sofa_challenger(topic,final,output)
     (output/"V35_SOFA_CHALLENGER_QA.json").write_text(json.dumps(
         sofa_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    final,v36_audit=add_v36_action_clips(topic,final,output)
+    (output/"V36_CANDIDATE_REPLACEMENTS_QA.json").write_text(
+        json.dumps(v36_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     final=apply_rank_one_story_timing(final)
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
@@ -197,10 +309,11 @@ def main():
     save_license_and_status(topic,final,recommendations,attempts,output)
     video=assemble_video(topic,final,output)
     qa=technical_qa(video,output,topic,final)
-    qa["version"]="V32"
+    qa["version"]="V36"
     qa["curated_new_video_used"]=bool(audit["download_ok"])
     qa["source_permissions_fully_cleared"]=False
     qa["publication_approved"]=False
+    qa["v36_actions_added"]=int(v36_audit["jumpscare_added"])+int(v36_audit["pair_added"])
     qa["original_style_preserved"]="V28.3 locked, caption 60pt"
     (output/"V32_TECHNICAL_QA.json").write_text(json.dumps(qa,
         ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
