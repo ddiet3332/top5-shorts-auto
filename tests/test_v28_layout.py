@@ -42,6 +42,10 @@ class V28NoClutterLayoutTests(unittest.TestCase):
             self.assertEqual(len([c for c in cues if ",TopFive," in c]),1)
             self.assertTrue(any("0:00:00.00,0:00:27.00,MainTopic" in c for c in cues))
             self.assertTrue(any("0:00:00.00,0:00:27.00,TopFive" in c for c in cues))
+            self.assertIn("Style: Caption,NanumSquare,60,",text)
+            # V28.3 template is approved: caption font only; placement and title remain fixed.
+            self.assertIn("504,1190",text)
+            self.assertIn("Style: MainTopic,NanumSquare,59,",text)
             self.assertIn("고양이들의 황당한 순간",text)
             self.assertIn("540,140",text)
             self.assertIn("540,214",text)
