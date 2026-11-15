@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "version": "V24_EXPERIMENTAL",
+  "workflow_run_id": 43677489225,
+  "edit_name": "TOP5_V24_EDITORIAL_REVIEW_ONLY_1080x1920.mp4",
+  "previous_version": "V23",
+  "previous_score": 81,
+  "total": 79,
+  "max_score": 100,
+  "production_threshold": 75,
+  "publishing_candidate_threshold": 85,
+  "reviewed_actual_mp4": true,
+  "score_kind": "QUALITATIVE_EDITORIAL_JUDGEMENT",
+  "rubric": [
+    {
+      "id": "hook_first_2s",
+      "name": "첫 2초 후킹",
+      "max": 20,
+      "previous": 19,
+      "current": 19
+    },
+    {
+      "id": "humor_payoff",
+      "name": "장면 재미·반전",
+      "max": 25,
+      "previous": 16,
+      "current": 15
+    },
+    {
+      "id": "ranking_convincing",
+      "name": "TOP5 순위 설득력",
+      "max": 15,
+      "previous": 13,
+      "current": 12
+    },
+    {
+      "id": "pacing_transitions",
+      "name": "컷 전환·흐름",
+      "max": 15,
+      "previous": 14,
+      "current": 14
+    },
+    {
+      "id": "creative_captions",
+      "name": "자막·창작성",
+      "max": 10,
+      "previous": 9,
+      "current": 9
+    },
+    {
+      "id": "sound_immersion",
+      "name": "사운드·몰입감",
+      "max": 10,
+      "previous": 8,
+      "current": 8
+    },
+    {
+      "id": "rights_monetization_readiness",
+      "name": "저작권·수익화 준비",
+      "max": 5,
+      "previous": 2,
+      "current": 2
+    }
+  ],
+  "technical": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 24,
+    "video_duration_sec": 30,
+    "audio_duration_sec": 30,
+    "full_av_decode": "PASS",
+    "integrated_loudness_lufs": -21.1,
+    "true_peak_dbfs": -4.3,
+    "original_audio_removed": true
+  },
+  "change": "Replace V23 rank4 Pexels PX-9208508 toy leap with PX-5991137 black-white cat descending high ledge at source 12.0-17.0 sec. Other ranks unchanged.",
+  "decision": "REJECT_EXPERIMENT_KEEP_V23_AS_BEST_BASELINE",
+  "reason": "Rank4 monochrome wide shot shows a landing but subject is smaller/less legible on a phone; rank uniqueness decreases alongside other jumps; no novel comedic payoff",
+  "independent_creator_and_third_party_rights_cleared": false,
+  "youtube_reused_content_monetization_approved": false,
+  "approved_for_publication": false
+}
