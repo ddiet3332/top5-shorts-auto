@@ -215,9 +215,11 @@ def build_dynamic_subtitles(path,topic,items):
                 # V37 original scene commentary: setup -> observed payoff.
                 # One line at a time in the LOCKED 60pt x/y design.
                 stages=row["caption_sequence"]
-                if (len(stages)!=2 or not 0.6<float(stages[1][0])<sec-0.7
-                    or float(stages[0][0])<0):
-                    raise ValueError("Two-stage original commentary timing invalid")
+                points=[float(v[0]) for v in stages]
+                if (not 2<=len(stages)<=3 or points[0]<0 or
+                    any(points[i+1]-points[i]<0.65 for i in range(len(points)-1)) or
+                    sec-points[-1]<0.65):
+                    raise ValueError("Original commentary timing invalid")
                 for i,(offset,words) in enumerate(stages):
                     stop=start+(float(stages[i+1][0]) if i+1<len(stages) else sec)
                     subtitle_lines.append(cue(start+float(offset),stop,"Caption",
