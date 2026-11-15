@@ -4,13 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/v22.yml'
+      - '.github/workflows/v22_video.yml'
       - 'src/v22_qa.py'
       - 'src/v22_audio_remaster.py'
       - 'src/publish_v22_video_index.py'
       - 'tests/test_v22_ranking.py'
-      - 'src/v22_audio_remaster.py'
-      - 'src/publish_v22_video_index.py'
       - 'sample/v22-sources.json'
       - 'sample/v22-mixed-selection.json'
       - 'sample/v22-script.json'
