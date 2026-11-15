@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "source_review_run_id": 43667599999,
+  "editorial_scope": "Previously viewed preview windows only; not a legal conclusion or full-source assessment.",
+  "exclusions": [
+    {
+      "title": "File:Kitten jumping on bamboo mat.webm",
+      "reason": "Prior preview showed grooming/rolling, no visible jump; misleading label risk"
+    },
+    {
+      "title": "File:Cat discovers it was being spied on.webm",
+      "reason": "Prior preview did not show a clear cat reaction"
+    },
+    {
+      "title": "File:Kitten playing - Tokyo - Jan 7 2020.webm",
+      "reason": "Low-motion resting kitten, no distinct short-form payoff"
+    },
+    {
+      "title": "File:We're all out of chicken, go get the cat.webm",
+      "reason": "Edited meme/skit with human cut; unsuitable for genuine animal-action TOP5"
+    },
+    {
+      "title": "File:Sophy the Cat is Really High On A Ledge.webm",
+      "reason": "No verified jump, fall or meaningful payoff in preview"
+    },
+    {
+      "title": "File:2022-10-18 LJUBLJANA Doma CARNIVORA Felis catus DOMAČA MAČKA 4.webm",
+      "reason": "Static stair cat; weak short-form action in reviewed preview"
+    }
+  ],
+  "note": "Can be reconsidered only after deliberate new manual assessment of different source moments. Not a copyright blacklist."
+}
