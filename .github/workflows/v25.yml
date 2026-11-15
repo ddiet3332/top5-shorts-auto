@@ -11,7 +11,7 @@ on:
       - 'src/v25_editorial_finish.py'
       - 'src/publish_v25_video_index.py'
       - 'sample/v25-situation-captions.json'
-      - 'src/v22_audio_remaster.py'
+      - 'src/v25_audio_remaster.py'
       - 'tests/test_v25_caption_only.py'
       - 'sample/v22-sources.json'
       - 'sample/v22-mixed-selection.json'
@@ -54,9 +54,9 @@ jobs:
         run: python3 src/v25_qa.py --output output --selection sample/v22-mixed-selection.json --video output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
       - name: Retain self-produced nonverbal soundtrack with no TTS or original-source audio
         run: |
-          python3 -m venv /tmp/v22_audio_env
-          /tmp/v22_audio_env/bin/pip install --quiet numpy
-          /tmp/v22_audio_env/bin/python src/v22_audio_remaster.py \
+          python3 -m venv /tmp/v25_audio_env
+          /tmp/v25_audio_env/bin/pip install --quiet numpy
+          /tmp/v25_audio_env/bin/python src/v25_audio_remaster.py \
             --input output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4 \
             --output output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4 \
             --scratch output/v25_audio_temp
