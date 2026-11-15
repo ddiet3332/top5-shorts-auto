@@ -25,13 +25,17 @@ PROMOTED={
     "File:Larry the cat and Chloé playing (100111224612).webm":
         ("함께 놀기","누가 더 신났을까?"),
 }
-MIN_STRONG=55
+MIN_STRONG=50
 MAX_DOWNLOADS=15
 
 def checked_scenes():
-    if not CHECKED.exists():
-        return {}
-    return json.loads(CHECKED.read_text(encoding="utf-8")).get("reviewed",{})
+    # Prior real-frame editorial evidence can guide later automatic reranks.
+    # It never proves rights or quality of a different crop/window.
+    memory={}
+    for path in (CHECKED, BASE/"review/v30_checked_actions.json"):
+        if path.exists():
+            memory.update(json.loads(path.read_text(encoding="utf-8")).get("reviewed",{}))
+    return memory
 
 def discover_for_topic(topic,discover=True):
     rows={}
