@@ -1,4 +1,4 @@
-# TOP5 — 직접 촬영자 영상 사용 허락 확보 절차
+# TOP5 — 직접 촬영자 영상 사용 허락 확보 절차 (상황 자막·무내레이션 기준)
 
 목표: **5초 동안 사건·반전이 분명한 동물 원본**을 확보하되, 게시 및 수익화의 이용권을 검증합니다.
 
@@ -14,12 +14,12 @@
 
 안녕하세요. 직접 촬영하신 동물 영상 [원본 링크]를 보고 연락드립니다.
 
-해당 영상 중 약 3~6초 구간을 독창적인 한국어 해설과 자막, 순위 비교가 포함된 YouTube Shorts 영상에 활용하고 싶습니다. 이 쇼츠는 광고 수익이 발생할 수 있습니다.
+해당 영상 중 약 3~6초 구간을 내레이션 없이 독창적인 한국어 상황 자막, 편집적 순위 비교가 포함된 YouTube Shorts 영상에 활용하고 싶습니다. 이 쇼츠는 광고 수익이 발생할 수 있습니다.
 
 해당 영상을 직접 촬영하고 영상의 이용을 허락할 권리가 있으신지, 그리고 아래 이용을 허락해 주실 수 있는지 확인 부탁드립니다.
 
 - 유튜브 쇼츠에서의 상업적 공개·수익화
-- 영상 일부 발췌, 화면 크기 조절, 컷 편집, 새로운 한국어/영어 자막·해설과 효과음 추가
+- 영상 일부 발췌, 화면 크기 조절, 컷 편집, 새로운 한국어/영어 상황 자막과 직접 제작한 효과음 추가(내레이션·TTS 없음)
 - 완성 영상 썸네일·제목·설명란에서의 해당 장면 사용과 출처 표시
 - 전 세계 유튜브 플랫폼에서의 비독점 이용, 합의한 기간 동안
 
@@ -31,9 +31,9 @@
 
 Hello, I'm contacting you about your original animal video: [original URL].
 
-I'd like to license a 3–6 second excerpt for a YouTube Short with original commentary, captions, a ranked editorial comparison, and new sound effects. The Short may be monetized.
+I'd like to license a 3–6 second excerpt for a YouTube Short with original funny situational captions, a ranked editorial comparison, and self-produced sound effects, with no voiceover. The Short may be monetized.
 
-Did you record and own the rights to this footage, and would you consider granting **non-exclusive commercial YouTube use** worldwide, including excerpting, resizing, editing, adding Korean/English narration or captions, and using a still frame in the thumbnail? We can agree on the term and fee, if any, before use.
+Did you record and own the rights to this footage, and would you consider granting **non-exclusive commercial YouTube use** worldwide, including excerpting, resizing, editing, adding Korean/English on-screen situational captions (without narration or TTS), and using a still frame in the thumbnail? We can agree on the term and fee, if any, before use.
 
 Please let me know the credit name you prefer and whether the footage contains third-party music, other people's voices, or people requiring separate permission. I will not reuse original audio without separate clearance.
 
@@ -42,7 +42,7 @@ If you agree, please reply with the specific video URL, permitted uses, term, an
 ## 필수 허가 근거 기록 (공개 GitHub에는 민감정보/원문 미저장)
 1. 정확한 원본 URL 및 원본 파일 식별자/해시.
 2. 촬영자·저작권 보유자임을 뒷받침하는 자료 및 연락 경로의 진정성.
-3. 허가 범위: 상업용 유튜브 쇼츠, 변형, 번역, 자막·음성, 썸네일, 지역, 기간, 수익화 허용 여부.
+3. 허가 범위: 상업용 유튜브 쇼츠, 변형, 번역, 상황 자막·직접 제작 효과음(음성 해설 제외), 썸네일, 지역, 기간, 수익화 허용 여부.
 4. 비독점 여부, 이용료, 저작자 표시, 조건/예외.
 5. 별도 음원·출연자·상표·촬영 장소 권리 확인 및 필요 시 추가 허락.
 6. 답변/계약은 **비공개** 위치에 저장하고, GitHub에는 문서 자체가 아닌 내부 증빙 식별자와 검증 상태만 기록.
