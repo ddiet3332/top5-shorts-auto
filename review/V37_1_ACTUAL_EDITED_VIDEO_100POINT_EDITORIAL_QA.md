@@ -44,7 +44,7 @@ The editor score is not measured viewer humor, clickthrough rate, retention, sub
 
 ## X-CLIP model evidence and limitations
 - V37.0 after earlier door crop (15.35–21.35) was: 5th/4th/3rd relative text-video match, 2nd mismatch possibility −0.689, 1st inconclusive. Human actual frames confirm door does open; model does not reliably detect brief delayed event.
-- V37.1 free X-CLIP follow-on: https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43766565470 — launched; follow-up exact outcome and source-frame disagreement must be checked before interpreting.
+- V37.1 free X-CLIP follow-on: https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43766565470 — SUCCESS. Model suggested possible mismatch for the door shot at relative margin −0.729 even after timing adjustment. This is a model limitation: human-inspected actual MP4 frames show the door swings open at 19.9–20.8s, so the true action exists; X-CLIP sampling/relative semantic classification cannot be used to veto the verified scene. Ranks 5/4/3 relative text-video match, rank1 inconclusive.
 - Model confidence does not equal humor, copyright, YPP, author provenance, factual appropriateness or publish permission.
 
 ## Next required development
