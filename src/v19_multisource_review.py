@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 
 from v12_sources import allowed_page
 
-ALLOWED_PEXELS_IDS = frozenset({"PX-7680667","PX-6853903","PX-6853188"})
+ALLOWED_PEXELS_IDS = frozenset({"PX-7680667","PX-6187151","PX-17462877"})
 MIXKIT_RESTRICTED_EXAMPLES = frozenset({
     "https://mixkit.co/free-stock-video/kitten-playing-with-ball-6999/",
     "https://mixkit.co/free-stock-video/young-cats-play-in-the-garden-14184/",
