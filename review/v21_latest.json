@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repo": "ddiet3332/top5-shorts-auto",
-  "run_id": 43673298443,
-  "run_number": 2,
+  "run_id": 43673536572,
+  "run_number": 3,
   "workflow_status": "success",
   "video_qa_status": "TECHNICAL_OK_REVIEW_ONLY",
   "video_filename": "TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4",
@@ -16,8 +16,8 @@
     "File:Cat Jumpscare.webm",
     "File:Salto - Cat Jump.webm"
   ],
-  "artifact_name": "TOP5-v21-review-2",
-  "artifact_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43673298443#artifacts",
+  "artifact_name": "TOP5-v21-review-3",
+  "artifact_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43673536572#artifacts",
   "rights_gate": "UNVERIFIED",
   "rights_detail": "METADATA_ONLY",
   "subjective_100_point_score": null,
