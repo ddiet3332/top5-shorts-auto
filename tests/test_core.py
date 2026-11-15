@@ -269,6 +269,24 @@ class BasicTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_mixed_selection(bad,catalog)
 
+    def test_v14_setup_payoff_caption_timing_and_fixed_65pct(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            target=Path(d)/'v14.ass'
+            phrases={'rank5':['면봉을 보여줬더니…','갑자기 점프!'],
+                     'rank4':['건반을 밟고','훌쩍 사라짐!']}
+            create_subtitles(target,'고양이 돌발행동 TOP5',DEFAULT_CAPTIONS,
+                             caption_phases=phrases)
+            data=target.read_text(encoding='utf-8')
+            self.assertIn('면봉을 보여줬더니',data)
+            self.assertIn('갑자기 점프!',data)
+            self.assertIn(r'\\pos(540,1248)',data)
+            self.assertEqual(data.count('Dialogue:'),1+1+7*11+2)
+            self.assertIn('0:00:04.45',data)
+            with self.assertRaises(ValueError):
+                create_subtitles(target,'제목',DEFAULT_CAPTIONS,
+                                 caption_phases={'rank3':['단 하나']})
+
     def test_ass(self):
         import tempfile
         with tempfile.TemporaryDirectory() as d:
