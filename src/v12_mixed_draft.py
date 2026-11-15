@@ -134,6 +134,12 @@ def main():
     captions=dict(DEFAULT_CAPTIONS)
     captions.update({k:str(v)[:72] for k,v in notes.get('captions',{}).items() if k in captions})
     caption_phases=notes.get('phases',{})
+    caption_phase_offsets=notes.get('phase_offsets',{})
+    if not isinstance(caption_phase_offsets,dict) or any(
+        key not in ('rank5','rank4','rank3','rank2','rank1')
+        or type(value) not in (int,float)
+        for key,value in caption_phase_offsets.items()):
+        raise ValueError('Caption split offsets must be numeric seconds keyed by actual rank')
     if not isinstance(caption_phases,dict) or any(
         key not in ('rank5','rank4','rank3','rank2','rank1') for key in caption_phases):
         raise ValueError('V14 caption phases must be named by ranked segment')
@@ -143,6 +149,7 @@ def main():
     mp4=render_video(selected,out,args.title,captions,
                      narration=None,size='1080x1920',name_overrides=labels,
                      caption_phases=caption_phases,
+                      caption_phase_offsets=caption_phase_offsets,
                      segments=V16_SEGMENTS if args.v16_pacing else (V15_SEGMENTS if args.v15_pacing else None))
     rights={'license_check':'METADATA_ONLY','source_audio_approved':False,
             'publication_approved':False,
