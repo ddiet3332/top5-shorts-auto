@@ -156,8 +156,17 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--catalog',default='sample/v12-sources.json')
     ap.add_argument('--output',default='output')
+    ap.add_argument('--ids',default='',help='Comma-separated exact curated video IDs for small review')
     args=ap.parse_args()
     items=json.loads(Path(args.catalog).read_text(encoding='utf-8'))
+    if args.ids:
+        ids={x.strip() for x in args.ids.split(',') if x.strip()}
+        if not 1<=len(ids)<=3:
+            raise ValueError('At most 3 explicitly selected items per review')
+        existing={x['id'] for x in items if x.get('provider')=='pexels'}
+        if not ids.issubset(existing):
+            raise ValueError('Only listed curated source IDs can be auditioned')
+        items=[x for x in items if x.get('id') in ids]
     audition(items,args.output)
 
 
