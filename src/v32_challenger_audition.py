@@ -57,7 +57,7 @@ def main():
     candidates=[]
     pexel=ROOT/"pexels_40826295.mp4"
     try:
-        details=download_single_pexels(PEXELS,pexel,max_bytes=50*1024*1024)
+        details=download_single_pexels(PEXELS,pexel,max_bytes=125*1024*1024)
         candidates.append({"provider":"pexels","title":PEXELS["title"],"original":str(pexel),
             "source_page":PEXELS["page_url"],"claimed_license":PEXELS["license_label"],
             "license_url":PEXELS["license_url"],"author_metadata":PEXELS["creator"],
