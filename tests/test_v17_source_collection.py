@@ -106,6 +106,17 @@ class TestV17SourceCollection(unittest.TestCase):
         self.assertEqual(v17.audition_seconds(3.5), 0.0)
         self.assertEqual(v17.audition_seconds(241.0), 0.0)
 
+    def test_prior_failed_preview_exclusions_are_loaded(self):
+        from tempfile import TemporaryDirectory
+        with TemporaryDirectory() as tmp:
+            p = Path(tmp) / "exclusions.json"
+            p.write_text('{"exclusions":[{"title":"File:Weak cat.webm","reason":"No payoff"}]}',
+                         encoding="utf-8")
+            self.assertEqual(v17.editorial_excluded_titles(p),
+                             {"file:weak cat.webm"})
+            self.assertEqual(v17.editorial_excluded_titles(Path(tmp) / "missing.json"),
+                             set())
+
     def test_minimum_source_quality(self):
         self.assertFalse(v17.sufficient_resolution(320, 240))
         self.assertTrue(v17.sufficient_resolution(720, 480))
