@@ -69,6 +69,13 @@ def sufficient_resolution(w,h,minimum_short_edge=480,minimum_long_edge=720):
     return (isinstance(w,int) and isinstance(h,int) and
             min(w,h)>=minimum_short_edge and max(w,h)>=minimum_long_edge)
 
+def audition_seconds(duration):
+    """Allow an honest 4-second moment, without padding it into fake 5 seconds."""
+    if not 4.0<=duration<=240.0:
+        return 0.0
+    return round(min(5.0,duration-0.2),2)
+
+
 def is_external_reupload(item):
     source=str(item.get("source_claim",""))
     flags=" ".join(item.get("review_flags",[]))
@@ -235,10 +242,10 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=55*1024*1024):
             entry.update({"duration_sec":round(duration,2),"width":w,"height":h})
             if not sufficient_resolution(w,h):
                 entry["status"]="REJECT_LOW_RESOLUTION"
-            elif not 4.0<=duration<=240:
+            elif not audition_seconds(duration):
                 entry["status"]="REJECT_DURATION"
             else:
-                preview_seconds=round(min(5.0,duration-0.2),2)
+                preview_seconds=audition_seconds(duration)
                 windows=window_candidates(local,duration,seconds=preview_seconds,count=2,max_scan=65)
                 for ordinal,window in enumerate(windows,1):
                     start=float(window["start"])
