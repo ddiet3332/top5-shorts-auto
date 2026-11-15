@@ -99,10 +99,23 @@ def apply_rank_one_story_timing(items):
     out=[]
     for item in items:
         row=dict(item)
-        if row["title"]=="File:Salto - Cat Jump.webm" and float(row["duration_sec"])>=8.1:
-            row["cut_start"]=2.03
+        # Creative captions add a distinct observation to each rank without
+        # changing the user's approved 60pt font, position or geometry.
+        original_reactions={
+            "File:Cat in a Bag.webm":"쇼핑백에 이사 왔나?ㅋㅋ",
+            "Pexels PX-40826295":"바닥이 전용 마사지기ㅋㅋ",
+            "File:Moomin1.webm":"면봉 하나에 앞발 발사ㅋㅋ",
+            "File:Katzensprung in Zeitlupe.webm":"도약에서 착지까지 쭉!",
+            "File:Salto - Cat Jump.webm":"지붕 사이를 정말 넘는다!"
+        }
+        if row["title"] in original_reactions:
+            row["caption"]=original_reactions[row["title"]]
+        if row["title"]=="File:Salto - Cat Jump.webm" and float(row["duration_sec"])>=8.8:
+            # Original source frame scan: the cat first enters around 3.0s
+            # and exits near 8.1s. 2.65–8.65 balances both tails.
+            row["cut_start"]=2.65
             row["hook_start"]=4.9
-            row["timing_basis"]="V33 actual source frames 0-10 seconds"
+            row["timing_basis"]="V33 actual 0-10s source 18-frame QA and V33 full MP4 A/B"
             row["editorial_timing_reverified"]=True
         out.append(row)
     return out
