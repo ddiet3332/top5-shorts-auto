@@ -29,6 +29,30 @@ def official_video_id(item):
     return int(match.group(1))
 
 
+def safe_failure_code(exc):
+    """Machine-readable cause with no secret URL, token or response body."""
+    if isinstance(exc, (urllib.error.HTTPError,)):
+        return "HTTP_REJECTED_OR_UNAVAILABLE"
+    if isinstance(exc, (urllib.error.URLError, TimeoutError)):
+        return "NETWORK_UNAVAILABLE_OR_TIMEOUT"
+    if isinstance(exc, (subprocess.CalledProcessError, subprocess.TimeoutExpired)):
+        return "MEDIA_DECODING_OR_PREVIEW_FAILED"
+    message=str(exc)
+    if "Redirect outside official Pexels video delivery host" in message:
+        return "UNTRUSTED_REDIRECT_REJECTED"
+    if "Official URL did not return a video file" in message:
+        return "NOT_A_VIDEO_RESPONSE"
+    if "size limit" in message or "size exceeds" in message:
+        return "SOURCE_OVER_FILE_SIZE_LIMIT"
+    if "Unsupported duration" in message:
+        return "SOURCE_DURATION_UNSUPPORTED"
+    if "Response too small for a video" in message:
+        return "EMPTY_OR_INVALID_FILE"
+    if isinstance(exc, ValueError):
+        return "INVALID_METADATA_OR_MEDIA"
+    return "OTHER_FILE_OR_DOWNLOAD_ERROR"
+
+
 def download_single_pexels(item,filename,max_bytes=50*1024*1024):
     video_id=official_video_id(item)
     official_url=f'https://www.pexels.com/download/video/{video_id}/'
@@ -122,7 +146,8 @@ def audition(records,dest,max_candidates=3):
         except Exception as e:
             row['editorial_status']='DOWNLOAD_UNAVAILABLE_OR_NOT_LICENSE_CLEARED'
             row['failure_type']=type(e).__name__
-            print('[V12 source unavailable]',item['id'],type(e).__name__,flush=True)
+            row['failure_code']=safe_failure_code(e)
+            print('[V12 source unavailable]',item['id'],row['failure_code'],flush=True)
         finally:
             source.unlink(missing_ok=True)
         data.append(row)
