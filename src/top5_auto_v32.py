@@ -248,6 +248,106 @@ def add_v36_action_clips(topic,items,output):
         raise RuntimeError("V36 five distinct sources required")
     return rows,audit
 
+
+def apply_v37_story_and_door(topic,items,output):
+    """V37: human-contact-sheet-selected door opening and original scene comedy.
+
+    The user-locked template (including 60pt caption geometry) is not altered.
+    This only adjusts rank 2 content and puts short setup-action-payoff writing
+    in the same existing single-line reaction zone.
+    """
+    audit={"version":"V37","door_added":False,"original_story_captions":False,
+           "publication_approved":False,"rights_independently_verified":False,
+           "youtube_reused_content_approved":False,
+           "license_sharealike_acknowledged":False}
+    if topic["topic_id"]!="cat_surprises":
+        return items,audit
+    rows=[dict(row) for row in items]
+    pair="Pexels PX-17536779"
+    if any(row["title"]==pair for row in rows):
+        try:
+            from v37_cat_audition import commons_download
+            src={"id":"commons-door","provider":"commons",
+                 "title":"File:Cat opening door.webm",
+                 "page_url":"https://commons.wikimedia.org/wiki/File:Cat_opening_door.webm",
+                 "license_required":"by-sa/4.0"}
+            p=Path(output)/"v37_cat_door.webm"
+            license_data=commons_download(src,p)
+            from top5 import probe_duration
+            duration=float(probe_duration(p))
+            if duration<21.40:
+                raise ValueError("V37 exact 15.35-21.35 story window unavailable")
+            row={"title":src["title"],
+                 "source_page":src["page_url"],
+                 "author":license_data["author"],
+                 "license":license_data["license"],
+                 "license_url":license_data["license_url"],
+                 "source_claim":"Creator self-identifies on Commons; independent ownership check pending",
+                 "local_path":str(p),"duration_sec":duration,
+                 "cut_start":15.35,"motion_proxy":0,
+                 "editorial_quality_heuristic":66.0,
+                 "label":"앞발 문열기",
+                 "caption":"진짜 문까지 열었다!",
+                 "review_basis":"V37 original 0-22s 0.5s frame audit confirms jump, handle, door opening at 20.5-21s",
+                 "rights_verified":False,"publication_approved":False,
+                 "provenance_independently_verified":False,
+                 "source_audio_approved":False,
+                 "requires_sharealike_attribution":True}
+            rows=[row if item["title"]==pair else item for item in rows]
+            audit["door_added"]=True
+            audit["license_sharealike_acknowledged"]=True
+        except Exception as ex:
+            audit["door_issue"]=type(ex).__name__
+    scripts={
+        "File:Cat Jumpscare.webm":[[0.1,"태평하게 누워 있더니"],[1.7,"카메라로 갑자기 돌진!"]],
+        "Pexels PX-40826295":[[0.1,"길가에서 멈춰 서더니"],[2.1,"아예 바닥을 뒹군다ㅋㅋ"]],
+        "Pexels PX-34689563":[[0.1,"소파 아래가 수상한데?"],[1.8,"장난감 낚아채기 성공!"]],
+        "File:Cat opening door.webm":[[0.12,"문 앞에서 뭘 하려나?"],[2.45,"손잡이를 건드리더니"],[5.15,"진짜 열렸다!"]],
+        "Pexels PX-17536779":[[0.1,"상자 안을 지키는 고양이"],[3.1,"밖에서 앞발 대결ㅋㅋ"]],
+        "File:Salto - Cat Jump.webm":[[0.12,"지붕 사이 거리 재는 중"],[2.4,"망설임 없이 도약!"]],
+    }
+    for row in rows:
+        script=scripts.get(row["title"])
+        if script:
+            row["caption_sequence"]=script
+            row["original_commentary"]="V37 author-created two/three-act micro narration"
+            audit["original_story_captions"]=True
+    rows.sort(key=lambda r:(r["editorial_quality_heuristic"],r["title"]))
+    if len(rows)!=5 or len({r["title"] for r in rows})!=5:
+        raise RuntimeError("V37 count and diversity gate failed")
+    return rows,audit
+
+def v37_rights_and_description(items,output,audit):
+    """Write attribution and editing evidence; no YouTube revenue approval."""
+    notes=["# V37 publication-rights and source attribution draft","",
+       "This is a review-only rough-cut. Only publish after independently confirming each item's actual author and third-party rights, and assessing substantial originality.",
+       "No source audio is used; all audio was synthesized by our workflow.",""]
+    for i,row in enumerate(items):
+        notes.extend([f"## {5-i}위: {row['label']}",
+            f"- Source: {row['source_page']}",
+            f"- Credited author: {row['author']}",
+            f"- Source licence: {row['license']}",
+            f"- Licence URL: {row['license_url']}",
+            f"- Adaptation: 4-6s crop, aspect-preserving composition, author-written micro story captions, custom audio, comparison ranking and endcard",
+            "- Rights, third-party release, reused-content YPP: not independently cleared.",""])
+    notes.extend([
+       "## ShareAlike when the door opening scene is used",
+       "For the CC BY-SA 4.0 original by Astropulse, identify the original source, author, terms and changed use in the YouTube description. Because it is adapted, any adapted contribution must be offered under compatible CC BY-SA terms. Review compliance before publication.",
+       "- https://creativecommons.org/licenses/by-sa/4.0/",
+       "- https://commons.wikimedia.org/wiki/File:Cat_opening_door.webm",
+       "",
+       "Publication: BLOCKED until applicable legal and YPP considerations have been reviewed; provider labels are not an independent audit."
+    ])
+    (Path(output)/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md").write_text("\n".join(notes)+"\n",encoding="utf-8")
+    (Path(output)/"V37_STORY_AND_RIGHTS_QA.json").write_text(
+        json.dumps({"publish":False,"rights_independently_verified":False,
+                    "reused_content_ypp_approved":False,
+                    "door_added":audit["door_added"],
+                    "source_count":len(items),
+                    "act_timelines":[{"title":r["title"],"story":r.get("caption_sequence")}
+                                     for r in items]},ensure_ascii=False,indent=2)+"\n",
+        encoding="utf-8")
+
 def apply_rank_one_story_timing(items):
     """Based on V33 visual review of original Salto 0-10s.
 
@@ -303,17 +403,21 @@ def main():
     (output/"V36_CANDIDATE_REPLACEMENTS_QA.json").write_text(
         json.dumps(v36_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     final=apply_rank_one_story_timing(final)
+    final,v37_audit=apply_v37_story_and_door(topic,final,output)
+    v37_rights_and_description(final,output,v37_audit)
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     write_gates(output,topic,final,attempts,recommendations)
     save_license_and_status(topic,final,recommendations,attempts,output)
     video=assemble_video(topic,final,output)
     qa=technical_qa(video,output,topic,final)
-    qa["version"]="V36"
+    qa["version"]="V37"
     qa["curated_new_video_used"]=bool(audit["download_ok"])
     qa["source_permissions_fully_cleared"]=False
     qa["publication_approved"]=False
     qa["v36_actions_added"]=int(v36_audit["jumpscare_added"])+int(v36_audit["pair_added"])
+    qa["v37_actual_door_selected"]=bool(v37_audit["door_added"])
+    qa["v37_original_micro_story_written"]=bool(v37_audit["original_story_captions"])
     qa["original_style_preserved"]="V28.3 locked, caption 60pt"
     (output/"V32_TECHNICAL_QA.json").write_text(json.dumps(qa,
         ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
