@@ -17,6 +17,9 @@ on:
       - 'sample/v22-mixed-selection.json'
       - 'sample/v25-render-script.json'
   workflow_dispatch:
+concurrency:
+  group: top5-v25-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
