@@ -60,6 +60,7 @@ jobs:
             output/v32_auto/V29_ACTUAL_12FRAME_QA.jpg
             output/v32_auto/V32_TECHNICAL_QA.json
             output/v32_auto/V32_CHALLENGER_SELECTION.json
+            output/v32_auto/V35_SOFA_CHALLENGER_QA.json
             output/v32_auto/TOPIC_RECOMMENDATIONS_V32.json
             output/v32_auto/SOURCE_SELECTION_REVIEW.json
             output/v32_auto/SOURCE_CREDITS_REVIEW.md
