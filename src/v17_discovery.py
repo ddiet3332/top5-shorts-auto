@@ -24,6 +24,9 @@ from v8_moments import window_candidates, moment_photo
 SEARCHES=(
     "cat jumps", "funny cat", "cat opening door", "playing kittens",
     "cat climbing", "cat trick", "cat surprised", "cat and dog playing",
+    "cat startled", "cat knocks object", "kitten fails jump",
+    "cat chases tail", "cat startled by mirror", "cat in box",
+    "cat playing with dog", "cat catches toy", "cat reacts to toy",
 )
 CATEGORIES=(
     "Videos of jumping cats", "Videos of playing cats", "Videos of cats",
@@ -154,6 +157,19 @@ def collect_sources(searches=SEARCHES,categories=CATEGORIES,max_pool=160):
             break
     return list(pooled.values()), searched, failures
 
+def editorial_excluded_titles(path="review/excluded_clips.json"):
+    """Explicit evidence-based editorial exclusions, not rights claims."""
+    f=Path(path)
+    if not f.exists():
+        return set()
+    data=json.loads(f.read_text(encoding="utf-8"))
+    if not isinstance(data,dict) or not isinstance(data.get("exclusions"),list):
+        raise ValueError("Invalid editorial-exclusion ledger")
+    return {str(row["title"]).casefold()
+            for row in data["exclusions"]
+            if isinstance(row,dict) and row.get("title")}
+
+
 def archived_titles(base="sample"):
     old=set()
     for name in (
@@ -189,6 +205,7 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=55*1024*1024):
     irrelevant=[src for src in candidates if not likely_cat_candidate(src)]
     candidates=[src for src in candidates if likely_cat_candidate(src)]
     used=archived_titles()
+    editorial_exclusions=editorial_excluded_titles()
     report={"status":"NEEDS_MANUAL_REVIEW","automated_humor_rating":None,
             "license_review_complete":False,"approved_for_publication":False,
             "queries":queries,"query_errors":errors,"raw_license_filtered_pool":raw_count,
@@ -205,6 +222,10 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=55*1024*1024):
         group=action_group(name)
         if name.casefold() in used:
             report["rejected"].append({"title":name,"reason":"ALREADY_USED"})
+            continue
+        if name.casefold() in editorial_exclusions:
+            report["rejected"].append({
+                "title":name,"reason":"PRIOR_MOMENT_EDITORIAL_QA_REJECTED"})
             continue
         if is_external_reupload(src):
             report["rejected"].append({"title":name,"reason":"EXTERNAL_REUPLOAD_UNVERIFIED"})
@@ -292,6 +313,8 @@ def make_review(out,limit=10,byte_budget=190*1024*1024,max_file=55*1024*1024):
         f"위키미디어 CC BY/CC0 1차 메타데이터 통과 원본: **{raw_count}개**",
         f"고양이 관련 파일명·분류 근거 후보: **{len(candidates)}개** (실제 고양이 등장 여부는 재생 검수)",
         f"비고양이 관련성 차단: **{len(irrelevant)}개**",
+        f"이전 실제 미리보기 탈락 원본 재수집 방지 목록: **{len(editorial_exclusions)}개**",
+        "제외 목록은 저작권 결론이 아닌 이전 미리보기 장면의 편집 판단입니다.",
         "목표는 '재미있는 5개'를 검증하는 것이지 숫자 5를 무조건 채우는 게 아닙니다.",
         "‘움직임 점수’는 컷과 카메라 움직임에도 반응하므로 재미·웃음·반전을 뜻하지 않습니다.",
         "외부 YouTube·TikTok 재게시 파일은 저작자 권리가 미확인되어 우선 제외했습니다.",
