@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V13 alternate 5th-rank source QA - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V13 corrected action-cut 30sec QA - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -12,6 +12,7 @@ on:
         required: true
         type: choice
         options:
+          - v13-draft
           - mixed-draft
           - source-audition
           - source-review
@@ -52,13 +53,15 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || 'source-audition' }}
+          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'v13-draft' || 'source-audition') }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           V13_IDS: ${{ inputs.candidate_ids || 'PX-4807151,PX-6853903,PX-6853188' }}
         run: |
-          if [ "$MODE" = "mixed-draft" ]; then
+          if [ "$MODE" = "v13-draft" ]; then
+            python3 src/v12_mixed_draft.py --output output --selection sample/v13-mixed-selection.json --script sample/v13-script.json
+          elif [ "$MODE" = "mixed-draft" ]; then
             python3 src/v12_mixed_draft.py --output output
           elif [ "$MODE" = "source-audition" ]; then
             python3 src/v12_pexels_audition.py --output output --ids "$V13_IDS"
