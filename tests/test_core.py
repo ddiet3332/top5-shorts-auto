@@ -287,6 +287,35 @@ class BasicTests(unittest.TestCase):
                 create_subtitles(target,'제목',DEFAULT_CAPTIONS,
                                  caption_phases={'rank3':['단 하나']})
 
+    def test_v15_duration_redistribution_and_transition_synchronization(self):
+        import tempfile
+        import json
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            from top5 import V15_SEGMENTS
+            self.assertEqual(sum(duration for _,duration in V15_SEGMENTS),30)
+            self.assertEqual(dict(V15_SEGMENTS)['rank3'],3)
+            self.assertEqual(dict(V15_SEGMENTS)['rank2'],6)
+            self.assertEqual(dict(V15_SEGMENTS)['rank1'],6)
+            ass=root/'v15.ass'
+            phases={'rank3':['달려오는 중','앗 가까워졌어!'],
+                    'rank2':['연못 앞에','바로 점프!']}
+            create_subtitles(ass,'돌발행동 TOP5',DEFAULT_CAPTIONS,
+                             caption_phases=phases,segments=V15_SEGMENTS)
+            content=ass.read_text(encoding='utf-8')
+            self.assertIn('0:00:12.00,0:00:15.00,Active',content)
+            self.assertIn('0:00:15.00,0:00:21.00,Active',content)
+            self.assertIn('0:00:21.00,0:00:27.00,Active',content)
+            self.assertIn(r'\\pos(540,1248)',content)
+            marks=[0.04,2,7,12,15,21,27]
+            sfx=root/'custom.wav'
+            create_transition_sfx(sfx,seconds=30,transitions=marks)
+            import wave
+            with wave.open(str(sfx)) as wav:
+                self.assertEqual(wav.getnframes(),1440000)
+            with self.assertRaises(ValueError):
+                create_transition_sfx(root/'invalid.wav',transitions=[31])
+
     def test_ass(self):
         import tempfile
         with tempfile.TemporaryDirectory() as d:
