@@ -51,6 +51,33 @@ class TestV17SourceCollection(unittest.TestCase):
         self.assertFalse(v17.is_external_reupload({
             "source_claim": "own work", "review_flags": []}))
 
+    def test_unrelated_search_hits_are_excluded(self):
+        self.assertFalse(v17.likely_cat_candidate({
+            "title": "File:Gurl skater.webm"}))
+        self.assertFalse(v17.likely_cat_candidate({
+            "title": "File:Perceptual-elements-in-magic-trick.ogv"}))
+        self.assertFalse(v17.has_feline_title_evidence("File:Caterpillar.webm"))
+        self.assertTrue(v17.likely_cat_candidate({
+            "title": "File:Cat jumping backwards.webm"}))
+        self.assertTrue(v17.likely_cat_candidate({
+            "title": "File:Moomin1.webm", "cat_category_evidence": True}))
+        self.assertFalse(v17.likely_cat_candidate({
+            "title": "File:Moomin1.webm", "cat_category_evidence": False}))
+
+    def test_cat_category_provenance_overrides_generic_title(self):
+        def fake_query(term, per_query):
+            return [{"title": "File:Unknown pet.webm"}]
+        def fake_category(category, per_query):
+            return [{"title": "File:Unknown pet.webm"}]
+        with patch.object(v17, "query_candidates", side_effect=fake_query), \\
+             patch.object(v17, "category_candidates", side_effect=fake_category):
+            pool, _, _ = v17.collect_sources(
+                searches=("cat playing",), categories=("Videos of cats",),
+                max_pool=10)
+        self.assertEqual(len(pool), 1)
+        self.assertTrue(pool[0]["cat_category_evidence"])
+        self.assertTrue(v17.likely_cat_candidate(pool[0]))
+
     def test_minimum_source_quality(self):
         self.assertFalse(v17.sufficient_resolution(320, 240))
         self.assertTrue(v17.sufficient_resolution(720, 480))
