@@ -1,0 +1,80 @@
+name: TOP5 V19 - multi-source curated review
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v19.yml'
+      - 'src/v19_multisource_review.py'
+      - 'src/publish_v19_index.py'
+      - 'tests/test_v19_multisource_review.py'
+      - 'tests/test_publish_v19_index.py'
+      - 'sample/v19-curated-external.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Validate safety and source review tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Review seven individual source pages and preview three Pexels files
+        run: python3 src/v19_multisource_review.py --catalog sample/v19-curated-external.json --output output --pexels-audition
+      - name: Upload rights report and reviewed candidate previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-v19-review-${{ github.run_number }}
+          path: |
+            output/V19_SOURCE_DIVERSE_AUDIT.json
+            output/V19_REVIEW_QUEUE.csv
+            output/V19_EDITORIAL_QUEUE.md
+            output/V19_PHONE_REVIEW.html
+            output/V19_PEXELS/V12_PEXELS_AUDITION.json
+            output/V19_PEXELS/V12_PEXELS_AUDITION.md
+            output/V19_PEXELS/V12_PEXELS_FRAMES/*.jpg
+            output/V19_PEXELS/V12_PEXELS_PREVIEWS/*.mp4
+          if-no-files-found: warn
+          retention-days: 7
+  index:
+    needs: audition
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch candidate audit if available
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: TOP5-v19-review-${{ github.run_number }}
+          path: output
+      - name: Publish latest V19 Actions run ID without committing media
+        env:
+          AUDITION_RESULT: ${{ needs.audition.result }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git fetch --quiet origin main
+            git checkout --quiet -B v19-index origin/main
+            python3 src/publish_v19_index.py \
+              --audit output/V19_SOURCE_DIVERSE_AUDIT.json \
+              --review-dir review \
+              --repo "$GITHUB_REPOSITORY" \
+              --run-id "$GITHUB_RUN_ID" \
+              --run-number "$GITHUB_${{ github.run_number }}" \
+              --result "$AUDITION_RESULT"
+            git add review/v19_latest.json review/v19_runs/
+            if git diff --cached --quiet; then exit 0; fi
+            git commit -m "index: V19 run $GITHUB_${{ github.run_number }} [$GITHUB_RUN_ID]"
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
