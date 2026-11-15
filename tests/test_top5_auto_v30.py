@@ -48,7 +48,7 @@ class V30QA(unittest.TestCase):
 
     def test_curated_cut_only_moves_reviewed_source_and_clamps(self):
         shifted=apply_curated_cut_shift("File:Katzensprung in Zeitlupe.webm",9.0,23.9)
-        self.assertAlmostEqual(shifted,10.4,places=1)
+        self.assertAlmostEqual(shifted,9.0,places=1)  # Reverted after V31 A/B showed empty tail
         untouched=apply_curated_cut_shift("File:Unreviewed Source.webm",3.1,25.0)
         self.assertEqual(untouched,3.1)
 
