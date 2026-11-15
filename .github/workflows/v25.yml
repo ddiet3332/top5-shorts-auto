@@ -1,3 +1,4 @@
+# V25 is a nonverbal situation-caption experiment. Original raw camera audio is never auto-used.
 # Strictly a private REVIEW MASTER. Never upload to YouTube automatically.
 name: TOP5 V25 - no narration situational subtitle actual 30-second review
 on:
@@ -11,8 +12,6 @@ on:
       - 'src/publish_v25_video_index.py'
       - 'sample/v25-situation-captions.json'
       - 'src/v22_audio_remaster.py'
-      - 'src/v25_editorial_finish.py'
-      - 'src/publish_v25_video_index.py'
       - 'tests/test_v25_caption_only.py'
       - 'sample/v22-sources.json'
       - 'sample/v22-mixed-selection.json'
