@@ -104,7 +104,7 @@ def validate_handoff(index: dict, decisions: dict) -> tuple[list, dict, dict]:
         source_duration = source.get("duration_sec")
         if type(source_duration) not in (int, float) or source_duration < 5.25:
             raise ValueError("Short originals require separate retiming QA before a 5s rank slot")
-        if start + 5.10 > source_duration:
+        if start + 5.20 > source_duration:
             raise ValueError("Insufficient original footage after chosen start")
         preview_windows = source.get("review_moments", [])
         if not any(
