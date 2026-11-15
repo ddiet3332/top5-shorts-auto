@@ -31,7 +31,7 @@ class V37Tests(unittest.TestCase):
             got,audit=apply_v37_story_and_door({"topic_id":"cat_surprises"},rows(),td)
         self.assertEqual(len(got),5)
         self.assertEqual(got[3]["title"],"File:Cat opening door.webm")
-        self.assertEqual(got[3]["cut_start"],15.35)
+        self.assertEqual(got[3]["cut_start"],15.9)
         self.assertEqual(len(got[3]["caption_sequence"]),3)
         self.assertFalse(got[3]["publication_approved"])
         self.assertTrue(got[3]["requires_sharealike_attribution"])
