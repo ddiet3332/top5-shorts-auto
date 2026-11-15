@@ -43,7 +43,8 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
 Style: Title,NanumSquare,72,&H0000D9FF,&H00FFFFFF,&H00201B15,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,10,10,10,1
-Style: Upper,NanumSquare,52,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,12,12,12,1
+Style: MainTopic,NanumSquare,59,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
+Style: TopFive,NanumSquare,84,&H00FFFFFF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
 Style: SmallRank,NanumSquare,62,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,12,12,12,1
 Style: Rank,NanumSquare,50,&H00FFFFFF,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,10,10,10,1
 Style: Active,NanumSquare,55,&H0000B8FF,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,7,10,10,10,1
@@ -70,11 +71,11 @@ def cue(start,end,style,text,x,y,align=7,layer=5):
 def build_ass(path):
     cues=[]
     # One episode title, not a made-up channel name.
-    # V28.2: stable position and size for the entire ranked sequence.
-    # A hook-sized centered heading moving to the upper-left at second 2
-    # distracted viewers; keep one consistent unobtrusive upper-left lockup.
-    cues.append(cue(0,27,"Upper","고양이 돌발",37,205,7))
-    cues.append(cue(0,27,"SmallRank","TOP5",37,270,7))
+    # V28.3: a fixed, prominent central two-line title, as agreed.
+    # The real source video is fitted BELOW the header, so a jumping cat's
+    # face is never covered by the fixed topic headline.
+    cues.append(cue(0,27,"MainTopic","고양이들의 황당한 순간",540,140,8))
+    cues.append(cue(0,27,"TopFive","TOP5",540,214,8))
     # left ranking column: the current rank alone gets gold; no redundant explanations.
     position={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
     start=0.0
@@ -138,9 +139,13 @@ def create_scene(source,start,seconds,destination):
         "[base]scale=270:480:force_original_aspect_ratio=increase,"
         "crop=270:480,boxblur=12:1,scale=1080:1920,"
         "eq=brightness=-0.11:saturation=0.7[back];"
-        "[full]scale=1080:1920:force_original_aspect_ratio=decrease:flags=lanczos,"
+        # Dedicated 305px header protects high jumping faces.
+        # Preserve all foreground pixels; vertical originals fit within the
+        # remaining 1615px without forced cropping or upscaled fake detail.
+        "[full]scale=1080:1605:force_original_aspect_ratio=decrease:flags=lanczos,"
         "setsar=1[front];"
-        "[back][front]overlay=(W-w)/2:(H-h)/2:format=auto,"
+        "[back][front]overlay=(W-w)/2:305+(1615-h)/2:format=auto,"
+        "drawbox=x=0:y=0:w=1080:h=305:color=black@0.92:t=fill,"
         "drawbox=x=0:y=460:w=174:h=752:color=black@0.30:t=fill,"
         "fps=24,format=yuv420p[v]")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
@@ -162,7 +167,7 @@ def inspect_qa(file,output,captions):
          "-map","0:v:0","-map","0:a:0","-f","null","-"],timeout=240)
     report={
        "status":"TECHNICAL_AV_PASS_CREATIVE_RIGHTS_UNVERIFIED",
-       "version":"V28_FULLSCREEN",
+       "version":"V28_3_CENTERED_TITLE",
        "file":file.name,
        "duration_sec":30,
        "resolution":"1080x1920",
@@ -177,6 +182,9 @@ def inspect_qa(file,output,captions):
        "caption_start_global_seconds":{"hook":0,"rank5":2.42,"rank4":7.1,
         "rank3":12.35,"rank2":17.5,"rank1":23.2,"outro":27},
        "embedded_prior_v27_subtitles":False,
+       "fixed_center_title_from_to":[0,27],
+       "top_header_reserve_px":305,
+       "full_source_pixels_retained":True,
        "free_content_provider_license_metadata_checked":True,
        "third_party_rights_independently_cleared":False,
        "YouTube_reused_content_monetization_approved":False,
