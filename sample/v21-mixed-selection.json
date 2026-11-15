@@ -1,0 +1,54 @@
+[
+  {
+    "provider": "pexels",
+    "id": "PX-17462877",
+    "start_sec": 4,
+    "display_name": "레이저 추적",
+    "reaction_sfx": "pop",
+    "reaction_offset": 2.2,
+    "audio_approved": false,
+    "editorial_note": "Original V19 run5 verified tabby paws at moving laser; comedic payoff modest; review only"
+  },
+  {
+    "provider": "pexels",
+    "id": "PX-6187151",
+    "start_sec": 4,
+    "display_name": "잔디 추격전",
+    "reaction_sfx": "boing",
+    "reaction_offset": 3.1,
+    "audio_approved": false,
+    "editorial_note": "Original V19 run5 verified black cat moving and turning in grass; no strong clear payoff; review only"
+  },
+  {
+    "provider": "pexels",
+    "id": "PX-7680667",
+    "start_sec": 1.9,
+    "display_name": "의자 점프",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 1.6,
+    "audio_approved": false,
+    "editorial_note": "Original V19 run5 stool jump with weak lighting; actual jump present, no guaranteed comedy"
+  },
+  {
+    "provider": "wikimedia",
+    "title": "File:Cat Jumpscare.webm",
+    "start_sec": 4.2,
+    "display_name": "카메라 돌진",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 2.9,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "Self-shot CC0 Panini!, V12-V15 previously tested, cat runs toward lens; not new original"
+  },
+  {
+    "provider": "wikimedia",
+    "title": "File:Salto - Cat Jump.webm",
+    "start_sec": 2.5,
+    "display_name": "건물 사이 점프",
+    "reaction_sfx": "whoosh",
+    "reaction_offset": 3.1,
+    "audio_approved": false,
+    "manual_content_review": true,
+    "editorial_note": "Vimeo reupload CC BY3.0 bot-verified metadata, underlying author/third-party rights still unverified; review-only"
+  }
+]
