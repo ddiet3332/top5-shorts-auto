@@ -112,7 +112,7 @@ jobs:
               lines=['# V17.2 candidate review — not approved for publishing','',
                   f"- Commons CC metadata pool: **{a.get('raw_license_filtered_pool',0)}**",
                   f"- Cat-relevant candidates (title/category evidence only): **{a.get('cat_relevance_pool',0)}**",
-                  f"- Real 5-second video preview files: **{sum(len(c.get('moments',[])) for c in entries)}**",
+                  f"- Real short-video previews (up to 5 sec): **{sum(len(c.get('moments',[])) for c in entries)}**",
                   f"- Unique originals with previews: **{len(entries)}**",
                   "- Independently verified humor, copyright, and monetization approval: **0**",'',
                   '## Original candidate titles (manual video review required)','']
