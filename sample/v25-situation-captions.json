@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "version": "V25",
+  "base_version": "V23",
+  "mode": "SITUATIONAL_HARDSUB_NO_VOICE",
+  "target": {
+    "duration_sec": 30,
+    "width": 1080,
+    "height": 1920,
+    "fps": 24,
+    "primary_subtitle_y_center_ratio": 0.65,
+    "original_source_audio": false,
+    "narration_enabled": false,
+    "tts_enabled": false,
+    "speech_files_expected": 0,
+    "use_only_self_synthesized_sfx": true,
+    "publish_approved": false
+  },
+  "purpose": "Replace narration proposal with factual, funny two-beat situational onscreen captions synced to actual action; preserve V23 visual master until QA.",
+  "cues": [
+    {
+      "start_sec": 0,
+      "end_sec": 2,
+      "segment": "hook",
+      "caption": "저 틈을 진짜 뛰어넘는다고?",
+      "evidence": "Opening shot is real roof-gap jump; avoid implying unverified distance"
+    },
+    {
+      "start_sec": 2,
+      "end_sec": 3.1,
+      "segment": "rank5_setup",
+      "caption": "5위 · 저 상자에 뭐가 있길래?",
+      "evidence": "Cat approaches the box"
+    },
+    {
+      "start_sec": 3.1,
+      "end_sec": 6,
+      "segment": "rank5_payoff",
+      "caption": "일단 들어가고 생각하자!",
+      "evidence": "Cat jumps into box, stays mostly out of view; humorous characterization not a factual thought claim"
+    },
+    {
+      "start_sec": 6,
+      "end_sec": 7.15,
+      "segment": "rank4_setup",
+      "caption": "4위 · 장난감에 시선 고정",
+      "evidence": "Cat watches the object"
+    },
+    {
+      "start_sec": 7.15,
+      "end_sec": 11,
+      "segment": "rank4_payoff",
+      "caption": "점프 한 번! 다시 대기!",
+      "evidence": "Jump upward and repositions; do not claim catching toy"
+    },
+    {
+      "start_sec": 11,
+      "end_sec": 12.35,
+      "segment": "rank3_setup",
+      "caption": "3위 · 저 의자까지 닿을까?",
+      "evidence": "Sphynx or hairless cat near the stool"
+    },
+    {
+      "start_sec": 12.35,
+      "end_sec": 15,
+      "segment": "rank3_payoff",
+      "caption": "올라가는 건 순식간!",
+      "evidence": "Cat jumps up to stool and investigates item"
+    },
+    {
+      "start_sec": 15,
+      "end_sec": 17.5,
+      "segment": "rank2_setup",
+      "caption": "2위 · 점점 가까워지는데…",
+      "evidence": "Cat moves toward lens"
+    },
+    {
+      "start_sec": 17.5,
+      "end_sec": 21,
+      "segment": "rank2_payoff",
+      "caption": "잠깐! 렌즈 바로 앞까지!",
+      "evidence": "Frame QA showed close camera approach around 17.5–18.1s"
+    },
+    {
+      "start_sec": 21,
+      "end_sec": 23.3,
+      "segment": "rank1_setup",
+      "caption": "1위 · 건물 사이를 건넌다고?",
+      "evidence": "Building gap visible; no unsupported measured width"
+    },
+    {
+      "start_sec": 23.3,
+      "end_sec": 27,
+      "segment": "rank1_payoff",
+      "caption": "도약 성공! 착지까지 완벽!",
+      "evidence": "Visible jump and landing, avoid claiming safety beyond scene"
+    },
+    {
+      "start_sec": 27,
+      "end_sec": 30,
+      "segment": "outro",
+      "caption": "당신이라면 몇 위를 뽑겠어요?",
+      "evidence": "Five actual ranked footage still frames in V23 endcard"
+    }
+  ],
+  "qa_gates": {
+    "must_match_exact_behavior": true,
+    "must_not_obscure_subject": true,
+    "avoid_overcrowding_with_existing_editorial_notes": true,
+    "require_1080x1920_24fps_full_decode": true,
+    "require_no_voice_track": true,
+    "require_actual_frame_qa": true,
+    "require_7_category_100_point_scoring_after_final_mp4": true,
+    "minimum_candidate_score": 85,
+    "rights_gate_separate_from_score": true
+  },
+  "review_only": true,
+  "publication_approved": false
+}
