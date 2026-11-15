@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "version": "V26_FREE",
+  "user_selection": "caption-only, no voiceover, five distinct licensed free sources",
+  "source_baseline": "V25 source selection, 5 originals",
+  "duration_sec": 30,
+  "rights_scope": "Pexels 3, CC0 1, CC BY 3.0 1; requires credit and independent YouTube YPP review",
+  "no_tts": true,
+  "no_voiceover": true,
+  "use_only_original_synthesized_sfx": true,
+  "audio_passthrough": true,
+  "auto_publish": false,
+  "windows": [
+    {
+      "id": "intro",
+      "start_sec": 0,
+      "end_sec": 2,
+      "label": "INTRO",
+      "phase": "30초의 순간",
+      "headline": "예상 밖 행동 다섯 장면",
+      "detail": "같은 고양이, 전혀 다른 반응",
+      "stages": [
+        "도약",
+        "돌진",
+        "숨기"
+      ]
+    },
+    {
+      "id": "rank5_setup",
+      "start_sec": 2,
+      "end_sec": 2.42,
+      "label": "05위",
+      "phase": "먼저 관찰",
+      "headline": "상자를 발견한 고양이",
+      "detail": "잠깐의 망설임, 그리고 뛰어듭니다",
+      "stages": [
+        "접근",
+        "상자 속",
+        "잠복"
+      ]
+    },
+    {
+      "id": "rank5_payoff",
+      "start_sec": 2.42,
+      "end_sec": 6,
+      "label": "05위",
+      "phase": "반전 포착",
+      "headline": "들어가는 건 1초, 나오진 않네요",
+      "detail": "화면에 남은 건 상자 하나",
+      "stages": [
+        "접근",
+        "상자 속",
+        "잠복"
+      ]
+    },
+    {
+      "id": "rank4_setup",
+      "start_sec": 6,
+      "end_sec": 7.1,
+      "label": "04위",
+      "phase": "먼저 관찰",
+      "headline": "장난감에서 눈을 떼지 않습니다",
+      "detail": "몸보다 시선이 먼저 움직여요",
+      "stages": [
+        "주시",
+        "도약",
+        "다시 대기"
+      ]
+    },
+    {
+      "id": "rank4_payoff",
+      "start_sec": 7.1,
+      "end_sec": 11,
+      "label": "04위",
+      "phase": "반응 포착",
+      "headline": "위로 도약! 그리고 다시 대기",
+      "detail": "점프 뒤에도 시선은 장난감으로",
+      "stages": [
+        "주시",
+        "도약",
+        "다시 대기"
+      ]
+    },
+    {
+      "id": "rank3_setup",
+      "start_sec": 11,
+      "end_sec": 12.35,
+      "label": "03위",
+      "phase": "먼저 관찰",
+      "headline": "의자 위에 있는 간식을 발견",
+      "detail": "목표에 시선을 둔 채 자세를 잡습니다",
+      "stages": [
+        "발판 확인",
+        "점프",
+        "간식 확인"
+      ]
+    },
+    {
+      "id": "rank3_payoff",
+      "start_sec": 12.35,
+      "end_sec": 15,
+      "label": "03위",
+      "phase": "착지 포착",
+      "headline": "한 번에 의자까지 올라섭니다",
+      "detail": "멈추지 않고 곧장 목표를 확인",
+      "stages": [
+        "발판 확인",
+        "점프",
+        "간식 확인"
+      ]
+    },
+    {
+      "id": "rank2_setup",
+      "start_sec": 15,
+      "end_sec": 17.5,
+      "label": "02위",
+      "phase": "먼저 관찰",
+      "headline": "고양이가 렌즈 쪽으로 다가옵니다",
+      "detail": "처음에는 작게 보였는데…",
+      "stages": [
+        "멀리서",
+        "접근",
+        "렌즈 앞"
+      ]
+    },
+    {
+      "id": "rank2_payoff",
+      "start_sec": 17.5,
+      "end_sec": 21,
+      "label": "02위",
+      "phase": "반전 포착",
+      "headline": "순간적으로 화면을 꽉 채웁니다",
+      "detail": "거리 변화가 웃음 포인트",
+      "stages": [
+        "멀리서",
+        "접근",
+        "렌즈 앞"
+      ]
+    },
+    {
+      "id": "rank1_setup",
+      "start_sec": 21,
+      "end_sec": 23.2,
+      "label": "01위",
+      "phase": "먼저 관찰",
+      "headline": "눈앞에는 건물 사이의 틈",
+      "detail": "바로 다음 행동을 보면…",
+      "stages": [
+        "출발",
+        "공중 이동",
+        "착지"
+      ]
+    },
+    {
+      "id": "rank1_payoff",
+      "start_sec": 23.2,
+      "end_sec": 27,
+      "label": "01위",
+      "phase": "결정적 순간",
+      "headline": "뛰어오르는 순간이 가장 긴장됩니다",
+      "detail": "이 점프가 1위인 이유: 도약의 크기",
+      "stages": [
+        "출발",
+        "공중 이동",
+        "착지"
+      ]
+    },
+    {
+      "id": "outro",
+      "start_sec": 27,
+      "end_sec": 30,
+      "label": "TOP5",
+      "phase": "편집자의 선택",
+      "headline": "숨기 · 도약 · 착지 · 접근 · 건너뛰기",
+      "detail": "당신에게 가장 예상 밖인 장면은?",
+      "stages": [
+        "진입",
+        "반응",
+        "점프"
+      ]
+    }
+  ]
+}
