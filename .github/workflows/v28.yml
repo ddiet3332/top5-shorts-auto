@@ -1,4 +1,4 @@
-# V28 original-source, no narration. Never auto-publish or claim YPP approval.
+# V28.2 locked header 0–27s, original source, no narration. Never auto-publish or claim YPP approval.
 name: TOP5 V28 - original full-screen one-line review render
 on:
   workflow_dispatch:
