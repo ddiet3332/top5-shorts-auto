@@ -1,3 +1,4 @@
+# V24 tracks real video preview evidence, not automatic license/monetization approval.
 # Original preview candidates only. Not a valid use authorization for third-party music.
 name: TOP5 V24 - rights-aware high-action original source audition
 on:
@@ -7,7 +8,7 @@ on:
       - '.github/workflows/v24.yml'
       - 'src/v24_new_source_audition.py'
       - 'src/publish_v24_index.py'
-      - 'tests/test_v24_new_source_audition.py'
+      - 'tests/test_v24_action_sources.py'
       - 'sample/v24-new-candidates.json'
   workflow_dispatch:
 permissions:
