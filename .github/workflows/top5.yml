@@ -1,5 +1,5 @@
 name: TOP5 CC Shorts - discover and draft
-run-name: TOP5 V16 diverse funny-cat candidate audit - ${{ inputs.topic || 'cat actions' }}
+run-name: TOP5 V16 stronger 3rd rank and quicker 5th cut - ${{ inputs.topic || 'cat actions' }}
 on:
   push:
     branches: [main]
@@ -12,6 +12,7 @@ on:
         required: true
         type: choice
         options:
+          - v16-draft
           - v16-candidates
           - v15-draft
           - v15-short
@@ -58,13 +59,15 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - name: Discover, download, and build draft
         env:
-          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'v16-candidates' || 'source-audition') }}
+          MODE: ${{ inputs.mode || (github.event_name == 'push' && 'v16-draft' || 'source-audition') }}
           TOPIC: ${{ inputs.topic || 'cat playing' }}
           TITLE: ${{ inputs.title || '고양이 기상천외 행동 TOP5' }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           V13_IDS: ${{ inputs.candidate_ids || 'PX-4807151,PX-6853903,PX-6853188' }}
         run: |
-          if [ "$MODE" = "v16-candidates" ]; then
+          if [ "$MODE" = "v16-draft" ]; then
+            python3 src/v12_mixed_draft.py --output output --selection sample/v16-mixed-selection.json --script sample/v16-script.json --title '고양이 돌발행동 TOP5' --v16-pacing
+          elif [ "$MODE" = "v16-candidates" ]; then
             python3 src/v11_candidate_review.py --candidates sample/v16-candidates.json --output output
           elif [ "$MODE" = "v15-draft" ]; then
             python3 src/v12_mixed_draft.py --output output --selection sample/v15-mixed-selection.json --script sample/v15-script.json --title '고양이 돌발행동 TOP5' --v15-pacing
