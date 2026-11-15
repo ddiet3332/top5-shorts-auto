@@ -1,0 +1,68 @@
+# Single-run topic recommendation, original sources, curated new source, render, QA.
+# No YouTube publish; provider license and original source ownership remain distinct.
+name: TOP5 V32 - Auto stronger original 30s MP4
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Automatically choose or select a TOP5 topic'
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - cat_surprises
+          - dog_surprises
+          - nature_moments
+          - objects_oddities
+          - human_moments
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_auto_v32.yml'
+      - 'src/top5_auto_v32.py'
+      - 'tests/test_top5_auto_v32.py'
+permissions:
+  contents: read
+concurrency:
+  group: v32-auto-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  make-30-second-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup no-key video tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+          python3 -m venv /tmp/v32
+          /tmp/v32/bin/pip install -q numpy pillow
+      - name: Run fixed visual and rights regression tests
+        run: |
+          /tmp/v32/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
+          /tmp/v32/bin/python -m unittest discover -s tests -p 'test_top5_auto_v30.py' -v
+      - name: Choose topic, add valid video challenger and render original 30s TOP5
+        env:
+          TOPIC: ${{ github.event.inputs.topic || 'auto' }}
+        run: /tmp/v32/bin/python src/top5_auto_v32.py --topic "$TOPIC" --output output/v32_auto
+      - name: Validate entire MP4 with video and audio decoding
+        run: |
+          ffmpeg -hide_banner -v error -xerror -i output/v32_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+      - name: Keep both video and not-approved rights evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V32-auto-review-${{ github.run_number }}
+          path: |
+            output/v32_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+            output/v32_auto/V29_ACTUAL_12FRAME_QA.jpg
+            output/v32_auto/V32_TECHNICAL_QA.json
+            output/v32_auto/V32_CHALLENGER_SELECTION.json
+            output/v32_auto/TOPIC_RECOMMENDATIONS_V32.json
+            output/v32_auto/SOURCE_SELECTION_REVIEW.json
+            output/v32_auto/SOURCE_CREDITS_REVIEW.md
+            output/v32_auto/V30_CREATIVE_AND_RIGHTS_GATES.json
+          retention-days: 7
+          if-no-files-found: warn
