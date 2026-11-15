@@ -1,0 +1,69 @@
+# V30: one push = topic ranking, source search, visual proxy gates, 30s video.
+# Never use this workflow to publish or auto-certify ownership, licenses or YPP.
+name: TOP5 V30 - Auto discovery quality-gated MP4
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'auto, cat_surprises, dog_surprises, nature_moments, objects_oddities, human_moments'
+        required: false
+        default: auto
+        type: choice
+        options:
+          - auto
+          - cat_surprises
+          - dog_surprises
+          - nature_moments
+          - objects_oddities
+          - human_moments
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_auto_v30.yml'
+      - 'src/top5_auto_v30.py'
+      - 'tests/test_top5_auto_v30.py'
+      - 'sample/top5_auto_topics_v30.json'
+permissions:
+  contents: read
+concurrency:
+  group: v30-quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  generate-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 36
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare free editing stack
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+          python3 -m venv /tmp/v30
+          /tmp/v30/bin/pip install -q numpy pillow
+      - name: Regression check for design and rights gates
+        run: |
+          /tmp/v30/bin/python -m unittest discover -s tests -p 'test_top5_auto_v30.py' -v
+          /tmp/v30/bin/python -m unittest discover -s tests -p 'test_top5_auto_v29.py' -v
+      - name: Discover, rank and render video
+        env:
+          TOPIC: ${{ github.event.inputs.topic || 'auto' }}
+        run: /tmp/v30/bin/python src/top5_auto_v30.py --topic "$TOPIC" --output output/v30_auto
+      - name: Full decode safety gate
+        run: |
+          ffmpeg -hide_banner -v error -xerror -i output/v30_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+      - name: Upload output and review gates even after failed selection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V30-auto-review-${{ github.run_number }}
+          path: |
+            output/v30_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+            output/v30_auto/V29_ACTUAL_12FRAME_QA.jpg
+            output/v30_auto/V29_TECHNICAL_QA.json
+            output/v30_auto/V30_CREATIVE_AND_RIGHTS_GATES.json
+            output/v30_auto/V30_TOPICS.json
+            output/v30_auto/V30_CANDIDATES.json
+            output/v30_auto/SOURCE_CREDITS_REVIEW.md
+            output/v30_auto/SOURCE_SELECTION_REVIEW.json
+          retention-days: 7
+          if-no-files-found: warn
