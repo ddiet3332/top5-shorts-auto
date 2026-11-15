@@ -1,0 +1,76 @@
+# V31 evaluates the last true V30.1 MP4 using an MIT open-source video model.
+# It does NOT create a monetization approval or change the locked video template.
+name: TOP5 V31 - Semantic video QA of 30s review
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'V30 GitHub Actions run ID containing the 30-second MP4'
+        default: '43731723388'
+        required: false
+        type: string
+      artifact_name:
+        description: 'Exact artifact name from that run'
+        default: 'TOP5-V30-auto-review-2'
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v31_semantic_qa.yml'
+      - 'src/v31_semantic_qa.py'
+      - 'tests/test_v31_semantic_qa.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: semantic-v31-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  video-context-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg CPU PyTorch and video-language model libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python3 -m venv /tmp/v31_env
+          /tmp/v31_env/bin/pip install -q 'torch==2.7.1' --index-url https://download.pytorch.org/whl/cpu
+          /tmp/v31_env/bin/pip install -q 'transformers==4.51.3' 'safetensors>=0.4.3' pillow numpy
+      - name: Run deterministic semantic-veto unit tests
+        run: /tmp/v31_env/bin/python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
+      - name: Download exact previously rendered V30 MP4 and ranking metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V30_RUN: ${{ github.event.inputs.source_run || '43731723388' }}
+          V30_ARTIFACT: ${{ github.event.inputs.artifact_name || 'TOP5-V30-auto-review-2' }}
+        run: |
+          mkdir -p input
+          if [[ ! "$V30_RUN" =~ ^[0-9]{8,20}$ ]]; then echo 'Invalid run ID'; exit 1; fi
+          gh run download "$V30_RUN" --repo "$GITHUB_REPOSITORY" --name "$V30_ARTIFACT" --dir input
+          test -s input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+          test -s input/SOURCE_SELECTION_REVIEW.json
+      - name: Model-backed eight-frame video-text comparison for all 5 ranks
+        env:
+          HF_HUB_DISABLE_XET: '1'
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+          OMP_NUM_THREADS: '2'
+        run: |
+          /tmp/v31_env/bin/python src/v31_semantic_qa.py \
+            --video input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
+            --selection input/SOURCE_SELECTION_REVIEW.json \
+            --output output/v31_semantic
+      - name: Export visual evidence and advisory only report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V31-semantic-advisory-${{ github.run_number }}
+          path: |
+            output/v31_semantic/V31_SEMANTIC_QA.json
+            output/v31_semantic/V31_SEMANTIC_QA.md
+            output/v31_semantic/V31_40_FRAME_STORYBOARD.jpg
+          retention-days: 7
+          if-no-files-found: warn
