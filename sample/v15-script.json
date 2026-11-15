@@ -1,0 +1,36 @@
+{
+  "captions": {
+    "hook": "이 고양이는 진짜 날아갑니다!",
+    "rank5": "5위, 면봉 하나만 보여줬는데!",
+    "rank4": "4위, 건반을 밟은 다음은?",
+    "rank3": "3위, 카메라 앞에 등장했다!",
+    "rank2": "2위, 연못 앞에서 망설일까?",
+    "rank1": "1위, 고양이가 날아간 거리!",
+    "outro": "여러분이라면 몇 위를 1위로?"
+  },
+  "phases": {
+    "rank5": [
+      "면봉 하나만 보여줬는데…",
+      "점프 버튼이 켜졌습니다!"
+    ],
+    "rank4": [
+      "오늘은 피아노 연주회?",
+      "건반 밟더니 바로 퇴근!"
+    ],
+    "rank3": [
+      "3위, 어? 저 고양이",
+      "카메라 앞까지 순식간에!"
+    ],
+    "rank2": [
+      "2위, 연못이 가로막았는데",
+      "멈추지 않고 한 번에 점프!"
+    ],
+    "rank1": [
+      "1위, 건물 사이가 이렇게 넓은데",
+      "발 하나 안 헛디디고 성공!"
+    ]
+  },
+  "review_only": true,
+  "publication_approved": false,
+  "qa_note": "V15 3-second rank3 + 6-second ranks2/1. Commentary is editorial, no original audio or legal clearance."
+}
