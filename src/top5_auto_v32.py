@@ -450,9 +450,20 @@ def select_dog_audition_sources(topic,candidates,output):
                 except Exception as exc:
                     path.unlink(missing_ok=True)
                     failures.append({"id":src.get("title"),"reason":type(exc).__name__})
-    # V2 review: dog-field is too distant for a mobile Short.
-    rows=[r for r in rows if r.get("title")!="Pexels dog dog-field"]
-    combined=rows+commons
+    # Deterministic no-human fallback: exclude low-action footage when at least
+    # five other real, downloaded originals remain. Never invent extra sources.
+    # These are mechanical proxies, NOT a humor or rights approval.
+    weak={"Pexels dog dog-field","Pexels dog dog-snow"}
+    strong=[r for r in rows+commons if r.get("title") not in weak]
+    fallback=[r for r in rows+commons if r.get("title") in weak]
+    combined=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
+    (Path(output)/"AUTO_SOURCE_REPLACEMENT.json").write_text(json.dumps({
+        "strategy":"prefer five non-weak downloaded originals; fallback only on shortage",
+        "weak_candidates":[r["title"] for r in fallback],
+        "strong_candidates":[r["title"] for r in strong],
+        "fallback_used":[r["title"] for r in combined[:5] if r in fallback],
+        "semantic_humor_certified":False,"publication_approved":False
+    },ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
     (Path(output)/"DOG_SOURCE_BRIDGE.json").write_text(json.dumps({
         "pexels_technically_eligible":len(rows),"commons_technically_eligible":len(commons),
         "total":len(combined),"failures":failures,
