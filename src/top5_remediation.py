@@ -16,9 +16,13 @@ def plan(review, candidates, previous_attempts=0, max_repairs=3):
     clips=review.get("clips",[])
     if len(clips)!=5 or len({c.get("rank") for c in clips})!=5:
         return {"status":"BLOCKED","reason":"five_rank_reviews_required","repairs":[]}
-    unknown=[c for c in clips if c.get("verified") is not True\n             or type(c.get("editorial_score")) not in (int,float)\n             or not 0<=c["editorial_score"]<=100\n             or type(c.get("minimum_score",70)) not in (int,float)]\n    if unknown:\n        return {"status":"BLOCKED","reason":"unreviewed_or_invalid_clip_scores","repairs":[]}\n    bad=[c for c in clips if c.get("verified") is True
-         and isinstance(c.get("editorial_score"),(int,float))
-         and c["editorial_score"]<c.get("minimum_score",70)]
+    unknown=[c for c in clips if c.get("verified") is not True
+             or type(c.get("editorial_score")) not in (int,float)
+             or not 0<=c["editorial_score"]<=100
+             or type(c.get("minimum_score",70)) not in (int,float)]
+    if unknown:
+        return {"status":"BLOCKED","reason":"unreviewed_or_invalid_clip_scores","repairs":[]}
+    bad=[c for c in clips if c["editorial_score"]<c.get("minimum_score",70)]
     if not bad:
         return {"status":"NO_CHANGE","reason":"no_verified_weak_clips","repairs":[]}
     used={c.get("source_page") for c in clips}
