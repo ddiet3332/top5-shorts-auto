@@ -70,6 +70,20 @@ FALLBACK=[
 
 def prompts_for(title,label):
     key=(title+" "+label).lower()
+    # Dog TOP5 must never be evaluated against cat-only prompts.
+    if any(term in key for term in ("pexels dog","puppiesplaying","dog playing","dog jumping","dog running")):
+        if "jump" in key:
+            expected="A video of a dog jumping up toward a person."
+        elif "catch" in key or "fetch" in key:
+            expected="A video of a dog actively playing fetch or catching a toy."
+        elif "puppies" in key:
+            expected="A video of puppies actively playing together."
+        else:
+            expected="A video of a dog running or playing outdoors."
+        return [expected,
+                "A video of a dog sitting quietly and not playing.",
+                "A video of a dog walking slowly without a toy.",
+                "A video of an outdoor scene without any dogs."]
     for terms,arr in SCENES:
         if any(s.lower() in key for s in terms):
             return arr
