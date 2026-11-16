@@ -16,7 +16,10 @@ SOURCES=[
  {"id":"dog-fetch","provider":"pexels","title":"Close-Up Shot of a Dog Playing Fetch","page_url":"https://www.pexels.com/video/close-up-shot-of-a-dog-playing-fetch-4171485/","creator":"Magda Ehlers","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
  {"id":"dog-puppy","provider":"pexels","title":"A Dog Playing Catch","page_url":"https://www.pexels.com/video/a-dog-playing-catch-7515923/","creator":"RDNE Stock project","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
  {"id":"dog-snow","provider":"pexels","title":"Border Collie Catching Frisbee in Snow","page_url":"https://www.pexels.com/video/border-collie-catching-frisbee-in-snow-35235651/","creator":"Michal Petráš","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
- {"id":"dog-frisbee-2","provider":"pexels","title":"Dog Catching a Frisbee","page_url":"https://www.pexels.com/video/dog-catching-a-frisbee-6564028/","creator":"Brixiv","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"}
+ {"id":"dog-frisbee-2","provider":"pexels","title":"Dog Catching a Frisbee","page_url":"https://www.pexels.com/video/dog-catching-a-frisbee-6564028/","creator":"Brixiv","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+ {"id":"dog-field","provider":"pexels","title":"Energetic Dog Playing in Open Field","page_url":"https://www.pexels.com/video/energetic-dog-playing-in-open-field-35282488/","creator":"Jay's Photography","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+ {"id":"dog-jump-person","provider":"pexels","title":"Dog Jumping on Woman's Back","page_url":"https://www.pexels.com/video/dog-jumping-on-woman-s-back-7628753/","creator":"ArtHouse Studio","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+ {"id":"dog-fetch-ring","provider":"pexels","title":"A Dog Running on the Backyard","page_url":"https://www.pexels.com/video/a-dog-running-on-the-backyard-8746627/","creator":"ROMAN ODINTSOV","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"}
 ]
 def main():
  OUT.mkdir(parents=True,exist_ok=True)
