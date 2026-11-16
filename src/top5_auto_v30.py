@@ -12,7 +12,7 @@ import math
 from pathlib import Path
 from collections import Counter
 
-from top5 import query_candidates, download_video, probe_duration, motion_highlight
+from top5 import query_candidates, category_candidates, download_video, probe_duration, motion_highlight
 from top5_auto_v29 import (
     find_seed_candidates, title_score, story_label,
     assemble_video, technical_qa, save_license_and_status
@@ -47,12 +47,19 @@ def discover_for_topic(topic,discover=True):
     except Exception as e:
         failures.append("seed API: "+type(e).__name__)
     if discover:
-        for phrase in topic.get("search",[])[:4]:
+        for phrase in topic.get("search",[])[:12]:
             try:
                 for x in query_candidates(phrase,per_query=45):
                     rows.setdefault(x["title"],x)
             except Exception as e:
                 failures.append("search "+phrase+": "+type(e).__name__)
+    if discover:
+        for category in topic.get("commons_categories",[])[:5]:
+            try:
+                for x in category_candidates(category,per_query=100):
+                    rows.setdefault(x["title"],x)
+            except Exception as e:
+                failures.append("category "+category+": "+type(e).__name__)
     reviewed=checked_scenes()
     scored=[]
     seeds=set(topic.get("seeds",[]))
