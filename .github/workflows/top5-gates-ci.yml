@@ -4,8 +4,10 @@ on:
     paths:
       - 'src/top5_publication_gate.py'
       - 'src/top5_watchdog_decision.py'
+      - 'src/top5_remediation.py'
       - 'tests/test_top5_publication_gate.py'
       - 'tests/test_top5_watchdog_decision.py'
+      - 'tests/test_top5_remediation.py'
       - '.github/workflows/top5-gates-ci.yml'
   workflow_dispatch:
 permissions:
@@ -21,5 +23,7 @@ jobs:
           python-version: '3.11'
       - name: Quality and watchdog gate tests
         run: python -m unittest discover -s tests -p 'test_top5_*gate.py' -v
+      - name: Scene repair planning tests
+        run: python -m unittest discover -s tests -p 'test_top5_remediation.py' -v
       - name: Retry-decision tests
         run: python -m unittest discover -s tests -p 'test_top5_watchdog_decision.py' -v
