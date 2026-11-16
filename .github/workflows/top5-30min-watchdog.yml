@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v4
+      - name: Verify publication gates
+        run: python -m unittest discover -s tests -p 'test_top5_publication_gate.py' -v
       - name: Inspect dog TOP5 pipeline and retry failed runs
         env:
           GH_TOKEN: ${{ github.token }}
