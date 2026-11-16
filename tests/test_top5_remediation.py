@@ -20,7 +20,13 @@ class RemediationTests(unittest.TestCase):
         self.assertEqual(plan({"clips":self.clips},self.options)["status"],"BLOCKED")
     def test_unreviewed_clip_blocks(self):
         self.clips[2]["verified"]=False
-        self.assertEqual(plan({"clips":self.clips},self.options)["reason"],"unreviewed_clips")
+        self.assertEqual(plan({"clips":self.clips},self.options)["reason"],"unreviewed_or_invalid_clip_scores")
+    def test_missing_score_must_not_claim_no_change(self):
+        self.clips[0]["editorial_score"]=None
+        self.assertEqual(plan({"clips":self.clips},self.options)["status"],"BLOCKED")
+    def test_boolean_score_invalid(self):
+        self.clips[0]["editorial_score"]=True
+        self.assertEqual(plan({"clips":self.clips},self.options)["status"],"BLOCKED")
     def test_three_repair_limit(self):
         self.assertEqual(plan({"clips":self.clips},self.options,3)["status"],"STOP")
     def test_replacement_must_be_strictly_better(self):
