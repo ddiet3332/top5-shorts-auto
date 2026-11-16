@@ -76,7 +76,16 @@
       "trick",
       "run",
       "fetch",
-      "roll"
+      "roll",
+      "catch",
+      "play",
+      "agility",
+      "frisbee",
+      "chasing",
+      "running",
+      "tricks",
+      "rolling",
+      "dancing"
     ],
     "search": [
       "dog playing",
@@ -90,7 +99,17 @@
       "dog rolling",
       "dog catching ball",
       "Hund spielt",
-      "chien joue"
+      "chien joue",
+      "dog catches frisbee",
+      "dog catching",
+      "dog tricks",
+      "puppy jumps",
+      "dog running",
+      "dog agility training",
+      "dog playing ball",
+      "puppy playing ball",
+      "dog fetching stick",
+      "dogs playing together"
     ],
     "seeds": [],
     "exclude_title_contains": [
