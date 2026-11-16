@@ -415,7 +415,7 @@ def select_dog_audition_sources(topic,candidates,output):
                 "cut_start":round(start,2),"motion_proxy":float(motion),
                 "editorial_quality_heuristic":min(45.0,25.0+float(motion)*0.2),
                 "review_basis":"V37 source frame sheet generated; editorial action NOT yet verified",
-                "label":"강아지 행동 후보","caption":"어떤 행동이 이어질까?",
+                "label":src["title"],"caption":({"dog-fetch":"공을 향해 전력 질주!","dog-puppy":"앞발부터 나가는 순간","dog-snow":"눈밭 위 원반 추격","dog-field":"넓은 들판을 가로질러","dog-jump-person":"사람에게 달려드는 순간!","dog-fetch-ring":"원반을 향한 집중!"}.get(src["id"],"강아지의 움직임을 보세요")), 
                 "rights_verified":False,"publication_approved":False,
                 "comic_action_verified":False})
         except Exception as exc:
