@@ -507,6 +507,21 @@ def main():
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     write_gates(output,topic,final,attempts,recommendations)
     save_license_and_status(topic,final,recommendations,attempts,output)
+    # Persist a deterministic, non-publishing replacement manifest for later QA.
+    # These are provisional candidates, not verified clip reviews.
+    replacement_manifest={
+        "schema_version":1,"topic":topic["topic_id"],
+        "clips":[{"rank":5-i,"source_page":item.get("source_page"),
+                  "title":item.get("title"),"verified":False,
+                  "editorial_score":None,"rights_independently_cleared":False}
+                 for i,item in enumerate(final)],
+        "repair_attempt":0,
+        "next_step":"Independent clip-level review and source-rights evidence required",
+        "publication_approved":False
+    }
+    (output/"TOP5_REPLACEMENT_REVIEW_INPUT.json").write_text(
+        json.dumps(replacement_manifest,ensure_ascii=False,indent=2)+"\\n",
+        encoding="utf-8")
     video=assemble_video(topic,final,output)
     qa=technical_qa(video,output,topic,final)
     qa["version"]="V37"
