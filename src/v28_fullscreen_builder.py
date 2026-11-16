@@ -43,11 +43,11 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
 Style: Title,NanumSquare,72,&H0000D9FF,&H00FFFFFF,&H00201B15,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,10,10,10,1
-Style: MainTopic,NanumSquare,59,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
-Style: TopFive,NanumSquare,84,&H00FFFFFF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
+Style: MainTopic,NanumSquare,59,&H00171717,&H00171717,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
+Style: TopFive,NanumSquare,84,&H00171717,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
 Style: SmallRank,NanumSquare,62,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,12,12,12,1
-Style: Rank,NanumSquare,50,&H00FFFFFF,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,10,10,10,1
-Style: Active,NanumSquare,55,&H0000B8FF,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,7,10,10,10,1
+Style: Rank,NanumSquare,50,&H00171717,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,10,10,10,1
+Style: Active,NanumSquare,55,&H00171717,&H00171717,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,7,10,10,10,1
 Style: RankName,NanumGothic,22,&H00F5F5F5,&H00F5F5F5,&H00090909,&H00000000,-1,0,0,0,100,100,0,0,1,3,1,7,10,10,10,1
 Style: Caption,NanumSquare,60,&H00FFFFFF,&H00FFFFFF,&H0011100F,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,5,10,10,10,1
 Style: Outro,NanumSquare,58,&H00FFFFFF,&H00FFFFFF,&H0011100F,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,5,10,10,10,1
@@ -145,8 +145,8 @@ def create_scene(source,start,seconds,destination):
         "[full]scale=1080:1605:force_original_aspect_ratio=decrease:flags=lanczos,"
         "setsar=1[front];"
         "[back][front]overlay=(W-w)/2:305+(1615-h)/2:format=auto,"
-        "drawbox=x=0:y=0:w=1080:h=305:color=black@0.92:t=fill,"
-        "drawbox=x=0:y=460:w=174:h=752:color=black@0.30:t=fill,"
+        "drawbox=x=0:y=0:w=1080:h=305:color=white@0.96:t=fill,"
+        "drawbox=x=0:y=460:w=174:h=752:color=white@0.83:t=fill,"
         "fps=24,format=yuv420p[v]")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
          "-filter_complex",filtergraph,"-map","[v]",
