@@ -77,6 +77,23 @@ jobs:
             --video input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
             --selection input/SOURCE_SELECTION_REVIEW.json \
             --output output/v31_semantic
+      - name: Evaluate semantic rejection gates without inventing an editorial score
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('output/v31_semantic/V31_SEMANTIC_QA.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          mismatches=[r['rank'] for r in d['ranks'] if r['verdict']['flag']=='POSSIBLE_CAPTION_SCENE_MISMATCH']
+          report={'publication_approved':False,'editorial_score_100':None,
+                  'semantic_mismatch_ranks':mismatches,
+                  'automatic_improvement_required':bool(mismatches),
+                  'automatic_replacement_executed':False,
+                  'reason':'Semantic model is advisory; cannot certify humor, licenses or originality'}
+          Path('output/v31_semantic/AUTO_IMPROVEMENT_GATE.json').write_text(json.dumps(report,indent=2)+'\n')
+          print('AUTOMATION GATE',json.dumps(report))
+          PY
       - name: Export visual evidence and advisory only report
         if: always()
         uses: actions/upload-artifact@v4
@@ -84,6 +101,7 @@ jobs:
           name: TOP5-V31-semantic-advisory-${{ github.run_number }}
           path: |
             output/v31_semantic/V31_SEMANTIC_QA.json
+            output/v31_semantic/AUTO_IMPROVEMENT_GATE.json
             output/v31_semantic/V31_SEMANTIC_QA.md
             output/v31_semantic/V31_40_FRAME_STORYBOARD.jpg
           retention-days: 7
