@@ -450,8 +450,7 @@ def select_dog_audition_sources(topic,candidates,output):
                 except Exception as exc:
                     path.unlink(missing_ok=True)
                     failures.append({"id":src.get("title"),"reason":type(exc).__name__})
-    combined=rows+commons
-    (Path(output)/"DOG_SOURCE_BRIDGE.json").write_text(json.dumps({
+    # V2 actual-render review: dog-field is too distant to communicate the action\n    # on a phone-sized Short. Exclude it rather than counting motion as comedy.\n    rows=[r for r in rows if r.get("title")!="Pexels dog dog-field"]\n    combined=rows+commons\n    (Path(output)/"DOG_SOURCE_BRIDGE.json").write_text(json.dumps({
         "pexels_technically_eligible":len(rows),"commons_technically_eligible":len(commons),
         "total":len(combined),"failures":failures,
         "editorial_action_verified":False,"rights_verified":False,
