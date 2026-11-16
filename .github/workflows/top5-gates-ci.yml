@@ -5,6 +5,7 @@ on:
       - 'src/top5_publication_gate.py'
       - 'src/top5_watchdog_decision.py'
       - 'src/top5_remediation.py'
+      - 'src/top5_auto_v32.py'
       - 'tests/test_top5_publication_gate.py'
       - 'tests/test_top5_watchdog_decision.py'
       - 'tests/test_top5_remediation.py'
@@ -21,6 +22,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Compile production and gate scripts
+        run: python -m compileall -q src/top5_auto_v32.py src/top5_publication_gate.py src/top5_watchdog_decision.py src/top5_remediation.py
       - name: Quality and watchdog gate tests
         run: python -m unittest discover -s tests -p 'test_top5_*gate.py' -v
       - name: Scene repair planning tests
