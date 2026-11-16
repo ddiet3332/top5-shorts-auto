@@ -20,6 +20,7 @@ on:
       - '.github/workflows/top5_topic_production.yml'
       - 'sample/top5_auto_topics_v30.json'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_auto_v30.py'
       - 'src/topic_discovery_audit.py'
 permissions:
   contents: read
