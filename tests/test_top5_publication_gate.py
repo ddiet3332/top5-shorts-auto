@@ -28,9 +28,10 @@ class PublicationGateTests(unittest.TestCase):
         r=evaluate(self.qa,self.rights)
         self.assertFalse(r["report_80"])
         self.assertFalse(r["publication_candidate_85"])
-    def test_85_requires_both(self):
+    def test_missing_video_never_verifies_85(self):
         r=evaluate(self.qa,self.rights)
-        self.assertTrue(r["publication_candidate_85"])
+        self.assertFalse(r["publication_candidate_85"])
+        self.assertFalse(r["score_verified"])
         self.assertFalse(r["youtube_upload_permitted"])
     def test_missing_source_evidence_blocks_publication(self):
         self.rights["source_evidence"].pop()
