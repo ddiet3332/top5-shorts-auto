@@ -64,6 +64,10 @@ jobs:
           mkdir -p input
           if [[ ! "$V30_RUN" =~ ^[0-9]{8,20}$ ]]; then echo 'Invalid run ID'; exit 1; fi
           gh run download "$V30_RUN" --repo "$GITHUB_REPOSITORY" --name "$V30_ARTIFACT" --dir input
+          if test -s input/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4; then
+            cp input/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+            cp input/topic_run/SOURCE_SELECTION_REVIEW.json input/SOURCE_SELECTION_REVIEW.json
+          fi
           test -s input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
           test -s input/SOURCE_SELECTION_REVIEW.json
       - name: Model-backed eight-frame video-text comparison for all 5 ranks
