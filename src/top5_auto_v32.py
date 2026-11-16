@@ -520,7 +520,7 @@ def main():
         "publication_approved":False
     }
     (output/"TOP5_REPLACEMENT_REVIEW_INPUT.json").write_text(
-        json.dumps(replacement_manifest,ensure_ascii=False,indent=2)+"\\n",
+        json.dumps(replacement_manifest,ensure_ascii=False,indent=2)+"\n",
         encoding="utf-8")
     video=assemble_video(topic,final,output)
     qa=technical_qa(video,output,topic,final)
