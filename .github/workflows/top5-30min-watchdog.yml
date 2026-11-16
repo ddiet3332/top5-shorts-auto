@@ -52,7 +52,7 @@ jobs:
             mkdir -p /tmp/top5-watchdog
             gh api "repos/$GH_REPO/actions/artifacts/$artifact_id/zip" > /tmp/top5-watchdog/review.zip
             unzip -oq /tmp/top5-watchdog/review.zip -d /tmp/top5-watchdog/review
-            python -c 'import json,os,pathlib,sys; sys.path.insert(0,"src"); from top5_publication_gate import evaluate; root=pathlib.Path("/tmp/top5-watchdog/review"); qa=next(iter(root.rglob("editorial_qa.json")),None); rights=next(iter(root.rglob("independent_rights_review.json")),None); read=lambda p: json.loads(p.read_text()) if p else {}; result=evaluate(read(qa),read(rights)); summary=pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]); summary.open("a").write("80+ independently reviewed: "+str(result["report_80"])+"; rights passed: "+str(result["rights_gate_passed"])+"; YouTube upload: DISABLED\\n")'
+            python -c 'import json,os,pathlib,sys; sys.path.insert(0,"src"); from top5_publication_gate import evaluate; root=pathlib.Path("/tmp/top5-watchdog/review"); qa=next(iter(root.rglob("editorial_qa.json")),None); rights=next(iter(root.rglob("independent_rights_review.json")),None); video=next(iter(root.rglob("TOP5_AUTO_V29_REVIEW_1080x1920.mp4")),None); read=lambda p: json.loads(p.read_text()) if p else {}; result=evaluate(read(qa),read(rights),video if video else root/"missing.mp4"); summary=pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]); summary.open("a").write("80+ verified against MP4: "+str(result["report_80"])+"; rights passed: "+str(result["rights_gate_passed"])+"; YouTube upload: DISABLED\\n")'
             exit 0
           fi
           if [[ "$conclusion" != failure && "$conclusion" != timed_out ]]; then
