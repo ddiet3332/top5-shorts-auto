@@ -50,7 +50,7 @@ def evaluate(qa, rights, video_path=None):
     report={
         "score":total if reviewed else None,
         "score_verified":valid and reviewed,
-        "report_80":bool(valid and reviewed and total>=80),
+        "report_80":bool(valid and reviewed and total>=80 and rights_ok),
         "publication_candidate_85":bool(valid and reviewed and total>=85 and rights_ok),
         "rights_gate_passed":rights_ok,
         "youtube_upload_permitted":False,
@@ -60,8 +60,8 @@ def evaluate(qa, rights, video_path=None):
         report["reasons"].append("Full-video editorial scoring evidence incomplete")
     if not rights_ok:
         report["reasons"].append("Independent source rights and YouTube reused-content review incomplete")
-    if report["report_80"] and not rights_ok:
-        report["reasons"].append("80+ is review-only, NOT publication approval")
+    if valid and reviewed and total>=80 and not rights_ok:
+        report["reasons"].append("80+ editorial score withheld from reporting until rights gate passes")
     return report
 
 def main():
