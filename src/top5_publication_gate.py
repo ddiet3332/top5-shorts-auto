@@ -19,11 +19,20 @@ def evaluate(qa, rights):
     total=sum(scores.values()) if valid else None
     evidence=qa.get("full_video_review_evidence")
     reviewed=bool(isinstance(evidence,dict) and evidence.get("reviewed") is True
-                  and evidence.get("video_sha256") and evidence.get("reviewer")
+                  and isinstance(evidence.get("video_sha256"),str)
+                  and len(evidence["video_sha256"])==64
+                  and all(ch in "0123456789abcdef" for ch in evidence["video_sha256"].lower())
+                  and evidence.get("reviewer")
                   and evidence.get("reviewed_at"))
     rights_ok=(rights.get("source_rights_independently_cleared") is True
                and rights.get("all_five_sources_verified") is True
-               and rights.get("youtube_reused_content_reviewed") is True)
+               and rights.get("youtube_reused_content_reviewed") is True
+               and isinstance(rights.get("source_evidence"),list)
+               and len(rights["source_evidence"])==5
+               and len({x.get("source_page") for x in rights["source_evidence"] if isinstance(x,dict)})==5
+               and all(isinstance(x,dict) and x.get("independent_review") is True
+                       and x.get("license_evidence_url") and x.get("creator")
+                       for x in rights["source_evidence"]))
     report={
         "score":total if reviewed else None,
         "score_verified":valid and reviewed,
