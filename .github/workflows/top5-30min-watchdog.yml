@@ -42,7 +42,30 @@ jobs:
           attempt=$(jq -r '.run_attempt' <<<"$latest")
           echo "Run $id: $conclusion, attempt $attempt" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$conclusion" == success ]]; then
-            echo 'Success is technical only; quality and rights remain unapproved.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Technical run succeeded. Checking review evidence (never infer scores).' >> "$GITHUB_STEP_SUMMARY"
+            artifacts=$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100")
+            artifact_id=$(jq -r '[.artifacts[] | select(.name | startswith("TOP5-dog_surprises-review-"))] | sort_by(.created_at) | last | .id // empty' <<<"$artifacts")
+            if [[ -z "$artifact_id" ]]; then
+              echo 'No dog review artifact: quality unknown.' >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            mkdir -p /tmp/top5-watchdog
+            gh api "repos/$GH_REPO/actions/artifacts/$artifact_id/zip" > /tmp/top5-watchdog/review.zip
+            unzip -oq /tmp/top5-watchdog/review.zip -d /tmp/top5-watchdog/review
+            python - <<'PY'
+import json,os
+from pathlib import Path
+p=Path('/tmp/top5-watchdog/review/topic_run/V30_CREATIVE_AND_RIGHTS_GATES.json')
+summary=Path(os.environ['GITHUB_STEP_SUMMARY'])
+if not p.exists():
+    summary.open('a').write('Missing quality/rights report; fail closed.\\n')
+else:
+    d=json.loads(p.read_text())
+    if d.get('quality_target_75_met') is None or d.get('copyright_and_ypp_verified') is not True:
+        summary.open('a').write('Quality score unverified and/or rights not cleared; NO 80-point claim, NO publication.\\n')
+    else:
+        summary.open('a').write('Evidence requires independent review before any 80+ claim.\\n')
+PY
             exit 0
           fi
           if [[ "$conclusion" != failure && "$conclusion" != timed_out ]]; then
