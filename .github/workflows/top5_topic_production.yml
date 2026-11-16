@@ -22,6 +22,7 @@ on:
       - 'src/top5_auto_v32.py'
       - 'src/top5_auto_v30.py'
       - 'src/topic_discovery_audit.py'
+      - 'src/v12_sources.py'
 permissions:
   contents: read
 concurrency:
@@ -47,6 +48,10 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_auto_v30.py' -v
       - name: Audit discovery and save failure evidence
         run: /tmp/top5-topic/bin/python src/topic_discovery_audit.py --topic "$TOPIC" --output output/topic_run/DISCOVERY_AUDIT.json
+      - name: Verify external-source catalog validation
+        run: |
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v19_multisource_review.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v17_source_collection.py' -v
       - name: Produce topic-specific TOP5 review MP4
         run: /tmp/top5-topic/bin/python src/top5_auto_v32.py --topic "$TOPIC" --output output/topic_run
       - name: Full audio and video decode check
