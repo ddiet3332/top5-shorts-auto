@@ -70,7 +70,8 @@ def discover_for_topic(topic,discover=True):
             continue
         meta_score=title_score(row,topic)
         if topic.get("require_action_in_title",False) and not any(action.casefold() in normalized_name for action in topic["actions"]):
-            continue
+            if name not in seeds:
+                continue
         if name in seeds and meta_score<0 and not BLOCK.search(row.get("source_claim","")):
             meta_score=4.0  # explicitly curated neutral-name files, metadata only
         if meta_score<=0:
