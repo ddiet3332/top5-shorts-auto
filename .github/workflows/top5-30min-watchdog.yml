@@ -53,19 +53,19 @@ jobs:
             gh api "repos/$GH_REPO/actions/artifacts/$artifact_id/zip" > /tmp/top5-watchdog/review.zip
             unzip -oq /tmp/top5-watchdog/review.zip -d /tmp/top5-watchdog/review
             python - <<'PY'
-import json,os
-from pathlib import Path
-p=Path('/tmp/top5-watchdog/review/topic_run/V30_CREATIVE_AND_RIGHTS_GATES.json')
-summary=Path(os.environ['GITHUB_STEP_SUMMARY'])
-if not p.exists():
-    summary.open('a').write('Missing quality/rights report; fail closed.\\n')
-else:
-    d=json.loads(p.read_text())
-    if d.get('quality_target_75_met') is None or d.get('copyright_and_ypp_verified') is not True:
-        summary.open('a').write('Quality score unverified and/or rights not cleared; NO 80-point claim, NO publication.\\n')
-    else:
-        summary.open('a').write('Evidence requires independent review before any 80+ claim.\\n')
-PY
+            import json,os
+            from pathlib import Path
+            p=Path('/tmp/top5-watchdog/review/topic_run/V30_CREATIVE_AND_RIGHTS_GATES.json')
+            summary=Path(os.environ['GITHUB_STEP_SUMMARY'])
+            if not p.exists():
+                summary.open('a').write('Missing quality/rights report; fail closed.\\n')
+            else:
+                d=json.loads(p.read_text())
+                if d.get('quality_target_75_met') is None or d.get('copyright_and_ypp_verified') is not True:
+                    summary.open('a').write('Quality score unverified and/or rights not cleared; NO 80-point claim, NO publication.\\n')
+                else:
+                    summary.open('a').write('Evidence requires independent review before any 80+ claim.\\n')
+            PY
             exit 0
           fi
           if [[ "$conclusion" != failure && "$conclusion" != timed_out ]]; then
