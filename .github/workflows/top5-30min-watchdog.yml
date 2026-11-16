@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify publication gates
         run: python -m unittest discover -s tests -p 'test_top5_publication_gate.py' -v
+      - name: Verify watchdog decisions
+        run: python -m unittest discover -s tests -p 'test_top5_watchdog_decision.py' -v
       - name: Inspect dog TOP5 pipeline and retry failed runs
         env:
           GH_TOKEN: ${{ github.token }}
@@ -27,20 +29,23 @@ jobs:
           run_json=$(gh api "repos/$GH_REPO/actions/runs/43969794527")
           workflow_id=$(jq -r '.workflow_id' <<<"$run_json")
           runs=$(gh api "repos/$GH_REPO/actions/workflows/$workflow_id/runs?per_page=15")
-          active=$(jq '[.workflow_runs[] | select(.status=="queued" or .status=="in_progress" or .status=="waiting")] | length' <<<"$runs")
-          if (( active > 0 )); then
-            echo 'Dog pipeline active; no duplicate launch.' >> "$GITHUB_STEP_SUMMARY"
+          decision=$(jq -c '.workflow_runs' <<<"$runs" | python src/top5_watchdog_decision.py)
+          action=$(jq -r '.action' <<<"$decision")
+          echo "Watchdog decision: $decision" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$action" == wait || "$action" == block ]]; then
             exit 0
           fi
-          latest=$(jq -c '.workflow_runs[0] // empty' <<<"$runs")
-          if [[ -z "$latest" ]]; then
-            echo 'No history; fail closed.' >> "$GITHUB_STEP_SUMMARY"
+          id=$(jq -r '.run_id' <<<"$decision")
+          if [[ "$action" == rerun_failed_jobs ]]; then
+            gh api -X POST "repos/$GH_REPO/actions/runs/$id/rerun-failed-jobs" >/dev/null
+            echo 'Bounded retry requested; no publishing.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$action" != inspect_artifact ]]; then
+            echo 'Unknown watchdog decision; blocked.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          conclusion=$(jq -r '.conclusion' <<<"$latest")
-          id=$(jq -r '.id' <<<"$latest")
-          attempt=$(jq -r '.run_attempt' <<<"$latest")
-          echo "Run $id: $conclusion, attempt $attempt" >> "$GITHUB_STEP_SUMMARY"
+          conclusion=success
           if [[ "$conclusion" == success ]]; then
             echo 'Technical run succeeded. Checking review evidence (never infer scores).' >> "$GITHUB_STEP_SUMMARY"
             artifacts=$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100")
@@ -55,13 +60,3 @@ jobs:
             python -c 'import json,os,pathlib,sys; sys.path.insert(0,"src"); from top5_publication_gate import evaluate; root=pathlib.Path("/tmp/top5-watchdog/review"); qa=next(iter(root.rglob("editorial_qa.json")),None); rights=next(iter(root.rglob("independent_rights_review.json")),None); video=next(iter(root.rglob("TOP5_AUTO_V29_REVIEW_1080x1920.mp4")),None); read=lambda p: json.loads(p.read_text()) if p else {}; result=evaluate(read(qa),read(rights),video if video else root/"missing.mp4"); summary=pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]); summary.open("a").write("80+ verified against MP4: "+str(result["report_80"])+"; rights passed: "+str(result["rights_gate_passed"])+"; YouTube upload: DISABLED\\n")'
             exit 0
           fi
-          if [[ "$conclusion" != failure && "$conclusion" != timed_out ]]; then
-            echo 'Manual review required.' >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-          if (( attempt >= 4 )); then
-            echo 'Three retries exhausted.' >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-          gh api -X POST "repos/$GH_REPO/actions/runs/$id/rerun-failed-jobs" >/dev/null
-          echo 'Retry requested; no publishing.' >> "$GITHUB_STEP_SUMMARY"
