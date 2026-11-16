@@ -23,6 +23,9 @@ class RemediationTests(unittest.TestCase):
         self.assertEqual(plan({"clips":self.clips},self.options)["reason"],"unreviewed_clips")
     def test_three_repair_limit(self):
         self.assertEqual(plan({"clips":self.clips},self.options,3)["status"],"STOP")
+    def test_replacement_must_be_strictly_better(self):
+        self.options[0]["editorial_score"]=39
+        self.assertEqual(plan({"clips":self.clips},self.options)["status"],"BLOCKED")
     def test_no_weak_clips(self):
         self.clips[0]["editorial_score"]=80
         self.assertEqual(plan({"clips":self.clips},self.options)["status"],"NO_CHANGE")
