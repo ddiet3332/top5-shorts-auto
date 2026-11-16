@@ -12,7 +12,12 @@ from v12_pexels_audition import download_single_pexels
 
 OUT=Path("output/dog_audition")
 SOURCES=[
- {"id":"dog-frisbee","provider":"pexels","title":"Dog catches frisbee","page_url":"https://www.pexels.com/video/a-dog-catching-a-frisbee-855029/","creator":"UNVERIFIED","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+ {"id":"dog-frisbee","provider":"pexels","title":"A Dog Catching a Frisbee","page_url":"https://www.pexels.com/video/a-dog-catching-a-frisbee-7080033/","creator":"Brixiv","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+,
+ {"id":"dog-fetch","provider":"pexels","title":"Close-Up Shot of a Dog Playing Fetch","page_url":"https://www.pexels.com/video/close-up-shot-of-a-dog-playing-fetch-4171485/","creator":"Magda Ehlers","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+ {"id":"dog-puppy","provider":"pexels","title":"A Dog Playing Catch","page_url":"https://www.pexels.com/video/a-dog-playing-catch-7515923/","creator":"RDNE Stock project","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+ {"id":"dog-snow","provider":"pexels","title":"Border Collie Catching Frisbee in Snow","page_url":"https://www.pexels.com/video/border-collie-catching-frisbee-in-snow-35235651/","creator":"Michal Petráš","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
+ {"id":"dog-frisbee-2","provider":"pexels","title":"Dog Catching a Frisbee","page_url":"https://www.pexels.com/video/dog-catching-a-frisbee-6564028/","creator":"Brixiv","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"}
 ]
 def main():
  OUT.mkdir(parents=True,exist_ok=True)
