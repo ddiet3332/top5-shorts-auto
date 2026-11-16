@@ -92,7 +92,16 @@
       "Hund spielt",
       "chien joue"
     ],
-    "seeds": []
+    "seeds": [],
+    "exclude_title_contains": [
+      "DogPlayingTetris",
+      "pone.",
+      "Genomic-deletion",
+      "achromatopsia",
+      "secure-base-effect",
+      "body-size-by-virtue",
+      "compulsive-tail-chasing"
+    ]
   },
   {
     "topic_id": "nature_moments",
