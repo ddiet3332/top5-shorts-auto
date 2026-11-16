@@ -497,7 +497,9 @@ def main():
     video=assemble_video(topic,final,output)
     qa=technical_qa(video,output,topic,final)
     qa["version"]="V37"
-    qa["curated_new_video_used"]=bool(audit["download_ok"])
+    qa["curated_new_video_used"]=bool(audit["download_ok"]) if topic["topic_id"]!="dog_surprises" else len([item for item in final if item.get("provider")=="pexels"])>0
+    qa["dog_pexels_originals_in_edit"]=sum(item.get("provider")=="pexels" for item in final) if topic["topic_id"]=="dog_surprises" else None
+    qa["dog_editorial_action_verified"]=False if topic["topic_id"]=="dog_surprises" else None
     qa["source_permissions_fully_cleared"]=False
     qa["publication_approved"]=False
     qa["v36_actions_added"]=int(v36_audit["jumpscare_added"])+int(v36_audit["pair_added"])
@@ -506,7 +508,7 @@ def main():
     qa["original_style_preserved"]="V28.3 locked, caption 60pt"
     (output/"V32_TECHNICAL_QA.json").write_text(json.dumps(qa,
         ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    print("V32 VIDEO COMPLETE",video,"new source =",audit["download_ok"],
+    print("V32 VIDEO COMPLETE",video,"new source =",qa["curated_new_video_used"],
           "publication = NO",flush=True)
 
 if __name__=="__main__":main()
