@@ -16,12 +16,9 @@ def plan(review, candidates, previous_attempts=0, max_repairs=3):
     clips=review.get("clips",[])
     if len(clips)!=5 or len({c.get("rank") for c in clips})!=5:
         return {"status":"BLOCKED","reason":"five_rank_reviews_required","repairs":[]}
-    bad=[c for c in clips if c.get("verified") is True
+    unknown=[c for c in clips if c.get("verified") is not True\n             or type(c.get("editorial_score")) not in (int,float)\n             or not 0<=c["editorial_score"]<=100\n             or type(c.get("minimum_score",70)) not in (int,float)]\n    if unknown:\n        return {"status":"BLOCKED","reason":"unreviewed_or_invalid_clip_scores","repairs":[]}\n    bad=[c for c in clips if c.get("verified") is True
          and isinstance(c.get("editorial_score"),(int,float))
          and c["editorial_score"]<c.get("minimum_score",70)]
-    unknown=[c for c in clips if c.get("verified") is not True]
-    if unknown:
-        return {"status":"BLOCKED","reason":"unreviewed_clips","repairs":[]}
     if not bad:
         return {"status":"NO_CHANGE","reason":"no_verified_weak_clips","repairs":[]}
     used={c.get("source_page") for c in clips}
@@ -31,7 +28,8 @@ def plan(review, candidates, previous_attempts=0, max_repairs=3):
                  and x.get("editorial_reviewed") is True
                  and x.get("rights_independently_cleared") is True
                  and x.get("creator") and x.get("license_evidence_url")
-                 and isinstance(x.get("editorial_score"),(int,float))
+                 and type(x.get("editorial_score")) in (int,float)
+                 and 0<=x["editorial_score"]<=100
                  and x["editorial_score"]>weak["editorial_score"]]
         if not options:
             return {"status":"BLOCKED","reason":"no_rights_cleared_better_replacement",
