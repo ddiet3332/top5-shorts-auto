@@ -26,7 +26,7 @@ class PublicationGateTests(unittest.TestCase):
     def test_rights_fail_closed(self):
         self.rights["all_five_sources_verified"]=False
         r=evaluate(self.qa,self.rights)
-        self.assertTrue(r["report_80"])
+        self.assertFalse(r["report_80"])
         self.assertFalse(r["publication_candidate_85"])
     def test_85_requires_both(self):
         r=evaluate(self.qa,self.rights)
