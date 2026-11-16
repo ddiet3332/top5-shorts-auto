@@ -11,7 +11,10 @@ class PublicationGateTests(unittest.TestCase):
                      "reviewed_at":"2026-11-17","video_sha256":"a"*64}}
         self.rights={"source_rights_independently_cleared":True,
                      "all_five_sources_verified":True,
-                     "youtube_reused_content_reviewed":True}
+                     "youtube_reused_content_reviewed":True,
+                     "source_evidence":[{"source_page":f"https://example.org/{i}",
+                         "independent_review":True,"license_evidence_url":"https://example.org/license",
+                         "creator":"Verified creator"} for i in range(5)]}
     def test_no_evidence_never_claims_80(self):
         self.qa.pop("full_video_review_evidence")
         self.assertFalse(evaluate(self.qa,self.rights)["report_80"])
@@ -27,6 +30,9 @@ class PublicationGateTests(unittest.TestCase):
         r=evaluate(self.qa,self.rights)
         self.assertTrue(r["publication_candidate_85"])
         self.assertFalse(r["youtube_upload_permitted"])
+    def test_missing_source_evidence_blocks_publication(self):
+        self.rights["source_evidence"].pop()
+        self.assertFalse(evaluate(self.qa,self.rights)["publication_candidate_85"])
     def test_low_score_not_reported(self):
         self.qa["editorial_scores"]["fun_reversal"]=0
         self.assertFalse(evaluate(self.qa,self.rights)["report_80"])
