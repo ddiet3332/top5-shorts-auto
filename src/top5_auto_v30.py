@@ -65,6 +65,9 @@ def discover_for_topic(topic,discover=True):
     seeds=set(topic.get("seeds",[]))
     for row in rows.values():
         name=row["title"]
+        normalized_name=name.casefold()
+        if any(term.casefold() in normalized_name for term in topic.get("exclude_title_contains",[])):
+            continue
         meta_score=title_score(row,topic)
         if name in seeds and meta_score<0 and not BLOCK.search(row.get("source_claim","")):
             meta_score=4.0  # explicitly curated neutral-name files, metadata only
