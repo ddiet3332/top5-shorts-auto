@@ -25,7 +25,7 @@ def evaluate(qa, rights, video_path=None):
                   and all(ch in "0123456789abcdef" for ch in evidence["video_sha256"].lower())
                   and evidence.get("reviewer")
                   and evidence.get("reviewed_at"))
-    file_hash_ok=True
+    file_hash_ok=False
     if video_path is not None:
         path=Path(video_path)
         if not path.is_file():
