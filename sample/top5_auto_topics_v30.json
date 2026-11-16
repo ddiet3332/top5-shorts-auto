@@ -101,7 +101,8 @@
       "secure-base-effect",
       "body-size-by-virtue",
       "compulsive-tail-chasing"
-    ]
+    ],
+    "require_action_in_title": true
   },
   {
     "topic_id": "nature_moments",
