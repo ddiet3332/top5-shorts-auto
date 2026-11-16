@@ -101,7 +101,9 @@
       "dog catching",
       "dog running"
     ],
-    "seeds": [],
+    "seeds": [
+      "File:Puppiesplaying-tokyoarea-jan7-2020.webm"
+    ],
     "exclude_title_contains": [
       "DogPlayingTetris",
       "pone.",
@@ -111,7 +113,12 @@
       "body-size-by-virtue",
       "compulsive-tail-chasing"
     ],
-    "require_action_in_title": true
+    "require_action_in_title": true,
+    "commons_categories": [
+      "Videos of dogs",
+      "Videos of puppies",
+      "Videos of dog agility"
+    ]
   },
   {
     "topic_id": "nature_moments",
