@@ -1,0 +1,54 @@
+name: TOP5 30-minute watchdog
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: read
+concurrency:
+  group: top5-30min-watchdog
+  cancel-in-progress: false
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect dog TOP5 pipeline and retry failed runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_json=$(gh api "repos/$GH_REPO/actions/runs/43969794527")
+          workflow_id=$(jq -r '.workflow_id' <<<"$run_json")
+          runs=$(gh api "repos/$GH_REPO/actions/workflows/$workflow_id/runs?per_page=15")
+          active=$(jq '[.workflow_runs[] | select(.status=="queued" or .status=="in_progress" or .status=="waiting")] | length' <<<"$runs")
+          if (( active > 0 )); then
+            echo 'Dog pipeline active; no duplicate launch.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          latest=$(jq -c '.workflow_runs[0] // empty' <<<"$runs")
+          if [[ -z "$latest" ]]; then
+            echo 'No history; fail closed.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          conclusion=$(jq -r '.conclusion' <<<"$latest")
+          id=$(jq -r '.id' <<<"$latest")
+          attempt=$(jq -r '.run_attempt' <<<"$latest")
+          echo "Run $id: $conclusion, attempt $attempt" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$conclusion" == success ]]; then
+            echo 'Success is technical only; quality and rights remain unapproved.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$conclusion" != failure && "$conclusion" != timed_out ]]; then
+            echo 'Manual review required.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          if (( attempt >= 4 )); then
+            echo 'Three retries exhausted.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          gh api -X POST "repos/$GH_REPO/actions/runs/$id/rerun-failed-jobs" >/dev/null
+          echo 'Retry requested; no publishing.' >> "$GITHUB_STEP_SUMMARY"
