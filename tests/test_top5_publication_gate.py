@@ -1,5 +1,7 @@
 import sys
 import unittest
+import tempfile
+import hashlib
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
 from top5_publication_gate import evaluate,CATEGORIES
@@ -33,6 +35,13 @@ class PublicationGateTests(unittest.TestCase):
     def test_missing_source_evidence_blocks_publication(self):
         self.rights["source_evidence"].pop()
         self.assertFalse(evaluate(self.qa,self.rights)["publication_candidate_85"])
+    def test_actual_video_hash_mismatch_blocks_report(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/"video.mp4"
+            p.write_bytes(b"real-video")
+            self.assertFalse(evaluate(self.qa,self.rights,p)["report_80"])
+            self.qa["full_video_review_evidence"]["video_sha256"]=hashlib.sha256(b"real-video").hexdigest()
+            self.assertTrue(evaluate(self.qa,self.rights,p)["report_80"])
     def test_low_score_not_reported(self):
         self.qa["editorial_scores"]["fun_reversal"]=0
         self.assertFalse(evaluate(self.qa,self.rights)["report_80"])
