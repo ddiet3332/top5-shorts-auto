@@ -18,6 +18,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/top5_topic_production.yml'
+      - 'sample/top5_auto_topics_v30.json'
+      - 'src/top5_auto_v32.py'
 permissions:
   contents: read
 concurrency:
