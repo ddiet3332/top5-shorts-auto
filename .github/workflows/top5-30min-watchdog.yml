@@ -29,7 +29,13 @@ jobs:
           run_json=$(gh api "repos/$GH_REPO/actions/runs/43969794527")
           workflow_id=$(jq -r '.workflow_id' <<<"$run_json")
           runs=$(gh api "repos/$GH_REPO/actions/workflows/$workflow_id/runs?per_page=15")
-          decision=$(jq -c '.workflow_runs' <<<"$runs" | python src/top5_watchdog_decision.py)
+          # Hydrate run_attempt; the list endpoint may omit it.
+          hydrated=$(jq -c '[.workflow_runs[] | {id,status,conclusion,created_at}]' <<<"$runs")
+          while IFS= read -r run_id; do
+            detail=$(gh api "repos/$GH_REPO/actions/runs/$run_id")
+            hydrated=$(jq -c --argjson detail "$detail" 'map(if .id == $detail.id then . + {run_attempt:$detail.run_attempt} else . end)' <<<"$hydrated")
+          done < <(jq -r '.[].id' <<<"$hydrated")
+          decision=$(printf '%s' "$hydrated" | python src/top5_watchdog_decision.py)
           action=$(jq -r '.action' <<<"$decision")
           echo "Watchdog decision: $decision" >> "$GITHUB_STEP_SUMMARY"
           if [[ "$action" == wait || "$action" == block ]]; then
