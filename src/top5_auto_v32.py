@@ -379,6 +379,88 @@ def apply_rank_one_story_timing(items):
         out.append(row)
     return out
 
+def select_dog_audition_sources(topic,candidates,output):
+    """Use actual downloaded Pexels audition assets, never merely count them.
+
+    This is a review-only assembly. Title metadata is not proof of the action,
+    funniness, authorship or YouTube reuse permission.
+    """
+    from top5 import probe_duration, motion_highlight
+    audit_path=Path("output/dog_audition/DOG_AUDITION.json")
+    if not audit_path.is_file():
+        raise RuntimeError("DOG_AUDITION_MISSING: run V37 dog audition first")
+    evidence=json.loads(audit_path.read_text(encoding="utf-8"))
+    rows=[]
+    failures=[]
+    for src in evidence.get("candidates",[]):
+        if src.get("status")!="AWAITING_EDITORIAL_FRAME_REVIEW":
+            failures.append({"id":src.get("id"),"reason":src.get("status")})
+            continue
+        path=audit_path.parent/(src["id"]+".mp4")
+        if not path.is_file():
+            failures.append({"id":src["id"],"reason":"downloaded original missing"})
+            continue
+        try:
+            duration=float(probe_duration(path))
+            if duration<6.2:
+                raise ValueError("source shorter than six-second rank")
+            start,motion=motion_highlight(path,duration,seconds=5)
+            start=max(0.0,min(float(start),duration-6.08))
+            rows.append({
+                "title":"Pexels dog "+src["id"],"provider":"pexels",
+                "source_page":src["page_url"],"author":src["creator"],
+                "license":"Pexels License","license_url":src["license_url"],
+                "source_claim":"Provider listing only; authorship and rights not independently cleared",
+                "local_path":str(path),"duration_sec":duration,
+                "cut_start":round(start,2),"motion_proxy":float(motion),
+                "editorial_quality_heuristic":min(45.0,25.0+float(motion)*0.2),
+                "review_basis":"V37 source frame sheet generated; editorial action NOT yet verified",
+                "label":"강아지 행동 후보","caption":"어떤 행동이 이어질까?",
+                "rights_verified":False,"publication_approved":False,
+                "comic_action_verified":False})
+        except Exception as exc:
+            failures.append({"id":src["id"],"reason":type(exc).__name__})
+    # Commons sources are downloaded and metadata checked by the existing V30 gate.
+    # Do not select medical, resting, hunting or unrelated videos to fill ranks.
+    from top5_auto_v30 import select_sources
+    commons=[]
+    if candidates:
+        try:
+            commons,_=select_sources(candidates,output)
+        except RuntimeError:
+            # V30 requires five Commons items. Dog mode may have fewer.
+            from top5 import download_video
+            for i,src in enumerate(candidates[:12]):
+                path=Path(output)/("dog_commons_%02d"%i+Path(src["title"]).suffix.lower())
+                try:
+                    download_video(src,path)
+                    duration=float(probe_duration(path))
+                    if duration<6.2 or duration>125: raise ValueError("duration")
+                    start,motion=motion_highlight(path,duration,seconds=5)
+                    if motion<0.1: raise ValueError("static")
+                    commons.append({**src,"local_path":str(path),
+                        "duration_sec":duration,
+                        "cut_start":max(0.0,min(float(start),duration-6.08)),
+                        "motion_proxy":float(motion),
+                        "editorial_quality_heuristic":min(45.0,25.0+float(motion)*0.2),
+                        "review_basis":"Commons metadata/motion only; action not verified",
+                        "label":"강아지 행동 후보","caption":"무슨 일이 벌어질까?",
+                        "rights_verified":False,"publication_approved":False,
+                        "comic_action_verified":False})
+                except Exception as exc:
+                    path.unlink(missing_ok=True)
+                    failures.append({"id":src.get("title"),"reason":type(exc).__name__})
+    combined=rows+commons
+    (Path(output)/"DOG_SOURCE_BRIDGE.json").write_text(json.dumps({
+        "pexels_technically_eligible":len(rows),"commons_technically_eligible":len(commons),
+        "total":len(combined),"failures":failures,
+        "editorial_action_verified":False,"rights_verified":False,
+        "publication_approved":False},ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    if len(combined)<5:
+        raise RuntimeError("DOG_SOURCE_SHORTAGE: %d/5 real eligible originals; "
+                           "Pexels audition now connected, no filler allowed"%len(combined))
+    return combined[:5],failures
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--topics",default="sample/top5_auto_topics_v30.json")
@@ -393,8 +475,11 @@ def main():
         json.dumps({"chosen_topic":topic["topic_id"],"topics":recommendations,
         "method":"metadata availability and previous editorial judgments",
         "measured_trends_or_views":False},ensure_ascii=False,indent=2)+"\n")
-    if len(candidates)<5: raise RuntimeError("insufficient rights-metadata sources")
-    selected,attempts=select_sources(candidates,output)
+    if topic["topic_id"]=="dog_surprises":
+        selected,attempts=select_dog_audition_sources(topic,candidates,output)
+    else:
+        if len(candidates)<5: raise RuntimeError("insufficient rights-metadata sources")
+        selected,attempts=select_sources(candidates,output)
     final,audit=add_challenger(topic,selected,output)
     final,sofa_audit=add_sofa_challenger(topic,final,output)
     (output/"V35_SOFA_CHALLENGER_QA.json").write_text(json.dumps(
