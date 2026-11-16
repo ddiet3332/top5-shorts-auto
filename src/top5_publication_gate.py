@@ -6,12 +6,13 @@ No upload or publication capability.
 """
 import argparse
 import json
+import hashlib
 from pathlib import Path
 
 CATEGORIES = {"hook":20,"fun_reversal":25,"ranking":15,"flow":15,
               "original_captions":10,"sound":10,"rights_monetization":5}
 
-def evaluate(qa, rights):
+def evaluate(qa, rights, video_path=None):
     scores=qa.get("editorial_scores")
     valid=(isinstance(scores,dict) and set(scores)==set(CATEGORIES)
            and all(type(scores[k]) in (int,float) and 0<=scores[k]<=v
@@ -24,6 +25,19 @@ def evaluate(qa, rights):
                   and all(ch in "0123456789abcdef" for ch in evidence["video_sha256"].lower())
                   and evidence.get("reviewer")
                   and evidence.get("reviewed_at"))
+    file_hash_ok=True
+    if video_path is not None:
+        path=Path(video_path)
+        if not path.is_file():
+            file_hash_ok=False
+        else:
+            h=hashlib.sha256()
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024*1024),b""):
+                    h.update(chunk)
+            file_hash_ok=(isinstance(evidence,dict)
+                          and h.hexdigest().lower()==str(evidence.get("video_sha256","")).lower())
+    reviewed=reviewed and file_hash_ok
     rights_ok=(rights.get("source_rights_independently_cleared") is True
                and rights.get("all_five_sources_verified") is True
                and rights.get("youtube_reused_content_reviewed") is True
@@ -55,9 +69,10 @@ def main():
     p.add_argument("--qa",required=True)
     p.add_argument("--rights",required=True)
     p.add_argument("--output",required=True)
+    p.add_argument("--video",required=True)
     a=p.parse_args()
     report=evaluate(json.loads(Path(a.qa).read_text()),
-                    json.loads(Path(a.rights).read_text()))
+                    json.loads(Path(a.rights).read_text()),a.video)
     Path(a.output).parent.mkdir(parents=True,exist_ok=True)
     Path(a.output).write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n")
     print(json.dumps(report,ensure_ascii=False))
