@@ -62,7 +62,10 @@
       "puppies",
       "hund",
       "perro",
-      "chien"
+      "chien",
+      "canine",
+      "cachorro",
+      "собак"
     ],
     "actions": [
       "jump",
@@ -78,7 +81,16 @@
     "search": [
       "dog playing",
       "dog jumping",
-      "dog chasing"
+      "dog chasing",
+      "puppy playing",
+      "dog trick",
+      "dog fetch",
+      "dog agility",
+      "puppy running",
+      "dog rolling",
+      "dog catching ball",
+      "Hund spielt",
+      "chien joue"
     ],
     "seeds": []
   },
