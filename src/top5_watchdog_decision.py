@@ -11,7 +11,15 @@ def decide(runs):
         return {"action":"block","reason":"no_history"}
     r=max(runs,key=lambda x:(x.get("created_at",""),int(x.get("id",0))))
     state=r.get("conclusion")
-    attempt=int(r.get("run_attempt",1))
+    raw_attempt=r.get("run_attempt")
+    if raw_attempt is None:
+        return {"action":"block","reason":"missing_run_attempt","run_id":r["id"]}
+    try:
+        attempt=int(raw_attempt)
+    except (TypeError,ValueError):
+        return {"action":"block","reason":"invalid_run_attempt","run_id":r["id"]}
+    if attempt<1:
+        return {"action":"block","reason":"invalid_run_attempt","run_id":r["id"]}
     if state=="success":
         return {"action":"inspect_artifact","run_id":r["id"]}
     if state not in ("failure","timed_out"):
