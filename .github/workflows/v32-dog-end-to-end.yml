@@ -586,6 +586,60 @@ jobs:
               draw.text(((i%4)*270+8,(i//4)*515+7),name,fill='black')
           canvas.save(root/'RANK_BOUNDARY_CONTACT_SHEET.jpg',quality=88)
           PY
+      - name: Bind contact sheet and rank evidence to exact rendered MP4
+        if: always()
+        env:
+          TOP5_RUN_ID: ${{ github.run_id }}
+          TOP5_SOURCE_SHA: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path('output/top5_review_light')
+          selected=Path('output/v32_dog_final_candidate/TOP5_DOG_AUTO_SELECTED_1080x1920.mp4')
+          def digest(path):
+              if not path.is_file(): return None
+              h=hashlib.sha256()
+              with path.open('rb') as stream:
+                  for chunk in iter(lambda:stream.read(1024*1024),b''): h.update(chunk)
+              return h.hexdigest()
+          timestamps={'hook':0.5,'rank5':2.5,'rank4':6.5,'rank3':11.5,
+                      'rank2':15.5,'rank1':21.5,'outro':27.5,'outro_end':29.0}
+          manifest={'schema_version':1,'run_id':os.environ['TOP5_RUN_ID'],
+                    'source_sha':os.environ['TOP5_SOURCE_SHA'],
+                    'selected_mp4_sha256':digest(selected),
+                    'contact_sheet_sha256':digest(root/'TOP5_CONTACT_SHEET.jpg'),
+                    'contact_sheet_inspected_by_human':False,
+                    'full_av_review_complete':False,
+                    'editorial_score_100':None,'rights_verified':False,
+                    'publication_approved':False,
+                    'rank_frames':[{'label':name,'time_sec':seconds,
+                                    'sha256':digest(root/'rank_evidence'/f'{name}.jpg')}
+                                   for name,seconds in timestamps.items()]}
+          root.mkdir(parents=True,exist_ok=True)
+          (root/'FRAME_EVIDENCE_MANIFEST.json').write_text(
+              json.dumps(manifest,ensure_ascii=False,indent=2)+'\\n')
+          if not manifest['selected_mp4_sha256'] or not manifest['contact_sheet_sha256']:
+              print('WARNING: frame evidence incomplete; no editorial certification')
+          PY
+      - name: Publish text-readable exact-run frame evidence manifest
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs=require('fs');
+            const source='output/top5_review_light/FRAME_EVIDENCE_MANIFEST.json';
+            if (!fs.existsSync(source)) {core.warning('Frame manifest missing');return;}
+            const {owner,repo}=context.repo;
+            const dest='review/latest/FRAME_EVIDENCE_MANIFEST.json';
+            let sha;
+            try {const old=await github.rest.repos.getContent({owner,repo,path:dest});sha=old.data.sha;}
+            catch(e){if(e.status!==404)throw e;}
+            await github.rest.repos.createOrUpdateFileContents({owner,repo,path:dest,sha,
+              content:fs.readFileSync(source).toString('base64'),
+              message:'chore: bind dog review frames to rendered MP4 [skip ci]',
+              branch:context.payload.repository.default_branch});
       - name: Commit contact sheet for direct GitHub image access
         if: always()
         uses: actions/github-script@v7
