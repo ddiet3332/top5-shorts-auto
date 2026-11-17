@@ -190,12 +190,25 @@ def select_sources(candidates,output,limit=11):
     used.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
     return used,attempts
 
+def cue_with_ass_override(start,end,style,plain_text,x,y,align,layer,override):
+    """Insert trusted ASS styling after cue() escapes user-visible text.
+
+    cue() deliberately escapes braces/backslashes in text, so embedding raw
+    ASS override tags in its text argument renders literal garbage onscreen.
+    Only constant, internally authored overrides are passed here.
+    """
+    base=cue(start,end,style,plain_text,x,y,align,layer)
+    marker="}"+plain_text
+    if not base.endswith(marker):
+        raise ValueError("ASS cue structure changed; refuse malformed subtitle")
+    return base[:-len(plain_text)]+override+plain_text
+
 def build_dynamic_subtitles(path,topic,items):
     subtitle_lines=[]
     # At 360px review size the original topic header was unreadably small.
     # ASS inline overrides preserve the existing 60pt reaction-caption template.
-    subtitle_lines.append(cue(0,27,"MainTopic",r"{\fs82\bord3}"+topic["headline"],540,112,8))
-    subtitle_lines.append(cue(0,27,"TopFive",r"{\fs100\bord2}TOP5",540,220,8))
+    subtitle_lines.append(cue_with_ass_override(0,27,"MainTopic",topic["headline"],540,112,8,5,r"{\fs82\bord3}"))
+    subtitle_lines.append(cue_with_ass_override(0,27,"TopFive","TOP5",540,220,8,5,r"{\fs100\bord2}"))
     # Never render raw provider/source titles as rank labels: Pexels metadata is
     # often long English text and collided with the action in mobile samples.
     # Show short Korean action labels derived from the already-authored
@@ -226,11 +239,11 @@ def build_dynamic_subtitles(path,topic,items):
                     # A single large, high-contrast active-rank label avoids
                     # the separated triangle/number ambiguity on 360px previews.
                     # Thick dark outline + gold foreground remain readable at 360px.
-                    active_label=rf"{{\1c&H00D8F5&\3c&H171717&\bord7\shad0\fs92}}▶ {rank}위"
-                    subtitle_lines.append(cue(start,end,"Active",active_label,35,y,7,6))
+                    active_label=f"▶ {rank}위"
+                    subtitle_lines.append(cue_with_ass_override(start,end,"Active",active_label,35,y,7,6,r"{\1c&H00D8F5&\3c&H171717&\bord7\shad0\fs92}"))
                 else:
-                    muted_label=rf"{{\alpha&H85&\fs65}}{rank}위"
-                    subtitle_lines.append(cue(start,end,style,muted_label,35,y))
+                    muted_label=f"{rank}위"
+                    subtitle_lines.append(cue_with_ass_override(start,end,style,muted_label,35,y,7,5,r"{\alpha&H85&\fs65}"))
             rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
             row=items[rank_index[label]] if label!="hook" else {}
             reaction=(row.get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
