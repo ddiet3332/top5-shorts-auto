@@ -357,6 +357,12 @@ jobs:
             ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf scale=360:640 -c:v libx264 -preset veryfast -crf 31 -c:a aac -b:a 64k -movflags +faststart output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4
             ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf scale=540:960 -c:v libx264 -preset veryfast -crf 26 -c:a aac -b:a 96k -movflags +faststart output/top5_review_light/TOP5_DOG_SELECTED_540x960.mp4
             ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf "fps=1/2,scale=360:640" -q:v 4 output/top5_review_light/frames/frame_%03d.jpg
+            mkdir -p output/top5_review_light/rank_evidence
+            for SPEC in "hook:0.5" "rank5:2.5" "rank4:6.5" "rank3:11.5" "rank2:15.5" "rank1:21.5" "outro:27.5" "outro_end:29.0"; do
+              NAME="${SPEC%%:*}"
+              TIME="${SPEC#*:}"
+              ffmpeg -hide_banner -loglevel error -y -ss "$TIME" -i "$INPUT" -frames:v 1 -vf scale=540:960 -q:v 3 "output/top5_review_light/rank_evidence/${NAME}.jpg"
+            done
             cp output/v32_dog_final_candidate/SELECTED_SOURCE_PROVENANCE.json output/top5_review_light/ 2>/dev/null || true
             cp output/v32_dog_final_candidate/AUTO_REPAIR_PLAN.json output/top5_review_light/ 2>/dev/null || true
             ffprobe -v error -show_entries format=duration,size -of json output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4 > output/top5_review_light/VIDEO_INFO.json
@@ -419,6 +425,26 @@ jobs:
               out=Path('output/top5_review_light/TOP5_CONTACT_SHEET.jpg')
               sheet.save(out,quality=72,optimize=True)
               print('Contact sheet bytes:',out.stat().st_size)
+          PY
+      - name: Build rank-boundary visual evidence sheet
+        if: always()
+        run: |
+          /tmp/top5/bin/python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          root=Path('output/top5_review_light')
+          names=['hook','rank5','rank4','rank3','rank2','rank1','outro','outro_end']
+          canvas=Image.new('RGB',(270*4,515*2),'white')
+          draw=ImageDraw.Draw(canvas)
+          for i,name in enumerate(names):
+              p=root/'rank_evidence'/f'{name}.jpg'
+              if not p.exists(): continue
+              with Image.open(p) as im:
+                  im=im.convert('RGB')
+                  im.thumbnail((270,480))
+                  canvas.paste(im,((i%4)*270+(270-im.width)//2,(i//4)*515+30))
+              draw.text(((i%4)*270+8,(i//4)*515+7),name,fill='black')
+          canvas.save(root/'RANK_BOUNDARY_CONTACT_SHEET.jpg',quality=88)
           PY
       - name: Commit contact sheet for direct GitHub image access
         if: always()
