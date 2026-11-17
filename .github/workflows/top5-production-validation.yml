@@ -51,7 +51,7 @@ jobs:
           rights=root/"independent_rights_review.json"
           read=lambda p: json.loads(p.read_text()) if p.is_file() else {}
           result=evaluate(read(qa),read(rights),root/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4")
-          (root/"PUBLICATION_GATE.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\\n")
+          (root/"PUBLICATION_GATE.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+chr(10))
           print("Score verified:",result["score_verified"],"80+:",result["report_80"],"Rights:",result["rights_gate_passed"])
           PY
       - name: Upload review-only result
