@@ -9,6 +9,7 @@ on:
       - 'src/v28_fullscreen_builder.py'
       - 'src/top5_auto_repair_plan.py'
       - 'src/top5_bounded_reedit.py'
+      - 'src/top5_semantic_review.py'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -112,6 +113,20 @@ jobs:
       - name: Attempt bounded alternate edit when visual proxy flags repetition
         if: success()
         run: /tmp/top5/bin/python src/top5_bounded_reedit.py
+      - name: Attempt multimodal editorial review of selected candidate
+        if: success()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          /tmp/top5/bin/python - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          root=Path('output/v32_dog_final_candidate')
+          comparison=json.loads((root/'AUTO_ALTERNATE_EDIT.json').read_text())
+          selected=comparison.get('selected_candidate') or str(root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4')
+          subprocess.run(['/tmp/top5/bin/python','src/top5_semantic_review.py',selected,
+                          str(root/'SEMANTIC_EDITORIAL_REVIEW.json')],check=True)
+          PY
       - name: Initialize independent review evidence as unverified
         if: success()
         run: |
