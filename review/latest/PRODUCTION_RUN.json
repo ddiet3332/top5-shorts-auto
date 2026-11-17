@@ -1,0 +1,12 @@
+{
+  "run_id": 44126118808,
+  "run_number": 106,
+  "workflow": "V32 dog end-to-end MP4 build",
+  "trigger": "push",
+  "source_sha": "e41de690208d81f424251f5f7beebb5f0f06d7ad",
+  "status": "STARTED",
+  "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44126118808",
+  "editorial_score_100": null,
+  "rights_verified": false,
+  "youtube_auto_upload": false
+}
