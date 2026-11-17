@@ -31,7 +31,30 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Write local run identity independent of GitHub Contents API
+        if: always()
+        env:
+          TOP5_RUN_ID: ${{ github.run_id }}
+          TOP5_RUN_NUMBER: ${{ github.run_number }}
+          TOP5_SOURCE_SHA: ${{ github.sha }}
+          TOP5_EVENT: ${{ github.event_name }}
+        run: |
+          mkdir -p output/top5_diagnostics
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          data={"run_id":os.environ["TOP5_RUN_ID"],
+                "run_number":os.environ["TOP5_RUN_NUMBER"],
+                "source_sha":os.environ["TOP5_SOURCE_SHA"],
+                "trigger":os.environ["TOP5_EVENT"],
+                "status":"STARTED","editorial_score_100":None,
+                "rights_verified":False,"youtube_auto_upload":False}
+          Path("output/top5_diagnostics/RUN_IDENTITY.json").write_text(json.dumps(data,indent=2)+"\\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write("## TOP5 run identity\\nRun: "+data["run_id"]+"\\nCommit: "+data["source_sha"]+"\\n")
+          PY
       - name: Publish traceable run identity before production
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -634,6 +657,7 @@ jobs:
           if-no-files-found: error
       - name: Publish final run identity and selected MP4 SHA-256
         if: always()
+        continue-on-error: true
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -659,6 +683,18 @@ jobs:
               content:Buffer.from(JSON.stringify(data,null,2)).toString('base64'),
               message:'chore: publish final dog production evidence [skip ci]',
               branch:context.payload.repository.default_branch});
+      - name: Upload independent run diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-RUN-DIAGNOSTICS-${{ github.run_number }}
+          path: |
+            output/top5_diagnostics/
+            output/v32_dog_final_candidate/FEEDBACK_REPAIR_APPLIED.json
+            output/v32_dog_final_candidate/AUTO_SELECTION_VERDICT.json
+            output/v32_dog_final_candidate/AUTO_ALTERNATE_EDIT.json
+          retention-days: 14
+          if-no-files-found: warn
       - name: Create or update GitHub issue on production failure
         if: failure()
         uses: actions/github-script@v7
