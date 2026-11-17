@@ -92,7 +92,7 @@ else:
             candidate["objective_technical_pass"]=False
     eligible=[c for c in candidates if c.get("objective_technical_pass") is True]
     if not eligible:
-        # Retain a review file but explicitly mark the result as defective.
+        # Keep an inspectable verdict, but never treat an objectively defective video as passing.
         eligible=candidates
         report["objective_defects_unresolved"]=True
     reviewed=[c for c in candidates if c.get("semantic_status")=="PARTIAL_VISION_REVIEW"
@@ -104,9 +104,9 @@ else:
             a.get("rank_issue_penalty",99),-a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
         report["selection_basis"]="AI visible-editorial score, with motion proxy tie-break"
     else:
-        ranked=sorted(candidates,key=lambda a:(
+        ranked=sorted(eligible,key=lambda a:(
             -a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
-        report["selection_basis"]="motion proxy fallback: semantic review unavailable"
+        report["selection_basis"]="objective-defect-filtered motion proxy fallback: semantic review unavailable"
     # This is a bounded, auditable repair cycle. It does not certify full 80/100.
     winner=ranked[0]
     report["selected_objective_technical_pass"]=winner.get("objective_technical_pass") is True
