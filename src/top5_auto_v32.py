@@ -6,7 +6,7 @@ Pexels sources are one-by-one, manually curated; no API key, scraping or
 license/YPP claim. The broader topical engine remains V30 for other topics.
 """
 from __future__ import annotations
-import argparse,json,shutil
+import argparse,hashlib,json,shutil
 from pathlib import Path
 from v12_sources import allowed_page
 from top5 import fetch_json, extract_candidates, download_video
@@ -548,6 +548,27 @@ def main():
     (output/"TOP5_REPLACEMENT_REVIEW_INPUT.json").write_text(
         json.dumps(replacement_manifest,ensure_ascii=False,indent=2)+"\n",
         encoding="utf-8")
+    # Audit selected input bytes; this is not a copyright clearance.
+    selected_evidence=[]
+    for i,item in enumerate(final):
+        original=Path(item["local_path"])
+        if not original.is_file() or original.stat().st_size==0:
+            raise RuntimeError("SELECTED_SOURCE_MISSING: "+str(original))
+        digest=hashlib.sha256()
+        with original.open("rb") as stream:
+            for chunk in iter(lambda:stream.read(1024*1024),b""):
+                digest.update(chunk)
+        selected_evidence.append({
+            "rank":5-i,"source_page":item.get("source_page"),
+            "source_path":str(original),"sha256":digest.hexdigest(),
+            "size_bytes":original.stat().st_size,
+            "rights_verified":False,"publication_approved":False})
+    if len(selected_evidence)!=5 or len({r["sha256"] for r in selected_evidence})!=5:
+        raise RuntimeError("SELECTED_SOURCE_DUPLICATE_OR_MISSING")
+    (output/"SELECTED_SOURCE_PROVENANCE.json").write_text(json.dumps({
+        "selected":selected_evidence,"rights_verified":False,
+        "editorial_score_verified":False,"publication_approved":False
+    },ensure_ascii=False,indent=2)+chr(10),encoding="utf-8")
     video=assemble_video(topic,final,output)
     qa=technical_qa(video,output,topic,final)
     qa["version"]="V37"
