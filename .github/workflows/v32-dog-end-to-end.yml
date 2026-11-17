@@ -10,6 +10,8 @@ on:
       - 'src/top5_auto_repair_plan.py'
       - 'src/top5_bounded_reedit.py'
       - 'src/top5_semantic_review.py'
+      - 'src/top5_feedback_repair.py'
+      - 'review/feedback/dog_latest.json'
       - 'src/editorial_gate.py'
       - 'src/top5_objective_defect_qa.py'
       - 'src/top5_quality_gate.py'
