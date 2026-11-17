@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "run_id": "44191093240",
-  "source_sha": "f526139bfc9813a3090ad82b69aa3ffad63741e8",
-  "selected_mp4_sha256": "9f433aee79650a269320838d41b7de9ff9dbe05db3782208921245138ddbdd08",
-  "contact_sheet_sha256": "d8b29292a7f50f5d8ee045b615db82f9540b8b56590a8c966f6bb52d6ee620b1",
+  "run_id": "44192710957",
+  "source_sha": "90dc1c8acf0d8baa98eea832d1e8c3863f88dd31",
+  "selected_mp4_sha256": "1a1747822042a5d352e6fb634078da4fe522a0fcb3adf0c64936e5e0be71d762",
+  "contact_sheet_sha256": "14c64e8ad1bbb3e9edf33c29f472b04101fb550ef383708a3d43f24d3432e330",
   "contact_sheet_inspected_by_human": false,
   "full_av_review_complete": false,
   "editorial_score_100": null,
@@ -13,42 +13,42 @@
     {
       "label": "hook",
       "time_sec": 0.5,
-      "sha256": "10db1b6c8da6a291d6235e876f234846320a4469ce7fee696dff1b07a28fdffb"
+      "sha256": "8f0613aaf907d00d29493a0841e0f9c0948e45b1264ca77f9faf964467d31c9d"
     },
     {
       "label": "rank5",
       "time_sec": 2.5,
-      "sha256": "86793c6c29b07086d15788f3b82daa3c30995ee245b29e70cfd98caa194ee0dd"
+      "sha256": "5735625ace4bc65d9bf1b36d16ba531359ca08e2df178ae045e246d42adecc40"
     },
     {
       "label": "rank4",
       "time_sec": 6.5,
-      "sha256": "56f8b65cf9d043aec366134e950b5ad5db6fb22445f00f328ac485c33cfac077"
+      "sha256": "81061a674d9f98883e7ea1388a0503730bbe83aa01b98237a618d52ae7848549"
     },
     {
       "label": "rank3",
       "time_sec": 11.5,
-      "sha256": "d0e16fe95536a01b938dd43603899a9a28a093df178597a1778b100d0e8e633d"
+      "sha256": "a5038cdb9aad65635583950f0a7485bb692d9cb045e9d39fc942f7dadd529884"
     },
     {
       "label": "rank2",
       "time_sec": 15.5,
-      "sha256": "3cd78cc4e6450d5c74384fda0a8c86188cd6e5e13ee9e8ec8fae29b533be729a"
+      "sha256": "e062c8d58d4f5176e5fcd3e13f6b8b58904ebbf361fd5049a588cb7b13092d03"
     },
     {
       "label": "rank1",
       "time_sec": 21.5,
-      "sha256": "2f2a3c2140a8bc8d01cf923f7d982f672934fcfbbdc7fb3fe3b525bdcb8bebda"
+      "sha256": "97ca7ec7176a86ad9d5818fed2eb2bb41700c354a232bc5679ee8e9774aa46c0"
     },
     {
       "label": "outro",
       "time_sec": 27.5,
-      "sha256": "fd8853a36692b057cb72704ac9f7f0f1573d89c67af755384ed34cc25db947cc"
+      "sha256": "cbd8934c59ecc333c4914405365908222fc1d39024f38c9c83abd7a9d82678c7"
     },
     {
       "label": "outro_end",
       "time_sec": 29.0,
-      "sha256": "2f1ca18d9910298846a93037da6b8cd3dad25feb3be72544acdd40aa29dc719e"
+      "sha256": "81692959a0bb56c03f8b169f19eebd6300472fd5758399567bf7806a07c376ad"
     }
   ]
 }\n
