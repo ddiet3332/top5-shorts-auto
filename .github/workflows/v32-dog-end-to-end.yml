@@ -10,6 +10,7 @@ on:
       - 'src/top5_auto_repair_plan.py'
       - 'src/top5_bounded_reedit.py'
       - 'src/top5_semantic_review.py'
+      - 'src/editorial_gate.py'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -152,6 +153,45 @@ jobs:
                    'rights_verified':False,'publication_permitted':False}
           (root/'AUTO_SELECTION_VERDICT.json').write_text(json.dumps(verdict,indent=2)+chr(10))
           print(json.dumps(verdict))
+          PY
+      - name: Evaluate 80-point gate against the actually selected dog video
+        if: success()
+        run: |
+          /tmp/top5/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.editorial_gate import assess
+          root=Path('output/v32_dog_final_candidate')
+          def read(name):
+              p=root/name
+              try: return json.loads(p.read_text(encoding='utf-8'))
+              except (OSError,ValueError): return {}
+          selection=read('AUTO_SELECTION_VERDICT.json')
+          selected=Path(selection.get('selected_mp4',''))
+          technical={'technical_pass':selection.get('technical_decode_pass') is True and selected.is_file()}
+          # An 11-frame vision score is NOT full audiovisual editorial evidence.
+          # Never promote proxy scores to an 80-point verified score.
+          scorecard=read('FULL_AV_EDITORIAL_SCORECARD.json')
+          rights=read('INDEPENDENT_RIGHTS_EVIDENCE.json')
+          if not (scorecard.get('full_av_review_complete') is True
+                  and scorecard.get('reviewed_video_sha256')):
+              scorecard={}
+          else:
+              import hashlib
+              h=hashlib.sha256()
+              if selected.is_file():
+                  with selected.open('rb') as stream:
+                      for block in iter(lambda:stream.read(1048576),b''): h.update(block)
+              if h.hexdigest()!=scorecard['reviewed_video_sha256']:
+                  scorecard={}
+          result=assess(scorecard,technical,rights)
+          result.update({'selected_video':str(selected),
+                         'full_av_review_verified':bool(scorecard),
+                         'auto_reedit_attempts':len(read('AUTO_ALTERNATE_EDIT.json').get('attempts',[])),
+                         'manual_youtube_upload_only':True})
+          (root/'SELECTED_DOG_EDITORIAL_80_GATE.json').write_text(
+              json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(result,ensure_ascii=False))
           PY
       - name: Initialize independent review evidence as unverified
         if: success()
