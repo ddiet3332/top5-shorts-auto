@@ -24,12 +24,25 @@ SOURCES=[
  {"id":"dog-door-peek","provider":"pexels","title":"Curious Dog Peeking Around a Doorframe","page_url":"https://www.pexels.com/video/curious-dog-peeking-around-a-doorframe-31147382/","creator":"K","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"},
  {"id":"dog-fetch-ring","provider":"pexels","title":"A Dog Running on the Backyard","page_url":"https://www.pexels.com/video/a-dog-running-on-the-backyard-8746627/","creator":"ROMAN ODINTSOV","license_label":"Pexels License","license_url":"https://www.pexels.com/license/"}
 ]
+# Repeated Actions runs confirmed these sources fail the safe downloader.
+# Do not retry them on every render until source policy or limits change.
+KNOWN_UNUSABLE = {
+ "dog-frisbee": "Source exceeds 125 MiB single-asset safety cap",
+ "dog-frisbee-2": "Source exceeds 125 MiB single-asset safety cap",
+ "dog-door-rush": "Source duration unsupported by downloader",
+}
 def main():
  OUT.mkdir(parents=True,exist_ok=True)
  rows=[]
  for src in SOURCES:
   row={**src,"publication_approved":False,"rights_verified":False,"actual_action_verified":False}
   path=OUT/(src["id"]+".mp4")
+  if src["id"] in KNOWN_UNUSABLE:
+   row["status"]="SKIPPED_KNOWN_UNUSABLE"
+   row["error_detail"]=KNOWN_UNUSABLE[src["id"]]
+   rows.append(row)
+   print(row["id"],row["status"],flush=True)
+   continue
   try:
    if not allowed_page(src): raise ValueError("Invalid individual official source page")
    row["download"]=download_single_pexels(src,path,max_bytes=125*1024*1024)
