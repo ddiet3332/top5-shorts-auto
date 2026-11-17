@@ -64,6 +64,13 @@ jobs:
       - name: Extract timestamped editorial review frames
         run: |
           /tmp/top5-validation/bin/python src/top5_qa_frames.py --video output/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --output output/topic_run/FRAME_REVIEW --count 15
+      - name: Generate SHA-bound seven-category editorial review packet
+        run: |
+          /tmp/top5-validation/bin/python src/top5_editorial_review_packet.py \
+            --video output/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
+            --manifest output/topic_run/TOP5_REPLACEMENT_REVIEW_INPUT.json \
+            --frames output/topic_run/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json \
+            --output output/topic_run/EDITORIAL_REVIEW_PACKET.json
       - name: Upload review-only result
         if: always()
         uses: actions/upload-artifact@v4
