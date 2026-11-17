@@ -59,8 +59,7 @@ jobs:
             echo 'Unknown watchdog decision; blocked.' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
-          conclusion=success
-          if [[ "$conclusion" == success ]]; then
+          if [[ "$action" == inspect_artifact ]]; then
             echo 'Technical run succeeded. Checking review evidence (never infer scores).' >> "$GITHUB_STEP_SUMMARY"
             artifacts=$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100")
             artifact_id=$(jq -r '[.artifacts[] | select(.name | startswith("TOP5-dog-production-validation-"))] | sort_by(.created_at) | last | .id // empty' <<<"$artifacts")
