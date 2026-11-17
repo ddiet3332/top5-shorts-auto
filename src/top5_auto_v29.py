@@ -217,12 +217,12 @@ def build_dynamic_subtitles(path,topic,items):
                 y=485+(rank-1)*143
                 style="Active" if rank==active else "Rank"
                 # Rank rail: a large gold marker makes the currently playing rank unambiguous.
+                # Keep rank rail numerals clean: the Korean action caption is
+                # already shown below the video, so duplicating it under the
+                # active rank caused text overlap in 15-frame contact sheets.
                 if rank==active:
-                    subtitle_lines.append(cue(start,end,"Active","▶",12,y,7,6))
+                    subtitle_lines.append(cue(start,end,"Active","▶",190,y,7,6))
                 subtitle_lines.append(cue(start,end,style,f"{rank}위",35,y))
-                if rank==active:
-                    subtitle_lines.append(cue(start,end,"RankName",
-                              rank_titles[rank],35,y+61))
             rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
             row=items[rank_index[label]] if label!="hook" else {}
             reaction=(row.get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
