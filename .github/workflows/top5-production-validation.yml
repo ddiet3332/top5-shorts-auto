@@ -29,6 +29,7 @@ jobs:
           /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_remediation.py' -v
           /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_publication_gate.py' -v
           /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
+          /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_free_visual_metrics.py' -v
       - name: Download real dog source audition
         run: /tmp/top5-validation/bin/python src/v37_dog_audition.py
       - name: Verify source review manifest exists
