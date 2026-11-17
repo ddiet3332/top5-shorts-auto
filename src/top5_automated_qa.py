@@ -11,7 +11,7 @@ def score(video, technical_path, manifest_path):
     manifest=json.loads(Path(manifest_path).read_text(encoding="utf-8"))
     checks={}
     checks["mp4_exists"]=video.is_file() and video.stat().st_size>100000
-    checks["full_decode"]=technical.get("full_decode") is True
+    checks["full_decode"]=technical.get("full_decode") in (True,"PASS")
     checks["format_1080x1920_h264_aac"]=False
     checks["duration_30s"]=False
     checks["five_rank_sources"]=False
