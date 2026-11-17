@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "run_id": "44192710957",
-  "source_sha": "90dc1c8acf0d8baa98eea832d1e8c3863f88dd31",
-  "selected_mp4_sha256": "1a1747822042a5d352e6fb634078da4fe522a0fcb3adf0c64936e5e0be71d762",
-  "contact_sheet_sha256": "14c64e8ad1bbb3e9edf33c29f472b04101fb550ef383708a3d43f24d3432e330",
+  "run_id": "44196668612",
+  "source_sha": "f8ddde0c3f4ff86e0299c2f0646108e57b59cfe2",
+  "selected_mp4_sha256": "1c36b4fa2a00eefa9fb8c85adb13c54d03fba1c587583dd0196d24ad65dc3609",
+  "contact_sheet_sha256": "d175958dfc970db86cc1dd6b0796594f18c5749facd40b351e0f285d6c63597d",
   "contact_sheet_inspected_by_human": false,
   "full_av_review_complete": false,
   "editorial_score_100": null,
@@ -13,32 +13,32 @@
     {
       "label": "hook",
       "time_sec": 0.5,
-      "sha256": "8f0613aaf907d00d29493a0841e0f9c0948e45b1264ca77f9faf964467d31c9d"
+      "sha256": "26eef2391c36a92aea4258f1204e10a7ff573175790e589a4c5cd74f3686092a"
     },
     {
       "label": "rank5",
       "time_sec": 2.5,
-      "sha256": "5735625ace4bc65d9bf1b36d16ba531359ca08e2df178ae045e246d42adecc40"
+      "sha256": "f81aecb654ccb2cfbdffba4e14710a79e21a6d07d4a4cf0b328572ba9a382bc1"
     },
     {
       "label": "rank4",
       "time_sec": 6.5,
-      "sha256": "81061a674d9f98883e7ea1388a0503730bbe83aa01b98237a618d52ae7848549"
+      "sha256": "0739c6f773f2809576765fcc7ea73d6f72b50d21dea5249bfb6c346e3023ae6d"
     },
     {
       "label": "rank3",
       "time_sec": 11.5,
-      "sha256": "a5038cdb9aad65635583950f0a7485bb692d9cb045e9d39fc942f7dadd529884"
+      "sha256": "54bed2f37c34dd0779beda500935bbf0e90a238a7c484eb3bbf055ef55d406c7"
     },
     {
       "label": "rank2",
       "time_sec": 15.5,
-      "sha256": "e062c8d58d4f5176e5fcd3e13f6b8b58904ebbf361fd5049a588cb7b13092d03"
+      "sha256": "2c30cb9925e8880972095dc927cffaf3a0b8bf74c66e8378da8d59a0f9777ef5"
     },
     {
       "label": "rank1",
       "time_sec": 21.5,
-      "sha256": "97ca7ec7176a86ad9d5818fed2eb2bb41700c354a232bc5679ee8e9774aa46c0"
+      "sha256": "9f4795e930d340aeeac6f98c1d85c78cc856e4896f0f5f773651e1d3f4dfc5e7"
     },
     {
       "label": "outro",
