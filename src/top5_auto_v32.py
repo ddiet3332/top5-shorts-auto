@@ -415,7 +415,7 @@ def select_dog_audition_sources(topic,candidates,output):
                 "cut_start":round(start,2),"motion_proxy":float(motion),
                 "editorial_quality_heuristic":min(45.0,25.0+float(motion)*0.2),
                 "review_basis":"V37 source frame sheet generated; editorial action NOT yet verified",
-                "label":src["title"],"caption":({"dog-fetch":"공을 향해 전력 질주!","dog-puppy":"앞발부터 나가는 순간","dog-snow":"눈밭 위 원반 추격","dog-field":"넓은 들판을 가로질러","dog-jump-person":"사람에게 달려드는 순간!","dog-fetch-ring":"원반을 향한 집중!"}.get(src["id"],"강아지의 움직임을 보세요")), 
+                "label":src["title"],"caption":({"dog-fetch":"공을 향해 전력 질주!","dog-puppy":"앞발부터 나가는 순간","dog-snow":"눈밭 위 원반 추격","dog-field":"넓은 들판을 가로질러","dog-jump-person":"사람에게 달려드는 순간!","dog-fetch-ring":"원반을 향한 집중!","dog-bag-surprise":"가방에서 갑자기 등장!","dog-door-rush":"문 열리자 단체 출동!","dog-door-peek":"문 뒤에서 슬쩍 등장!"}.get(src["id"],"강아지의 움직임을 보세요")), 
                 "rights_verified":False,"publication_approved":False,
                 "comic_action_verified":False})
         except Exception as exc:
@@ -460,6 +460,12 @@ def select_dog_audition_sources(topic,candidates,output):
     # The older strategy repeatedly selected fetch/catch footage.
     def action_family(item):
         title=str(item.get("title","")).lower()
+        if "bag-surprise" in title:
+            return "bag_surprise"
+        if "door-rush" in title:
+            return "door_rush"
+        if "door-peek" in title:
+            return "door_peek"
         if "jump-person" in title:
             return "jump_person"
         if "pupp" in title:
@@ -471,6 +477,9 @@ def select_dog_audition_sources(topic,candidates,output):
         if any(k in title for k in ("fetch","catch","frisbee","ring")):
             return "fetch"
         return "other:"+title
+    # Prefer new action families for audition, never treat titles as verified comedy.
+    fresh={"dog-bag-surprise","dog-door-rush","dog-door-peek"}
+    strong.sort(key=lambda r:(0 if any(x in r.get("title","") for x in fresh) else 1,r.get("title","")))
     pool=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
     combined=[]
     seen=set()
