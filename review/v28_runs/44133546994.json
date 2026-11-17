@@ -1,0 +1,17 @@
+{
+  "version": "V28_FULLSCREEN",
+  "run_id": 44133546994,
+  "run_number": 20,
+  "render_result": "failure",
+  "video_status": "FAILED_OR_CANCELLED",
+  "artifact_name": "TOP5-v28-fullscreen-20",
+  "artifact_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44133546994#artifacts",
+  "filename": null,
+  "source_count": 5,
+  "no_voiceover": true,
+  "no_tts": true,
+  "individual_original_source_rights_verified": false,
+  "youtube_monetization_approved": false,
+  "publication_approved": false,
+  "full_comedy_editorial_score": null
+}
