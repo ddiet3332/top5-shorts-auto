@@ -131,21 +131,15 @@ def render_endcard(selected,out):
     return img.save(out,quality=92)
 
 def create_scene(source,start,seconds,destination):
-    # A full-frame background is made of the same source, blurred.
-    # The foreground keeps every original pixel and its source ratio.
-    # No zoom-and-crop of a jumping animal.
+    # Render source exactly once: the former split/back/front composition
+    # duplicated wide footage in the exposed white margins (rank 2).
+    # Solid white padding is deliberately NOT a blurred/source-video backdrop.
+    # Keep the complete source image, including action near frame edges.
     filtergraph=(
-        "[0:v]split=2[base][full];"
-        "[base]scale=1080:1920:force_original_aspect_ratio=decrease:flags=lanczos,"
-        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=white,"
-        "eq=brightness=-0.03:saturation=0.95[back];"
-        # Dedicated 305px header protects high jumping faces.
-        # Preserve all foreground pixels; vertical originals fit within the
-        # remaining 1615px without forced cropping or upscaled fake detail.
-        "[full]scale=1080:1605:force_original_aspect_ratio=decrease:flags=lanczos,"
-        "setsar=1[front];"
-        "[back][front]overlay=(W-w)/2:305+(1615-h)/2:format=auto,"
-        "drawbox=x=0:y=0:w=1080:h=305:color=white@0.96:t=fill,"
+        "[0:v]scale=1080:1615:force_original_aspect_ratio=decrease:flags=lanczos,"
+        "setsar=1,"
+        "pad=1080:1615:(ow-iw)/2:(oh-ih)/2:color=white,"
+        "pad=1080:1920:0:305:color=white,"
         "drawbox=x=0:y=420:w=270:h=850:color=white@0.97:t=fill,"
         "fps=24,format=yuv420p[v]")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
