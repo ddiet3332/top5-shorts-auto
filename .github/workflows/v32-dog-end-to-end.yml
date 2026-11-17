@@ -8,6 +8,7 @@ on:
     - cron: '17 */6 * * *'
 permissions:
   contents: read
+  issues: write
 concurrency:
   group: v32-dog-end-to-end
   cancel-in-progress: false
@@ -157,6 +158,56 @@ jobs:
           (p/'V32_RESULT_SUMMARY.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(report,ensure_ascii=False))
           PY
+      - name: Publish run summary to GitHub Actions
+        if: always()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json,os
+          from pathlib import Path
+          p=Path('output/v32_dog_final_candidate')
+          def read(name):
+              try: return json.loads((p/name).read_text())
+              except (OSError,ValueError): return {}
+          diag=read('V32_BUILD_DIAGNOSTICS.json')
+          status=read('DELIVERY_STATUS.json')
+          rights=read('RIGHTS_AND_SCORE_AUDIT.json')
+          print('## TOP5 dog automated production report')
+          print(f"- Run: {os.environ['RUN_URL']}")
+          print(f"- Rendered review MP4: {bool(status.get('rendered_review_mp4_present'))}")
+          print(f"- Original candidates: {diag.get('source_candidates', 'unknown')}")
+          print(f"- Downloaded originals: {diag.get('originals_available', 'unknown')}")
+          print(f"- Independent rights and editorial approval: {bool(rights.get('publication_candidate'))}")
+          print(f"- Publication-ready 85+ candidate: {bool(status.get('publication_candidate_85_and_rights_cleared'))}")
+          print('- YouTube upload permission: NOT GRANTED (manual confirmation required)')
+          print('- Source failures: '+json.dumps(diag.get('source_failures',[]),ensure_ascii=False))
+          print('- Evidence: download the run artifact; never treat a successful job as copyright approval.')
+          PY
+      - name: Create or update GitHub issue on production failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = '[TOP5 automation] Production workflow failure';
+            const runUrl = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            const body = [
+              'The dog TOP5 workflow failed. This issue tracks the latest failure.',
+              '',
+              'Run: ' + runUrl,
+              'Commit: ${{ github.sha }}',
+              'Inspect the failed job logs before changing code.',
+              'Do not publish any review-only MP4.'
+            ].join('\\n');
+            const {owner,repo} = context.repo;
+            const issues = await github.paginate(github.rest.issues.listForRepo, {owner,repo,state:'open',per_page:100});
+            const prior = issues.find(x => !x.pull_request && x.title === title);
+            if (prior) {
+              await github.rest.issues.createComment({owner,repo,issue_number:prior.number,body});
+            } else {
+              await github.rest.issues.create({owner,repo,title,body});
+            }
       - name: Upload rendered MP4, original evidence and QA
         if: always()
         uses: actions/upload-artifact@v4
