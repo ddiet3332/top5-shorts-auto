@@ -30,9 +30,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          run_json=$(gh api "repos/$GH_REPO/actions/runs/43969794527")
-          workflow_id=$(jq -r '.workflow_id' <<<"$run_json")
-          runs=$(gh api "repos/$GH_REPO/actions/workflows/$workflow_id/runs?per_page=15")
+          runs=$(gh api "repos/$GH_REPO/actions/workflows/top5-production-validation.yml/runs?per_page=15")
           # Hydrate run_attempt; the list endpoint may omit it.
           hydrated=$(jq -c '[.workflow_runs[] | {id,status,conclusion,created_at}]' <<<"$runs")
           while IFS= read -r run_id; do
@@ -59,7 +57,7 @@ jobs:
           if [[ "$conclusion" == success ]]; then
             echo 'Technical run succeeded. Checking review evidence (never infer scores).' >> "$GITHUB_STEP_SUMMARY"
             artifacts=$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100")
-            artifact_id=$(jq -r '[.artifacts[] | select(.name | startswith("TOP5-dog_surprises-review-"))] | sort_by(.created_at) | last | .id // empty' <<<"$artifacts")
+            artifact_id=$(jq -r '[.artifacts[] | select(.name | startswith("TOP5-dog-production-validation-"))] | sort_by(.created_at) | last | .id // empty' <<<"$artifacts")
             if [[ -z "$artifact_id" ]]; then
               echo 'No dog review artifact: quality unknown.' >> "$GITHUB_STEP_SUMMARY"
               exit 0
