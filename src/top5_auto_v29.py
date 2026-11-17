@@ -192,7 +192,7 @@ def select_sources(candidates,output,limit=11):
 
 def build_dynamic_subtitles(path,topic,items):
     subtitle_lines=[]
-    subtitle_lines.append(cue(0,27,"MainTopic",topic["headline"],540,126,8))
+    subtitle_lines.append(cue(0,27,"MainTopic",topic["headline"],540,118,8))
     subtitle_lines.append(cue(0,27,"TopFive","TOP5",540,214,8))
     rank_titles={5-i:clip["label"] for i,clip in enumerate(items)}
     positions={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
