@@ -44,6 +44,17 @@ jobs:
           /tmp/top5/bin/python src/top5_qa_frames.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --output output/v32_dog_final_candidate/FRAME_REVIEW --count 15
           /tmp/top5/bin/python src/top5_editorial_review_packet.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json --frames output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/EDITORIAL_REVIEW_PACKET.json
           /tmp/top5/bin/python src/top5_free_visual_metrics.py --manifest output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/FREE_VISUAL_METRICS.json
+      - name: Initialize independent review evidence as unverified
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('output/v32_dog_final_candidate')
+          p=root/'INDEPENDENT_REVIEW_EVIDENCE.json'
+          if not p.exists():
+              p.write_text(json.dumps({'sources':[], 'editorial_scores':{}, 'editorial_review':{}, 'youtube_reused_content_review':{}, 'status':'UNVERIFIED_NEEDS_HUMAN_EVIDENCE'},indent=2)+'\\n')
+          PY
       - name: Independently evidence-gated rights and editorial scoring
         if: success()
         run: |
@@ -97,7 +108,8 @@ jobs:
           video=root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4'
           gate=root/'PUBLICATION_GATE.json'
           result=json.loads(gate.read_text()) if gate.is_file() else {}
-          ready=bool(video.is_file() and video.stat().st_size>0 and result.get('publication_candidate_85') is True and result.get('rights_gate_passed') is True)
+          audit=json.loads((root/'RIGHTS_AND_SCORE_AUDIT.json').read_text()) if (root/'RIGHTS_AND_SCORE_AUDIT.json').is_file() else {}
+          ready=bool(video.is_file() and video.stat().st_size>0 and result.get('publication_candidate_85') is True and result.get('rights_gate_passed') is True and audit.get('publication_candidate') is True)
           (root/'DELIVERY_STATUS.json').write_text(json.dumps({'rendered_review_mp4_present':video.is_file(),'publication_candidate_85_and_rights_cleared':ready,'youtube_upload_permitted':False,'editorial_score':result.get('score'),'editorial_and_rights_verified':ready},indent=2)+'\n')
           print('85+ and rights cleared:',ready,'review MP4 exists:',video.is_file())
           PY
