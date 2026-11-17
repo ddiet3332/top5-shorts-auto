@@ -71,6 +71,11 @@ jobs:
             --manifest output/topic_run/TOP5_REPLACEMENT_REVIEW_INPUT.json \
             --frames output/topic_run/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json \
             --output output/topic_run/EDITORIAL_REVIEW_PACKET.json
+      - name: Measure visual variation with free local analysis
+        run: |
+          /tmp/top5-validation/bin/python src/top5_free_visual_metrics.py \
+            --manifest output/topic_run/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json \
+            --output output/topic_run/FREE_VISUAL_METRICS.json
       - name: Upload review-only result
         if: always()
         uses: actions/upload-artifact@v4
