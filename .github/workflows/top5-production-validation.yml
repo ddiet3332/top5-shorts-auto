@@ -23,6 +23,8 @@ jobs:
           sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
           python3 -m venv /tmp/top5-validation
           /tmp/top5-validation/bin/pip install -q numpy pillow
+      - name: Validate updated dog action-family selection syntax
+        run: /tmp/top5-validation/bin/python -m py_compile src/top5_auto_v32.py
       - name: Compile and test quality/repair gates
         run: |
           /tmp/top5-validation/bin/python -m compileall -q src/top5_auto_v32.py src/top5_remediation.py src/top5_publication_gate.py
