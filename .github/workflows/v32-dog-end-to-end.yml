@@ -363,6 +363,40 @@ jobs:
           else
             echo "Review video missing; light package cannot be generated" > output/top5_review_light/ERROR.txt
           fi
+      - name: Self-contained technical and audio QA for selected video
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          root=Path('output/top5_review_light')
+          root.mkdir(parents=True,exist_ok=True)
+          video=root/'TOP5_DOG_SELECTED_540x960.mp4'
+          result={'video':str(video),'exists':video.is_file(),'checks':{},'editorial_score_100':None,'rights_verified':False,'youtube_auto_upload':False}
+          if video.is_file():
+              commands={
+                  'decode':['ffmpeg','-hide_banner','-v','error','-xerror','-i',str(video),'-map','0:v:0','-map','0:a:0','-f','null','-'],
+                  'blackdetect':['ffmpeg','-hide_banner','-i',str(video),'-vf','blackdetect=d=0.15:pix_th=0.08','-an','-f','null','-'],
+                  'silencedetect':['ffmpeg','-hide_banner','-i',str(video),'-af','silencedetect=noise=-42dB:d=0.35','-vn','-f','null','-'],
+                  'volume':['ffmpeg','-hide_banner','-i',str(video),'-af','volumedetect','-vn','-f','null','-']}
+              for name,cmd in commands.items():
+                  try:
+                      p=subprocess.run(cmd,capture_output=True,text=True,timeout=150)
+                      lines=(p.stderr or '').splitlines()
+                      if name=='blackdetect': findings=[x.strip() for x in lines if 'black_start:' in x]
+                      elif name=='silencedetect': findings=[x.strip() for x in lines if 'silence_start:' in x or 'silence_end:' in x]
+                      elif name=='volume': findings=[x.strip() for x in lines if 'mean_volume:' in x or 'max_volume:' in x]
+                      else: findings=[x.strip() for x in lines[-12:]]
+                      result['checks'][name]={'exit_code':p.returncode,'pass':p.returncode==0,'findings':findings[:40]}
+                  except Exception as exc:
+                      result['checks'][name]={'pass':False,'error':str(exc)[:200]}
+              p=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration,size:stream=codec_type,width,height','-of','json',str(video)],capture_output=True,text=True)
+              if p.returncode==0:
+                  result['media_info']=json.loads(p.stdout)
+              result['technical_pass']=all(x.get('pass') for x in result['checks'].values())
+          (root/'SELF_CONTAINED_QA.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\\n')
+          print(json.dumps({'technical_pass':result.get('technical_pass',False),'checks':result['checks']},ensure_ascii=False))
+          PY
       - name: Publish a directly readable contact sheet to repository
         if: always()
         run: |
