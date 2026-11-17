@@ -70,6 +70,26 @@ jobs:
           PY
       - name: Build dog TOP5 MP4 from downloaded originals
         run: /tmp/top5/bin/python src/top5_auto_v32.py --topic dog_surprises --output output/v32_dog_final_candidate
+      - name: Recheck exact five selected source hashes before technical QA
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          p=Path('output/v32_dog_final_candidate/SELECTED_SOURCE_PROVENANCE.json')
+          rows=json.loads(p.read_text())['selected']
+          if len(rows)!=5 or len({r['sha256'] for r in rows})!=5:
+              raise SystemExit('Exactly five distinct selected originals required')
+          for row in rows:
+              source=Path(row['source_path'])
+              if not source.is_file() or source.stat().st_size!=row['size_bytes']:
+                  raise SystemExit('Missing or changed selected original: '+str(source))
+              h=hashlib.sha256()
+              with source.open('rb') as f:
+                  for chunk in iter(lambda:f.read(1048576),b''): h.update(chunk)
+              if h.hexdigest()!=row['sha256']:
+                  raise SystemExit('Selected source SHA-256 mismatch: '+str(source))
+          print('Five selected original SHA-256 values rechecked')
+          PY
       - name: Verify actual rendered video and audio
         run: |
           test -s output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
@@ -214,6 +234,7 @@ jobs:
             output/dog_audition/DOG_AUDITION.json
             output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
             output/dog_audition/*.mp4
+            output/v32_dog_final_candidate/dog_commons_*.webm
             output/dog_audition/*.jpg
             output/dog_audition/*.png
           retention-days: 7
