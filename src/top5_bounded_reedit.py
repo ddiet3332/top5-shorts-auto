@@ -21,7 +21,7 @@ else:
     report["selection_basis"]="automatic frame-change proxy; not semantic editorial score"
     main=root/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4"
     main_hash=hashlib.sha256(main.read_bytes()).hexdigest() if main.is_file() else None
-    for variant in (1,2):
+    for variant in (1,2,3):
         alt=Path(f"output/v32_dog_alternate_candidate_{variant}")
         env=os.environ.copy()
         env["TOP5_REPAIR_VARIANT"]=str(variant)
@@ -57,8 +57,37 @@ else:
     baseline={"variant":0,"video":str(main),"sha256":main_hash,
               "visual_change_pair_ratio":float(metrics.get("visual_change_pair_ratio") or 0),
               "very_similar_adjacent_pairs":int(metrics.get("very_similar_adjacent_pairs") or 99)}
-    ranked=sorted([baseline]+passing,key=lambda a:(
-        -a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
+    # Close the feedback loop: assess every candidate, then choose by
+    # actual visible editorial evidence when the configured reviewer is available.
+    candidates=[baseline]+passing
+    for candidate in candidates:
+        target=Path(candidate["video"])
+        evidence=target.parent/"SEMANTIC_EDITORIAL_REVIEW.json"
+        if target.is_file():
+            try:
+                subprocess.run([sys.executable,"src/top5_semantic_review.py",
+                                str(target),str(evidence)],check=True,timeout=180)
+                assessment=json.loads(evidence.read_text())
+                candidate["semantic_status"]=assessment.get("status","UNVERIFIED")
+                candidate["visible_total"]=assessment.get("visible_total")
+                candidate["visible_max"]=assessment.get("visible_max")
+                candidate["weaknesses"]=assessment.get("weaknesses",[])
+                candidate["recommended_repairs"]=assessment.get("recommended_repairs",[])
+            except (subprocess.CalledProcessError,subprocess.TimeoutExpired,OSError,ValueError) as ex:
+                candidate["semantic_status"]="REVIEW_ERROR"
+                candidate["semantic_error"]=str(ex)[:200]
+    reviewed=[c for c in candidates if c.get("semantic_status")=="PARTIAL_VISION_REVIEW"
+              and isinstance(c.get("visible_total"),(int,float))]
+    if reviewed:
+        ranked=sorted(candidates,key=lambda a:(
+            -(a.get("visible_total") if isinstance(a.get("visible_total"),(int,float)) else -1),
+            -a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
+        report["selection_basis"]="AI visible-editorial score, with motion proxy tie-break"
+    else:
+        ranked=sorted(candidates,key=lambda a:(
+            -a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
+        report["selection_basis"]="motion proxy fallback: semantic review unavailable"
+    # This is a bounded, auditable repair cycle. It does not certify full 80/100.
     winner=ranked[0]
     report.update({"technical_pass":bool(passing),
                    "selected_variant":winner["variant"],
@@ -67,9 +96,11 @@ else:
                    "candidate_comparison":ranked,
                    "editorial_score_100":None,
                    "editorial_80_verified":False,
-                   "automatic_quality_proxy_only":True})
+                   "automatic_quality_proxy_only":not bool(reviewed),
+                   "semantic_feedback_applied":bool(reviewed),
+                   "attempt_count":len(report["attempts"])})
     if not passing:
-        report["reason"]="Both bounded alternate edits failed technical verification"
+        report["reason"]="All bounded alternate edits failed technical verification"
     elif winner["variant"]!=0:
         report.update({"alternate_video":winner["video"],"new_sha256":winner["sha256"]})
 (root/"AUTO_ALTERNATE_EDIT.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+chr(10))
