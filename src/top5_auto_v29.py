@@ -221,8 +221,11 @@ def build_dynamic_subtitles(path,topic,items):
                 # already shown below the video, so duplicating it under the
                 # active rank caused text overlap in 15-frame contact sheets.
                 if rank==active:
-                    subtitle_lines.append(cue(start,end,"Active","▶",190,y,7,6))
-                subtitle_lines.append(cue(start,end,style,f"{rank}위",35,y))
+                    # A single large, high-contrast active-rank label avoids
+                    # the separated triangle/number ambiguity on 360px previews.
+                    subtitle_lines.append(cue(start,end,"Active",f"▶ {rank}위",35,y,7,6))
+                else:
+                    subtitle_lines.append(cue(start,end,style,f"{rank}위",35,y))
             rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
             row=items[rank_index[label]] if label!="hook" else {}
             reaction=(row.get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
