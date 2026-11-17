@@ -274,6 +274,31 @@ jobs:
             const prior = issues.find(x => !x.pull_request && x.title === title);
             if (prior) await github.rest.issues.update({owner,repo,issue_number:prior.number,body});
             else await github.rest.issues.create({owner,repo,title,body});
+      - name: Produce lightweight standalone inspection package
+        if: always()
+        run: |
+          mkdir -p output/top5_review_light/frames
+          INPUT=output/v32_dog_final_candidate/TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4
+          if [ ! -s "$INPUT" ]; then
+            INPUT=output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+          fi
+          if [ -s "$INPUT" ]; then
+            ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf scale=360:640 -c:v libx264 -preset veryfast -crf 31 -c:a aac -b:a 64k -movflags +faststart output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4
+            ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf "fps=1/2,scale=360:640" -q:v 4 output/top5_review_light/frames/frame_%03d.jpg
+            cp output/v32_dog_final_candidate/SELECTED_SOURCE_PROVENANCE.json output/top5_review_light/ 2>/dev/null || true
+            cp output/v32_dog_final_candidate/AUTO_REPAIR_PLAN.json output/top5_review_light/ 2>/dev/null || true
+            ffprobe -v error -show_entries format=duration,size -of json output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4 > output/top5_review_light/VIDEO_INFO.json
+          else
+            echo "Review video missing; light package cannot be generated" > output/top5_review_light/ERROR.txt
+          fi
+      - name: Upload lightweight video-only inspection artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-DOG-LIGHT-REVIEW-${{ github.run_number }}
+          path: output/top5_review_light/
+          retention-days: 7
+          if-no-files-found: error
       - name: Upload rendered MP4, original evidence and QA
         if: always()
         uses: actions/upload-artifact@v4
