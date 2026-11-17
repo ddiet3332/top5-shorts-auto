@@ -6,7 +6,7 @@ Pexels sources are one-by-one, manually curated; no API key, scraping or
 license/YPP claim. The broader topical engine remains V30 for other topics.
 """
 from __future__ import annotations
-import argparse,hashlib,json,shutil
+import argparse,hashlib,json,shutil,os
 from pathlib import Path
 from v12_sources import allowed_page
 from top5 import fetch_json, extract_candidates, download_video
@@ -481,6 +481,12 @@ def select_dog_audition_sources(topic,candidates,output):
     fresh={"dog-bag-surprise","dog-door-rush","dog-door-peek"}
     strong.sort(key=lambda r:(0 if any(x in r.get("title","") for x in fresh) else 1,r.get("title","")))
     pool=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
+    # Deterministic alternative selection for bounded automated re-edits.
+    # Variant 0 is the default. Variants 1-2 rotate only verified downloaded files.
+    variant=max(0,min(2,int(os.environ.get("TOP5_REPAIR_VARIANT","0"))))
+    if variant and len(pool)>5:
+        shift=variant%len(pool)
+        pool=pool[shift:]+pool[:shift]
     combined=[]
     seen=set()
     for item in pool:
@@ -493,6 +499,7 @@ def select_dog_audition_sources(topic,candidates,output):
             combined.append(item)
     (Path(output)/"AUTO_SOURCE_REPLACEMENT.json").write_text(json.dumps({
         "strategy":"prefer distinct action families, then fill only from real downloaded originals",
+        "repair_variant":variant,
         "action_families_selected":[action_family(r) for r in combined[:5]],
         "weak_candidates":[r["title"] for r in fallback],
         "strong_candidates":[r["title"] for r in strong],
