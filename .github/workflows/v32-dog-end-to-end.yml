@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - '.github/workflows/v32-dog-end-to-end.yml'
+      - 'src/v37_dog_audition.py'
+      - 'src/top5_auto_v32.py'
+      - 'src/top5_auto_repair_plan.py'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -224,6 +227,9 @@ jobs:
           print('- Source failures: '+json.dumps(diag.get('source_failures',[]),ensure_ascii=False))
           print('- Evidence: download the run artifact; never treat a successful job as copyright approval.')
           PY
+      - name: Generate evidence-only repair plan
+        if: always()
+        run: python3 src/top5_auto_repair_plan.py
       - name: Publish persistent automated production status issue
         if: always()
         uses: actions/github-script@v7
