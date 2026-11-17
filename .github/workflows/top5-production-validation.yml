@@ -54,6 +54,13 @@ jobs:
           (root/"PUBLICATION_GATE.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+chr(10))
           print("Score verified:",result["score_verified"],"80+:",result["report_80"],"Rights:",result["rights_gate_passed"])
           PY
+      - name: Automatically score the actual MP4 (technical QA only)
+        run: |
+          /tmp/top5-validation/bin/python src/top5_automated_qa.py \
+            --video output/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
+            --technical output/topic_run/V32_TECHNICAL_QA.json \
+            --manifest output/topic_run/TOP5_REPLACEMENT_REVIEW_INPUT.json \
+            --output output/topic_run/TOP5_AUTOMATED_QA_SCORE.json
       - name: Upload review-only result
         if: always()
         uses: actions/upload-artifact@v4
