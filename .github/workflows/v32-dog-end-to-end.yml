@@ -403,6 +403,33 @@ jobs:
               content:fs.readFileSync(path).toString('base64'),sha,
               branch:context.payload.repository.default_branch});
             core.info('Contact sheet published: https://github.com/'+owner+'/'+repo+'/blob/'+context.payload.repository.default_branch+'/'+dest);
+      - name: Publish directly accessible lightweight review MP4
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const source = 'output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4';
+            if (!fs.existsSync(source)) { core.warning('No lightweight MP4'); return; }
+            const bytes = fs.readFileSync(source);
+            if (bytes.length > 20 * 1024 * 1024) {
+              core.warning('Review MP4 exceeds GitHub Contents API safe upload size');
+              return;
+            }
+            const {owner,repo} = context.repo;
+            const dest = 'review/latest/TOP5_DOG_REVIEW_360x640.mp4';
+            let sha;
+            try {
+              const prior = await github.rest.repos.getContent({owner,repo,path:dest});
+              sha = prior.data.sha;
+            } catch (e) { if (e.status !== 404) throw e; }
+            await github.rest.repos.createOrUpdateFileContents({
+              owner,repo,path:dest,sha,content:bytes.toString('base64'),
+              message:'chore: publish direct dog review MP4 [skip ci]',
+              branch:context.payload.repository.default_branch
+            });
+            core.info('Review MP4: https://github.com/'+owner+'/'+repo+'/raw/HEAD/'+dest);
       - name: Upload lightweight video-only inspection artifact
         if: always()
         uses: actions/upload-artifact@v4
