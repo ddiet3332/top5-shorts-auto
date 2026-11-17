@@ -194,8 +194,8 @@ def build_dynamic_subtitles(path,topic,items):
     subtitle_lines=[]
     # At 360px review size the original topic header was unreadably small.
     # ASS inline overrides preserve the existing 60pt reaction-caption template.
-    subtitle_lines.append(cue(0,27,"MainTopic",r"{\\fs82\\bord3}"+topic["headline"],540,112,8))
-    subtitle_lines.append(cue(0,27,"TopFive",r"{\\fs100\\bord2}TOP5",540,220,8))
+    subtitle_lines.append(cue(0,27,"MainTopic",r"{\fs82\bord3}"+topic["headline"],540,112,8))
+    subtitle_lines.append(cue(0,27,"TopFive",r"{\fs100\bord2}TOP5",540,220,8))
     # Never render raw provider/source titles as rank labels: Pexels metadata is
     # often long English text and collided with the action in mobile samples.
     # Show short Korean action labels derived from the already-authored
@@ -226,10 +226,10 @@ def build_dynamic_subtitles(path,topic,items):
                     # A single large, high-contrast active-rank label avoids
                     # the separated triangle/number ambiguity on 360px previews.
                     # Thick dark outline + gold foreground remain readable at 360px.
-                    active_label=rf"{{\\1c&H00D8F5&\\3c&H171717&\\bord7\\shad0\\fs92}}▶ {rank}위"
+                    active_label=rf"{{\1c&H00D8F5&\3c&H171717&\bord7\shad0\fs92}}▶ {rank}위"
                     subtitle_lines.append(cue(start,end,"Active",active_label,35,y,7,6))
                 else:
-                    muted_label=rf"{{\\alpha&H85&\\fs65}}{rank}위"
+                    muted_label=rf"{{\alpha&H85&\fs65}}{rank}위"
                     subtitle_lines.append(cue(start,end,style,muted_label,35,y))
             rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
             row=items[rank_index[label]] if label!="hook" else {}
@@ -273,7 +273,7 @@ def render_dynamic_endcard(items,path):
     draw.text((W//2,1515),"당신의 1위는?",anchor="mt",font=ft(83),fill="white")
     draw.text((W//2,1655),"댓글로 골라주세요!",anchor="mt",font=ft(60),fill="#F5D04E")
     # Remove tiny duplicate brand footer; keep one mobile-sized action prompt.
-    draw.text((W//2,1800),"1위 장면 다시 보기 ↻",anchor="mt",font=ft(57),fill="#FFFFFF")
+    draw.text((W//2,1800),"1위 장면 다시 보기",anchor="mt",font=ft(57),fill="#FFFFFF")
     image.save(path,quality=93)
 
 def save_license_and_status(topic,items,recommendations,attempts,output):
