@@ -294,7 +294,7 @@ jobs:
       - name: Publish a directly readable contact sheet to repository
         if: always()
         run: |
-          python3 - <<'PY'
+          /tmp/top5/bin/python - <<'PY'
           from pathlib import Path
           from PIL import Image,ImageDraw
           frames=sorted(Path('output/top5_review_light/frames').glob('frame_*.jpg'))
