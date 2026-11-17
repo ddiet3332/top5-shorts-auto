@@ -204,6 +204,9 @@ def build_dynamic_subtitles(path,topic,items):
             for rank in range(1,6):
                 y=485+(rank-1)*143
                 style="Active" if rank==active else "Rank"
+                # Rank rail: a large gold marker makes the currently playing rank unambiguous.
+                if rank==active:
+                    subtitle_lines.append(cue(start,end,"Active",">",12,y,7,6))
                 subtitle_lines.append(cue(start,end,style,f"{rank}위",35,y))
                 if rank==active:
                     subtitle_lines.append(cue(start,end,"RankName",
@@ -232,33 +235,24 @@ def build_dynamic_subtitles(path,topic,items):
     return subtitle_lines
 
 def render_dynamic_endcard(items,path):
-    image=Image.new("RGB",(W,H),"#070C11")
+    """Mobile-legible, single-message ending; no unreadable five-card mosaic."""
+    image=Image.new("RGB",(W,H),"#101820")
     draw=ImageDraw.Draw(image)
     font_path=subprocess.check_output(["fc-match","-f","%{file}","NanumSquare"],
                                       text=True).strip()
     ft=lambda n:ImageFont.truetype(font_path,n)
-    draw.rounded_rectangle((42,150,1038,435),radius=36,fill="#13202B")
-    draw.text((80,192),"5개의 순간",font=ft(70),fill="#F5D04E")
-    draw.text((80,300),"당신의 1위는?",font=ft(46),fill="white")
-    places=[(50,455,521,980),(559,455,1030,980),
-            (50,1010,360,1485),(385,1010,695,1485),(720,1010,1030,1485)]
-    for index,rect in enumerate(places):
-        rank=index+1
-        item=items[5-rank]
-        x0,y0,x1,y1=rect
-        moment=min(item["duration_sec"]-.15,item["cut_start"]+2)
-        frame=get_frame(item["local_path"],moment)
-        thumb=ImageOps.fit(frame,(x1-x0-14,y1-y0-100),Image.Resampling.LANCZOS)
-        draw.rounded_rectangle(rect,radius=21,fill="#233442",
-                               outline="#465A68",width=2)
-        image.paste(thumb,(x0+7,y0+7))
-        draw.text((x0+18,y1-73),f"{rank}위",
-                  font=ft(39 if rank<=2 else 31),fill="#F5D04E")
-        draw.text((x0+94 if rank<=2 else x0+86,y1-69),
-                  item["label"][:8],
-                  font=ft(27 if rank<=2 else 21),fill="white")
-    draw.text((80,1680),"실제 원본에서 선정한 5개 장면",
-              font=ft(30),fill="#D5E1EA")
+    # The top-ranked source is the only photographic focus.
+    item=items[-1]
+    moment=min(item["duration_sec"]-.15,item["cut_start"]+2)
+    frame=get_frame(item["local_path"],moment)
+    photo=ImageOps.fit(frame,(W,1150),Image.Resampling.LANCZOS)
+    image.paste(photo,(0,315))
+    draw.rectangle((0,0,W,315),fill="white")
+    draw.text((W//2,80),"TOP5",anchor="mt",font=ft(116),fill="#141414")
+    draw.rectangle((0,1465,W,H),fill="#101820")
+    draw.text((W//2,1515),"당신의 1위는?",anchor="mt",font=ft(83),fill="white")
+    draw.text((W//2,1655),"댓글로 골라주세요!",anchor="mt",font=ft(60),fill="#F5D04E")
+    draw.text((W//2,1810),"TOP5",anchor="mt",font=ft(52),fill="#FFFFFF")
     image.save(path,quality=93)
 
 def save_license_and_status(topic,items,recommendations,attempts,output):
