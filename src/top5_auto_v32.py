@@ -460,8 +460,6 @@ def select_dog_audition_sources(topic,candidates,output):
     # The older strategy repeatedly selected fetch/catch footage.
     def action_family(item):
         title=str(item.get("title","")).lower()
-        if any(k in title for k in ("fetch","catch","frisbee","ring")):
-            return "fetch"
         if "jump-person" in title:
             return "jump_person"
         if "pupp" in title:
@@ -470,6 +468,8 @@ def select_dog_audition_sources(topic,candidates,output):
             return "snow"
         if "field" in title:
             return "field"
+        if any(k in title for k in ("fetch","catch","frisbee","ring")):
+            return "fetch"
         return "other:"+title
     pool=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
     combined=[]
@@ -489,7 +489,7 @@ def select_dog_audition_sources(topic,candidates,output):
         "strong_candidates":[r["title"] for r in strong],
         "fallback_used":[r["title"] for r in combined[:5] if r in fallback],
         "semantic_humor_certified":False,"publication_approved":False
-    },ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+    },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     (Path(output)/"DOG_SOURCE_BRIDGE.json").write_text(json.dumps({
         "pexels_technically_eligible":len(rows),"commons_technically_eligible":len(commons),
         "total":len(combined),"failures":failures,
