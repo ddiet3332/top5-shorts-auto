@@ -456,9 +456,35 @@ def select_dog_audition_sources(topic,candidates,output):
     weak={"Pexels dog dog-field","Pexels dog dog-snow"}
     strong=[r for r in rows+commons if r.get("title") not in weak]
     fallback=[r for r in rows+commons if r.get("title") in weak]
-    combined=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
+    # Prefer distinct action families; do not mistake metadata for verified humor.
+    # The older strategy repeatedly selected fetch/catch footage.
+    def action_family(item):
+        title=str(item.get("title","")).lower()
+        if any(k in title for k in ("fetch","catch","frisbee","ring")):
+            return "fetch"
+        if "jump-person" in title:
+            return "jump_person"
+        if "pupp" in title:
+            return "puppies"
+        if "snow" in title:
+            return "snow"
+        if "field" in title:
+            return "field"
+        return "other:"+title
+    pool=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
+    combined=[]
+    seen=set()
+    for item in pool:
+        family=action_family(item)
+        if family not in seen:
+            combined.append(item)
+            seen.add(family)
+    for item in pool:
+        if item not in combined:
+            combined.append(item)
     (Path(output)/"AUTO_SOURCE_REPLACEMENT.json").write_text(json.dumps({
-        "strategy":"prefer five non-weak downloaded originals; fallback only on shortage",
+        "strategy":"prefer distinct action families, then fill only from real downloaded originals",
+        "action_families_selected":[action_family(r) for r in combined[:5]],
         "weak_candidates":[r["title"] for r in fallback],
         "strong_candidates":[r["title"] for r in strong],
         "fallback_used":[r["title"] for r in combined[:5] if r in fallback],
