@@ -184,6 +184,19 @@ jobs:
           print('- Source failures: '+json.dumps(diag.get('source_failures',[]),ensure_ascii=False))
           print('- Evidence: download the run artifact; never treat a successful job as copyright approval.')
           PY
+      - name: Upload rendered MP4, original evidence and QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: V32-dog-render-and-QA-${{ github.run_number }}
+          path: |
+            output/v32_dog_final_candidate/
+            output/dog_audition/DOG_AUDITION.json
+            output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
+            output/dog_audition/*.jpg
+            output/dog_audition/*.png
+          retention-days: 7
+          if-no-files-found: error
       - name: Create or update GitHub issue on production failure
         if: failure()
         uses: actions/github-script@v7
@@ -208,16 +221,3 @@ jobs:
             } else {
               await github.rest.issues.create({owner,repo,title,body});
             }
-      - name: Upload rendered MP4, original evidence and QA
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: V32-dog-render-and-QA-${{ github.run_number }}
-          path: |
-            output/v32_dog_final_candidate/
-            output/dog_audition/DOG_AUDITION.json
-            output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
-            output/dog_audition/*.jpg
-            output/dog_audition/*.png
-          retention-days: 7
-          if-no-files-found: error
