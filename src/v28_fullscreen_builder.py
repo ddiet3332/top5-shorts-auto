@@ -43,7 +43,7 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
 Style: Title,NanumSquare,72,&H0000D9FF,&H00FFFFFF,&H00201B15,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,10,10,10,1
-Style: MainTopic,NanumSquare,59,&H00171717,&H00171717,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
+Style: MainTopic,NanumSquare,78,&H00171717,&H00171717,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
 Style: TopFive,NanumSquare,84,&H00171717,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,5,1,8,12,12,12,1
 Style: SmallRank,NanumSquare,62,&H0000D9FF,&H00FFFFFF,&H00131211,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,12,12,12,1
 Style: Rank,NanumSquare,68,&H00171717,&H00FFFFFF,&H000B0B0B,&H00000000,-1,0,0,0,100,100,0,0,1,4,1,7,10,10,10,1
@@ -146,7 +146,7 @@ def create_scene(source,start,seconds,destination):
         "setsar=1[front];"
         "[back][front]overlay=(W-w)/2:305+(1615-h)/2:format=auto,"
         "drawbox=x=0:y=0:w=1080:h=305:color=white@0.96:t=fill,"
-        "drawbox=x=0:y=460:w=174:h=752:color=white@0.83:t=fill,"
+        "drawbox=x=0:y=420:w=270:h=850:color=white@0.97:t=fill,"
         "fps=24,format=yuv420p[v]")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
          "-filter_complex",filtergraph,"-map","[v]",
