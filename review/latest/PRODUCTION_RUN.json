@@ -1,24 +1,11 @@
 {
-  "run_id": 44200827587,
-  "run_number": 126,
+  "run_id": 44203848131,
+  "run_number": 127,
   "workflow": "V32 dog end-to-end MP4 build",
   "trigger": "push",
-  "source_sha": "4269f4c2a80cb304754588fd4ae46f1db5b84acf",
-  "status": "MP4_CREATED_NEEDS_REVIEW",
-  "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44200827587",
-  "selected_mp4_sha256": "0a9caf06f0f71f61027908a3538de26349e21aa7c451fada65a1e7594bd72d69",
-  "feedback": {
-    "applied": [
-      {
-        "rank": 3,
-        "action": "shift_highlight"
-      }
-    ],
-    "rejected": [],
-    "rights_verified": false,
-    "publication_approved": false,
-    "status": "APPLIED"
-  },
+  "source_sha": "b153d70d27bffc6cbaff3f8046d3483ffaef85ae",
+  "status": "STARTED",
+  "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44203848131",
   "editorial_score_100": null,
   "rights_verified": false,
   "youtube_auto_upload": false
