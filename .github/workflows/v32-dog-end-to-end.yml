@@ -27,8 +27,26 @@ jobs:
         run: /tmp/top5/bin/python -m compileall -q src/top5_auto_v32.py src/v37_dog_audition.py src/top5_publication_gate.py src/top5_rights_score_audit.py
       - name: Download original dog candidates and contact sheets
         id: audition
-        continue-on-error: true
         run: /tmp/top5/bin/python src/v37_dog_audition.py
+      - name: Verify minimum five usable originals and save SHA-256 evidence
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          base=Path('output/dog_audition')
+          rows=json.loads((base/'DOG_AUDITION.json').read_text())['candidates']
+          accepted=[]
+          for row in rows:
+              p=base/(row['id']+'.mp4')
+              if row.get('status')=='AWAITING_EDITORIAL_FRAME_REVIEW' and p.is_file():
+                  h=hashlib.sha256()
+                  with p.open('rb') as stream:
+                      for block in iter(lambda:stream.read(1024*1024),b''): h.update(block)
+                  accepted.append({'id':row['id'],'source_page':row['page_url'],'creator_claim':row.get('creator'),'sha256':h.hexdigest(),'size_bytes':p.stat().st_size,'rights_verified':False})
+          (base/'ORIGINAL_SHA256_INVENTORY.json').write_text(json.dumps({'originals':accepted,'independent_rights_verified':False},indent=2)+'\\n')
+          print('Usable originals:',len(accepted),'of',len(rows))
+          if len(accepted)<5: raise SystemExit('Fewer than 5 original source files; cannot claim original-based TOP5')
+          PY
       - name: Build dog TOP5 MP4 from downloaded originals
         run: /tmp/top5/bin/python src/top5_auto_v32.py --topic dog_surprises --output output/v32_dog_final_candidate
       - name: Verify actual rendered video and audio
@@ -53,7 +71,7 @@ jobs:
           root=Path('output/v32_dog_final_candidate')
           p=root/'INDEPENDENT_REVIEW_EVIDENCE.json'
           if not p.exists():
-              p.write_text(json.dumps({'sources':[], 'editorial_scores':{}, 'editorial_review':{}, 'youtube_reused_content_review':{}, 'status':'UNVERIFIED_NEEDS_HUMAN_EVIDENCE'},indent=2)+'\\n')
+              p.write_text(json.dumps({'sources':[], 'editorial_scores':{}, 'editorial_review':{}, 'youtube_reused_content_review':{}, 'status':'UNVERIFIED_NEEDS_HUMAN_EVIDENCE'},indent=2)+'\n')
           PY
       - name: Independently evidence-gated rights and editorial scoring
         if: success()
@@ -147,6 +165,7 @@ jobs:
           path: |
             output/v32_dog_final_candidate/
             output/dog_audition/DOG_AUDITION.json
+            output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
             output/dog_audition/*.jpg
             output/dog_audition/*.png
           retention-days: 7
