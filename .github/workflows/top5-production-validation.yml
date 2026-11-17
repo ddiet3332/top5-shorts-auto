@@ -37,6 +37,23 @@ jobs:
         run: /tmp/top5-validation/bin/python src/top5_auto_v32.py --topic "$TOPIC" --output output/topic_run
       - name: Verify full video and audio decoding
         run: ffmpeg -hide_banner -v error -xerror -i output/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+      - name: Record unverified quality and rights without fabricating scores
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, "src")
+          from top5_publication_gate import evaluate
+          root=Path("output/topic_run")
+          qa=root/"editorial_qa.json"
+          rights=root/"independent_rights_review.json"
+          read=lambda p: json.loads(p.read_text()) if p.is_file() else {}
+          result=evaluate(read(qa),read(rights),root/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4")
+          (root/"PUBLICATION_GATE.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\\n")
+          print("Score verified:",result["score_verified"],"80+:",result["report_80"],"Rights:",result["rights_gate_passed"])
+          PY
       - name: Upload review-only result
         if: always()
         uses: actions/upload-artifact@v4
