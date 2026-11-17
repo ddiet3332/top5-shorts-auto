@@ -24,6 +24,8 @@ jobs:
           python3 -m venv /tmp/top5
           /tmp/top5/bin/pip install -q numpy pillow
       - name: Download original dog candidates and contact sheets
+        id: audition
+        continue-on-error: true
         run: /tmp/top5/bin/python src/v37_dog_audition.py
       - name: Build dog TOP5 MP4 from downloaded originals
         run: /tmp/top5/bin/python src/top5_auto_v32.py --topic dog_surprises --output output/v32_dog_final_candidate
@@ -52,6 +54,25 @@ jobs:
           result=evaluate(read(root/'editorial_qa.json'),read(root/'independent_rights_review.json'),video)
           (root/'PUBLICATION_GATE.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           print('MP4 rendered; publication permitted:',result['youtube_upload_permitted'])
+          PY
+      - name: Write failure diagnostics and source inventory
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('output/v32_dog_final_candidate')
+          root.mkdir(parents=True,exist_ok=True)
+          audit=Path('output/dog_audition/DOG_AUDITION.json')
+          rows=json.loads(audit.read_text()).get('candidates',[]) if audit.exists() else []
+          mp4=root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4'
+          report={'workflow':'V32 dog end-to-end','source_manifest_present':audit.exists(),
+              'source_candidates':len(rows),'originals_available':sum((audit.parent/(r.get('id','')+'.mp4')).is_file() for r in rows),
+              'source_failures':[{'id':r.get('id'),'status':r.get('status'),'error':r.get('error_detail')} for r in rows if r.get('status')!='AWAITING_EDITORIAL_FRAME_REVIEW'],
+              'mp4_rendered':mp4.is_file() and mp4.stat().st_size>0,
+              'editorial_score_verified':False,'rights_approved':False,'publication_approved':False}
+          (root/'V32_BUILD_DIAGNOSTICS.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\\n')
+          print(json.dumps(report,ensure_ascii=False))
           PY
       - name: Upload rendered MP4, original evidence and QA
         if: always()
