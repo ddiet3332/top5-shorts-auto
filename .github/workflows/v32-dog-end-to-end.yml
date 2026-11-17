@@ -48,6 +48,26 @@ jobs:
           print('Usable originals:',len(accepted),'of',len(rows))
           if len(accepted)<5: raise SystemExit('Fewer than 5 original source files; cannot claim original-based TOP5')
           PY
+      - name: Validate five distinct playable source videos
+        run: |
+          python3 - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          base=Path('output/dog_audition')
+          inventory=json.loads((base/'ORIGINAL_SHA256_INVENTORY.json').read_text())['originals']
+          if len(inventory)<5: raise SystemExit('At least five original videos required')
+          ids=[row['id'] for row in inventory]
+          hashes=[row['sha256'] for row in inventory]
+          if len(set(ids))<5 or len(set(hashes))<5: raise SystemExit('Duplicate source IDs or source file hashes')
+          for row in inventory:
+              path=base/(row['id']+'.mp4')
+              if not path.is_file() or path.stat().st_size!=row['size_bytes']:
+                  raise SystemExit(f"Source file missing or size mismatch: {path}")
+              probe=subprocess.run(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=codec_type','-of','default=noprint_wrappers=1:nokey=1',str(path)],capture_output=True,text=True)
+              if probe.returncode!=0 or 'video' not in probe.stdout:
+                  raise SystemExit(f"Original is not a playable video: {path}")
+          print('Validated distinct playable source videos:',len(inventory))
+          PY
       - name: Build dog TOP5 MP4 from downloaded originals
         run: /tmp/top5/bin/python src/top5_auto_v32.py --topic dog_surprises --output output/v32_dog_final_candidate
       - name: Verify actual rendered video and audio
