@@ -13,13 +13,12 @@ report={"attempted":False,"reason":None,"alternate_video":None,"new_sha256":None
         "rights_verified":False,"youtube_upload_permitted":False}
 if len(original)!=5:
     report["reason"]="Five original provenance entries required"
-elif not metrics.get("possible_static_or_repetitive_visuals"):
-    report["reason"]="No static/repetitive visual warning; no blind rerender"
 else:
     # Bounded automatic improvement: try two real-source permutations and
     # retain all evidence. A passing decode is not an editorial score.
     report["attempted"]=True
     report["attempts"]=[]
+    report["selection_basis"]="automatic frame-change proxy; not semantic editorial score"
     main=root/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4"
     main_hash=hashlib.sha256(main.read_bytes()).hexdigest() if main.is_file() else None
     for variant in (1,2):
@@ -40,14 +39,38 @@ else:
                 raise RuntimeError("Alternate provenance invalid")
             digest=hashlib.sha256(video.read_bytes()).hexdigest()
             if digest==main_hash: raise RuntimeError("Identical to main candidate")
-            attempt.update({"technical_pass":True,"video":str(video),"sha256":digest})
-            if not report["technical_pass"]:
-                report.update({"technical_pass":True,"alternate_video":str(video),
-                               "new_sha256":digest,"selected_variant":variant})
+            # Generate candidate-specific frame evidence for every rendered variant.
+            frame_dir=alt/"FRAME_REVIEW"
+            subprocess.run([sys.executable,"src/top5_qa_frames.py","--video",str(video),
+                            "--output",str(frame_dir),"--count","15"],check=True,timeout=180)
+            from top5_free_visual_metrics import analyze
+            visual=analyze(frame_dir/"FRAME_REVIEW_MANIFEST.json",
+                           alt/"FREE_VISUAL_METRICS.json")
+            attempt.update({"technical_pass":True,"video":str(video),"sha256":digest,
+                            "visual_change_pair_ratio":visual["visual_change_pair_ratio"],
+                            "very_similar_adjacent_pairs":visual["very_similar_adjacent_pairs"]})
+
         except (subprocess.CalledProcessError,subprocess.TimeoutExpired,RuntimeError,OSError,ValueError) as ex:
             attempt["reason"]=type(ex).__name__+": "+str(ex)[:200]
         report["attempts"].append(attempt)
-    if not report["technical_pass"]:
+    passing=[a for a in report["attempts"] if a["technical_pass"]]
+    baseline={"variant":0,"video":str(main),"sha256":main_hash,
+              "visual_change_pair_ratio":float(metrics.get("visual_change_pair_ratio") or 0),
+              "very_similar_adjacent_pairs":int(metrics.get("very_similar_adjacent_pairs") or 99)}
+    ranked=sorted([baseline]+passing,key=lambda a:(
+        -a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
+    winner=ranked[0]
+    report.update({"technical_pass":bool(passing),
+                   "selected_variant":winner["variant"],
+                   "selected_candidate":winner["video"],
+                   "selected_sha256":winner["sha256"],
+                   "candidate_comparison":ranked,
+                   "editorial_score_100":None,
+                   "editorial_80_verified":False,
+                   "automatic_quality_proxy_only":True})
+    if not passing:
         report["reason"]="Both bounded alternate edits failed technical verification"
+    elif winner["variant"]!=0:
+        report.update({"alternate_video":winner["video"],"new_sha256":winner["sha256"]})
 (root/"AUTO_ALTERNATE_EDIT.json").write_text(json.dumps(report,ensure_ascii=False,indent=2)+chr(10))
 print(json.dumps(report,ensure_ascii=False))
