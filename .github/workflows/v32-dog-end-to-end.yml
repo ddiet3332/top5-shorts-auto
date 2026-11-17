@@ -6,6 +6,7 @@ on:
       - 'src/v37_dog_audition.py'
       - 'src/top5_auto_v32.py'
       - 'src/top5_auto_repair_plan.py'
+      - 'src/top5_bounded_reedit.py'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -106,6 +107,9 @@ jobs:
           /tmp/top5/bin/python src/top5_qa_frames.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --output output/v32_dog_final_candidate/FRAME_REVIEW --count 15
           /tmp/top5/bin/python src/top5_editorial_review_packet.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json --frames output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/EDITORIAL_REVIEW_PACKET.json
           /tmp/top5/bin/python src/top5_free_visual_metrics.py --manifest output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/FREE_VISUAL_METRICS.json
+      - name: Attempt bounded alternate edit when visual proxy flags repetition
+        if: success()
+        run: /tmp/top5/bin/python src/top5_bounded_reedit.py
       - name: Initialize independent review evidence as unverified
         if: success()
         run: |
@@ -277,6 +281,7 @@ jobs:
           name: V32-dog-render-and-QA-${{ github.run_number }}
           path: |
             output/v32_dog_final_candidate/
+            output/v32_dog_alternate_candidate/*.mp4
             output/dog_audition/DOG_AUDITION.json
             output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
             output/dog_audition/*.mp4
