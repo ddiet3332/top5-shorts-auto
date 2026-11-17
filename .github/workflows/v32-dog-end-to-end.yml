@@ -110,8 +110,10 @@ jobs:
           /tmp/top5/bin/python src/top5_qa_frames.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --output output/v32_dog_final_candidate/FRAME_REVIEW --count 15
           /tmp/top5/bin/python src/top5_editorial_review_packet.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json --frames output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/EDITORIAL_REVIEW_PACKET.json
           /tmp/top5/bin/python src/top5_free_visual_metrics.py --manifest output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/FREE_VISUAL_METRICS.json
-      - name: Attempt bounded alternate edit when visual proxy flags repetition
+      - name: Render, assess and select bounded candidate revisions
         if: success()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: /tmp/top5/bin/python src/top5_bounded_reedit.py
       - name: Attempt multimodal editorial review of selected candidate
         if: success()
@@ -418,6 +420,7 @@ jobs:
             output/v32_dog_final_candidate/
             output/v32_dog_alternate_candidate_1/
             output/v32_dog_alternate_candidate_2/
+            output/v32_dog_alternate_candidate_3/
             output/dog_audition/DOG_AUDITION.json
             output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
             output/dog_audition/*.mp4
