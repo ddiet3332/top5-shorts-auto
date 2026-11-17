@@ -76,6 +76,20 @@ jobs:
           (root/'V32_BUILD_DIAGNOSTICS.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\\n')
           print(json.dumps(report,ensure_ascii=False))
           PY
+      - name: Verify deliverable status
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('output/v32_dog_final_candidate')
+          video=root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4'
+          gate=root/'PUBLICATION_GATE.json'
+          result=json.loads(gate.read_text()) if gate.is_file() else {}
+          ready=bool(video.is_file() and video.stat().st_size>0 and result.get('youtube_upload_permitted') is True)
+          (root/'DELIVERY_STATUS.json').write_text(json.dumps({'finished_video_present':video.is_file(),'publication_ready':ready,'editorial_and_rights_verified':ready},indent=2)+'\\n')
+          print('Publication-ready deliverable:',ready)
+          PY
       - name: Upload rendered MP4, original evidence and QA
         if: always()
         uses: actions/upload-artifact@v4
