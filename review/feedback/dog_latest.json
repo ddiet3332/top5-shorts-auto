@@ -8,5 +8,7 @@
       "delta_seconds": 1,
       "reason": "previous inspection: static puppies rank3; move selected excerpt by 1s to test visible change"
     }
-  ]
+  ],
+  "test_cycle": 2,
+  "expected_feedback_application": "rank3 shift_highlight +1 second"
 }
