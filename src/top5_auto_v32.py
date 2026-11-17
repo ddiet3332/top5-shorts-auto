@@ -486,11 +486,11 @@ def select_dog_audition_sources(topic,candidates,output):
     strong.sort(key=lambda r:(0 if any(x in r.get("title","") for x in fresh) else 1,r.get("title","")))
     pool=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
     # Deterministic alternative selection for bounded automated re-edits.
-    # Variant 0 is the default. Variants 1-2 rotate only verified downloaded files.
-    variant=max(0,min(2,int(os.environ.get("TOP5_REPAIR_VARIANT","0"))))
-    if variant and len(pool)>5:
-        shift=variant%len(pool)
-        pool=pool[shift:]+pool[:shift]
+    # Variant 0 is default. Variants 1-3 rotate downloaded strong sources.
+    variant=max(0,min(3,int(os.environ.get("TOP5_REPAIR_VARIANT","0"))))
+    if variant and len(strong)>5:
+        shift=variant%len(strong)
+        pool=strong[shift:]+strong[:shift]+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
     combined=[]
     seen=set()
     for item in pool:
