@@ -548,6 +548,11 @@ def main():
         json.dumps(v36_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     final=apply_rank_one_story_timing(final)
     final,v37_audit=apply_v37_story_and_door(topic,final,output)
+    # Apply bounded, auditable feedback to the actual render inputs.
+    # The file is optional; invalid feedback never authorizes publication.
+    from top5_feedback_repair import load_and_apply
+    final,feedback_report=load_and_apply(
+        final,"review/feedback/dog_latest.json",output/"FEEDBACK_REPAIR_APPLIED.json")
     v37_rights_and_description(final,output,v37_audit)
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
