@@ -346,12 +346,16 @@ jobs:
         if: always()
         run: |
           mkdir -p output/top5_review_light/frames
-          INPUT=output/v32_dog_final_candidate/TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4
+          INPUT=output/v32_dog_final_candidate/TOP5_DOG_AUTO_SELECTED_1080x1920.mp4
+          if [ ! -s "$INPUT" ]; then
+            INPUT=output/v32_dog_final_candidate/TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4
+          fi
           if [ ! -s "$INPUT" ]; then
             INPUT=output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
           fi
           if [ -s "$INPUT" ]; then
             ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf scale=360:640 -c:v libx264 -preset veryfast -crf 31 -c:a aac -b:a 64k -movflags +faststart output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4
+            ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf scale=540:960 -c:v libx264 -preset veryfast -crf 26 -c:a aac -b:a 96k -movflags +faststart output/top5_review_light/TOP5_DOG_SELECTED_540x960.mp4
             ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf "fps=1/2,scale=360:640" -q:v 4 output/top5_review_light/frames/frame_%03d.jpg
             cp output/v32_dog_final_candidate/SELECTED_SOURCE_PROVENANCE.json output/top5_review_light/ 2>/dev/null || true
             cp output/v32_dog_final_candidate/AUTO_REPAIR_PLAN.json output/top5_review_light/ 2>/dev/null || true
