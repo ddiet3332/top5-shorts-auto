@@ -4,8 +4,13 @@ on:
     paths:
       - '.github/workflows/v32-dog-end-to-end.yml'
   workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
 permissions:
   contents: read
+concurrency:
+  group: v32-dog-end-to-end
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
