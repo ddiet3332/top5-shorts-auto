@@ -1,0 +1,51 @@
+name: TOP5 editorial 80 gate
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/editorial_gate.py'
+      - 'tests/test_editorial_gate.py'
+      - '.github/workflows/editorial-80-gate.yml'
+      - 'review/latest/SELF_CONTAINED_QA.json'
+      - 'review/latest/EDITORIAL_SCORECARD.json'
+      - 'review/latest/RIGHTS_REVIEW.json'
+  pull_request:
+    paths:
+      - 'src/editorial_gate.py'
+      - 'tests/test_editorial_gate.py'
+      - '.github/workflows/editorial-80-gate.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -p 'test_editorial_gate.py' -v
+      - name: Evaluate available review evidence without inventing scores
+        shell: bash
+        run: |
+          mkdir -p output
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from src.editorial_gate import assess
+          root = Path('review/latest')
+          def read(name):
+              p = root / name
+              return json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+          result = assess(read('EDITORIAL_SCORECARD.json'),
+                          read('SELF_CONTAINED_QA.json'),
+                          read('RIGHTS_REVIEW.json'))
+          Path('output/EDITORIAL_80_GATE.json').write_text(
+              json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+          print(json.dumps(result, ensure_ascii=False))
+          PY
+      - name: Upload gate evidence (not publishing authorization)
+        uses: actions/upload-artifact@v4
+        with:
+          name: editorial-80-gate-${{ github.run_number }}
+          path: output/EDITORIAL_80_GATE.json
+          retention-days: 7
