@@ -5,6 +5,8 @@ on:
       - '.github/workflows/v32-dog-end-to-end.yml'
       - 'src/v37_dog_audition.py'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_auto_v29.py'
+      - 'src/v28_fullscreen_builder.py'
       - 'src/top5_auto_repair_plan.py'
       - 'src/top5_bounded_reedit.py'
   workflow_dispatch:
