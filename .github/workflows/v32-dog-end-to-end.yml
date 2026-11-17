@@ -24,7 +24,7 @@ jobs:
           python3 -m venv /tmp/top5
           /tmp/top5/bin/pip install -q numpy pillow
       - name: Validate Python sources before rendering
-        run: /tmp/top5/bin/python -m compileall -q src/top5_auto_v32.py src/v37_dog_audition.py src/top5_publication_gate.py
+        run: /tmp/top5/bin/python -m compileall -q src/top5_auto_v32.py src/v37_dog_audition.py src/top5_publication_gate.py src/top5_rights_score_audit.py
       - name: Download original dog candidates and contact sheets
         id: audition
         continue-on-error: true
@@ -44,6 +44,14 @@ jobs:
           /tmp/top5/bin/python src/top5_qa_frames.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --output output/v32_dog_final_candidate/FRAME_REVIEW --count 15
           /tmp/top5/bin/python src/top5_editorial_review_packet.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json --frames output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/EDITORIAL_REVIEW_PACKET.json
           /tmp/top5/bin/python src/top5_free_visual_metrics.py --manifest output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/FREE_VISUAL_METRICS.json
+      - name: Independently evidence-gated rights and editorial scoring
+        if: success()
+        run: |
+          /tmp/top5/bin/python src/top5_rights_score_audit.py \
+            --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
+            --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json \
+            --review output/v32_dog_final_candidate/INDEPENDENT_REVIEW_EVIDENCE.json \
+            --output output/v32_dog_final_candidate/RIGHTS_AND_SCORE_AUDIT.json
       - name: Fail-closed publication gate
         if: success()
         run: |
