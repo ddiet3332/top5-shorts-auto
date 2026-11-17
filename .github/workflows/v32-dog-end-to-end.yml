@@ -35,6 +35,9 @@ jobs:
         run: |
           test -s output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
           ffmpeg -hide_banner -v error -xerror -i output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+      - name: Label rendered video as V32 review master
+        run: |
+          cp output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 output/v32_dog_final_candidate/TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4
       - name: Run technical QA and editorial evidence packet
         run: |
           /tmp/top5/bin/python src/top5_automated_qa.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --technical output/v32_dog_final_candidate/V32_TECHNICAL_QA.json --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json --output output/v32_dog_final_candidate/TOP5_AUTOMATED_QA_SCORE.json
@@ -86,9 +89,9 @@ jobs:
           video=root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4'
           gate=root/'PUBLICATION_GATE.json'
           result=json.loads(gate.read_text()) if gate.is_file() else {}
-          ready=bool(video.is_file() and video.stat().st_size>0 and result.get('youtube_upload_permitted') is True)
-          (root/'DELIVERY_STATUS.json').write_text(json.dumps({'finished_video_present':video.is_file(),'publication_ready':ready,'editorial_and_rights_verified':ready},indent=2)+'\n')
-          print('Publication-ready deliverable:',ready)
+          ready=bool(video.is_file() and video.stat().st_size>0 and result.get('publication_candidate_85') is True and result.get('rights_gate_passed') is True)
+          (root/'DELIVERY_STATUS.json').write_text(json.dumps({'rendered_review_mp4_present':video.is_file(),'publication_candidate_85_and_rights_cleared':ready,'youtube_upload_permitted':False,'editorial_score':result.get('score'),'editorial_and_rights_verified':ready},indent=2)+'\n')
+          print('85+ and rights cleared:',ready,'review MP4 exists:',video.is_file())
           PY
       - name: Upload rendered MP4, original evidence and QA
         if: always()
