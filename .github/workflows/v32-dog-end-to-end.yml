@@ -23,6 +23,8 @@ jobs:
           sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
           python3 -m venv /tmp/top5
           /tmp/top5/bin/pip install -q numpy pillow
+      - name: Validate Python sources before rendering
+        run: /tmp/top5/bin/python -m compileall -q src/top5_auto_v32.py src/v37_dog_audition.py src/top5_publication_gate.py
       - name: Download original dog candidates and contact sheets
         id: audition
         continue-on-error: true
