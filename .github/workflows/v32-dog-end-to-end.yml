@@ -170,7 +170,7 @@ jobs:
                   'likeness_review_cleared':False,
                   'youtube_reused_content_review_cleared':False,
                   'publication_permitted':False}
-          (root/'BUILD_PROVENANCE.json').write_text(json.dumps(report,indent=2)+'\\n')
+          (root/'BUILD_PROVENANCE.json').write_text(json.dumps(report,indent=2)+chr(10))
           PY
       - name: Write failure diagnostics and source inventory
         if: always()
