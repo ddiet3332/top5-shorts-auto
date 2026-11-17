@@ -12,6 +12,8 @@ on:
       - 'src/top5_semantic_review.py'
       - 'src/editorial_gate.py'
       - 'src/top5_objective_defect_qa.py'
+      - 'src/top5_quality_gate.py'
+      - 'src/top5_bounded_reedit.py'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -199,6 +201,27 @@ jobs:
                          'manual_youtube_upload_only':True})
           (root/'SELECTED_DOG_EDITORIAL_80_GATE.json').write_text(
               json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print(json.dumps(result,ensure_ascii=False))
+          PY
+      - name: Report selected-video quality independently of deferred rights
+        if: success()
+        run: |
+          /tmp/top5/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          from src.top5_quality_gate import assess_quality
+          root=Path('output/v32_dog_final_candidate')
+          def read(name):
+              try: return json.loads((root/name).read_text())
+              except (OSError,ValueError): return {}
+          selection=read('AUTO_SELECTION_VERDICT.json')
+          defects=read('SELECTED_DOG_OBJECTIVE_DEFECTS.json')
+          technical={'technical_pass':selection.get('technical_decode_pass') is True
+                     and defects.get('technical_pass') is True}
+          result=assess_quality(read('FULL_AV_EDITORIAL_SCORECARD.json'),technical,
+                                root/'TOP5_DOG_AUTO_SELECTED_1080x1920.mp4')
+          (root/'SELECTED_DOG_QUALITY_ONLY_80.json').write_text(
+              json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(result,ensure_ascii=False))
           PY
       - name: Initialize independent review evidence as unverified

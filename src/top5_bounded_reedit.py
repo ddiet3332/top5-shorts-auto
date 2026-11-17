@@ -76,11 +76,28 @@ else:
             except (subprocess.CalledProcessError,subprocess.TimeoutExpired,OSError,ValueError) as ex:
                 candidate["semantic_status"]="REVIEW_ERROR"
                 candidate["semantic_error"]=str(ex)[:200]
+    # Independently check the actual rendered bytes of every candidate.
+    # Reject candidates with objective freeze/black/silence flags before
+    # comparing motion proxies or partial visual-editorial estimates.
+    from top5_objective_defect_qa import run as inspect_defects
+    for candidate in candidates:
+        try:
+            defects=inspect_defects(candidate["video"])
+            candidate["objective_defects"]=defects
+            candidate["objective_technical_pass"]=defects.get("technical_pass") is True
+        except (OSError,ValueError,subprocess.SubprocessError) as exc:
+            candidate["objective_defects"]={"error":str(exc)[:200]}
+            candidate["objective_technical_pass"]=False
+    eligible=[c for c in candidates if c.get("objective_technical_pass") is True]
+    if not eligible:
+        # Retain a review file but explicitly mark the result as defective.
+        eligible=candidates
+        report["objective_defects_unresolved"]=True
     reviewed=[c for c in candidates if c.get("semantic_status")=="PARTIAL_VISION_REVIEW"
               and isinstance(c.get("visible_total"),(int,float))
               and c.get("visible_max")==85]
     if reviewed:
-        ranked=sorted(candidates,key=lambda a:(
+        ranked=sorted(eligible,key=lambda a:(
             -(a.get("visible_total") if a in reviewed else -1),
             -a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
         report["selection_basis"]="AI visible-editorial score, with motion proxy tie-break"
@@ -90,7 +107,8 @@ else:
         report["selection_basis"]="motion proxy fallback: semantic review unavailable"
     # This is a bounded, auditable repair cycle. It does not certify full 80/100.
     winner=ranked[0]
-    report.update({"technical_pass":bool(main.is_file() or passing),
+    report["selected_objective_technical_pass"]=winner.get("objective_technical_pass") is True
+    report.update({"technical_pass":bool(main.is_file() or passing) and winner.get("objective_technical_pass") is True,
                    "selected_variant":winner["variant"],
                    "selected_candidate":winner["video"],
                    "selected_sha256":winner["sha256"],
