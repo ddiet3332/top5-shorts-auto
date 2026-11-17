@@ -224,6 +224,46 @@ jobs:
           print('- Source failures: '+json.dumps(diag.get('source_failures',[]),ensure_ascii=False))
           print('- Evidence: download the run artifact; never treat a successful job as copyright approval.')
           PY
+      - name: Publish persistent automated production status issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const root = 'output/v32_dog_final_candidate/';
+            const read = name => { try { return JSON.parse(fs.readFileSync(root + name,'utf8')); } catch (_) { return {}; } };
+            const status = read('DELIVERY_STATUS.json');
+            const diag = read('V32_BUILD_DIAGNOSTICS.json');
+            const provenance = read('SELECTED_SOURCE_PROVENANCE.json');
+            const rows = Array.isArray(provenance.selected) ? provenance.selected : [];
+            const sourcePass = rows.length === 5 && new Set(rows.map(x=>x.sha256)).size === 5;
+            const renderPass = status.rendered_review_mp4_present === true;
+            const editorialPass = status.publication_candidate_85_and_rights_cleared === true;
+            const runUrl = 'https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId;
+            const title = '[TOP5 automation] Latest production status';
+            const result = ok => ok ? 'PASS' : 'BLOCKED / UNVERIFIED';
+            const body = [
+              '## Latest TOP5 dog automated production report',
+              'Run: ' + runUrl,
+              'Commit: ' + context.sha,
+              '',
+              '| Check | Result |', '|---|---|',
+              '| Review MP4 rendered | ' + result(renderPass) + ' |',
+              '| Five distinct selected original hashes | ' + result(sourcePass) + ' |',
+              '| Downloaded originals | ' + (diag.originals_available ?? 'unknown') + ' |',
+              '| Editorial 85+ AND independent rights | ' + result(editorialPass) + ' |',
+              '| YouTube upload | BLOCKED |',
+              '',
+              'Source failures: ' + JSON.stringify(diag.source_failures || []),
+              'Artifact: ' + runUrl + ' (V32-dog-render-and-QA-' + context.runNumber + ')',
+              'Machine-generated report; passing Actions is not copyright or YPP approval.'
+            ].join('\\n');
+            const {owner,repo} = context.repo;
+            const issues = await github.paginate(github.rest.issues.listForRepo,{owner,repo,state:'open',per_page:100});
+            const prior = issues.find(x => !x.pull_request && x.title === title);
+            if (prior) await github.rest.issues.update({owner,repo,issue_number:prior.number,body});
+            else await github.rest.issues.create({owner,repo,title,body});
       - name: Upload rendered MP4, original evidence and QA
         if: always()
         uses: actions/upload-artifact@v4
