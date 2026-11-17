@@ -1,0 +1,45 @@
+name: TOP5 production validation
+on:
+  push:
+    paths:
+      - '.github/workflows/top5-production-validation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: top5-production-validation
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    env:
+      TOPIC: dog_surprises
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install video dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+          python3 -m venv /tmp/top5-validation
+          /tmp/top5-validation/bin/pip install -q numpy pillow
+      - name: Compile and test quality/repair gates
+        run: |
+          /tmp/top5-validation/bin/python -m compileall -q src/top5_auto_v32.py src/top5_remediation.py src/top5_publication_gate.py
+          /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_remediation.py' -v
+          /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_publication_gate.py' -v
+          /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
+      - name: Download real dog source audition
+        run: /tmp/top5-validation/bin/python src/v37_dog_audition.py
+      - name: Build actual review MP4
+        run: /tmp/top5-validation/bin/python src/top5_auto_v32.py --topic "$TOPIC" --output output/topic_run
+      - name: Verify full video and audio decoding
+        run: ffmpeg -hide_banner -v error -xerror -i output/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+      - name: Upload review-only result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-dog-production-validation-${{ github.run_number }}
+          path: output/topic_run/
+          retention-days: 7
+          if-no-files-found: warn
