@@ -31,6 +31,12 @@ jobs:
         run: |
           set -euo pipefail
           runs=$(gh api "repos/$GH_REPO/actions/workflows/top5-production-validation.yml/runs?per_page=15")
+          run_count=$(jq -r '.total_count // 0' <<<"$runs")
+          if [[ "$run_count" -eq 0 ]]; then
+            gh api -X POST "repos/$GH_REPO/actions/workflows/top5-production-validation.yml/dispatches" -f ref=main >/dev/null
+            echo 'No production validation run existed; dispatched one review-only build.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           # Hydrate run_attempt; the list endpoint may omit it.
           hydrated=$(jq -c '[.workflow_runs[] | {id,status,conclusion,created_at}]' <<<"$runs")
           while IFS= read -r run_id; do
