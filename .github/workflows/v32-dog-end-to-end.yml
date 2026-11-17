@@ -93,6 +93,32 @@ jobs:
           (root/'DELIVERY_STATUS.json').write_text(json.dumps({'rendered_review_mp4_present':video.is_file(),'publication_candidate_85_and_rights_cleared':ready,'youtube_upload_permitted':False,'editorial_score':result.get('score'),'editorial_and_rights_verified':ready},indent=2)+'\n')
           print('85+ and rights cleared:',ready,'review MP4 exists:',video.is_file())
           PY
+      - name: Summarize actual render and rights gates
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('output/v32_dog_final_candidate')
+          p.mkdir(parents=True,exist_ok=True)
+          def read(name):
+              f=p/name
+              try: return json.loads(f.read_text()) if f.exists() else {}
+              except (ValueError,OSError): return {}
+          gate=read('PUBLICATION_GATE.json')
+          status=read('DELIVERY_STATUS.json')
+          diag=read('V32_BUILD_DIAGNOSTICS.json')
+          report={'review_mp4_present':(p/'TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4').is_file(),
+                  'source_originals':diag.get('originals_available'),
+                  'editorial_score_verified':gate.get('score_verified',False),
+                  'editorial_score':gate.get('score'),
+                  'rights_gate_passed':gate.get('rights_gate_passed',False),
+                  'publication_candidate_85':gate.get('publication_candidate_85',False),
+                  'upload_permitted':False,
+                  'failures':diag.get('source_failures',[])}
+          (p/'V32_RESULT_SUMMARY.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(report,ensure_ascii=False))
+          PY
       - name: Upload rendered MP4, original evidence and QA
         if: always()
         uses: actions/upload-artifact@v4
