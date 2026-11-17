@@ -81,6 +81,11 @@ jobs:
           /tmp/top5/bin/pip install -q numpy pillow
       - name: Validate Python sources before rendering
         run: /tmp/top5/bin/python -m compileall -q src/top5_auto_v32.py src/v37_dog_audition.py src/top5_publication_gate.py src/top5_rights_score_audit.py src/top5_bounded_reedit.py src/top5_feedback_repair.py src/top5_quality_gate.py src/top5_objective_defect_qa.py
+      - name: Regression check even-dimension white padding
+        run: |
+          ffmpeg -hide_banner -v error -f lavfi -i testsrc2=size=640x360:rate=24 -t 0.25 \
+            -vf 'scale=1080:1614:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,setsar=1,pad=1080:1614:(ow-iw)/2:(oh-ih)/2:color=white,pad=1080:1920:0:306:color=white,format=yuv420p' \
+            -f null -
       - name: Download original dog candidates and contact sheets
         id: audition
         run: /tmp/top5/bin/python src/v37_dog_audition.py

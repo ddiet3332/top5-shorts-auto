@@ -136,10 +136,10 @@ def create_scene(source,start,seconds,destination):
     # Solid white padding is deliberately NOT a blurred/source-video backdrop.
     # Keep the complete source image, including action near frame edges.
     filtergraph=(
-        "[0:v]scale=1080:1615:force_original_aspect_ratio=decrease:flags=lanczos,"
+        "[0:v]scale=1080:1614:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,"
         "setsar=1,"
-        "pad=1080:1615:(ow-iw)/2:(oh-ih)/2:color=white,"
-        "pad=1080:1920:0:305:color=white,"
+        "pad=1080:1614:(ow-iw)/2:(oh-ih)/2:color=white,"
+        "pad=1080:1920:0:306:color=white,"
         "drawbox=x=0:y=420:w=270:h=850:color=white@0.97:t=fill,"
         "fps=24,format=yuv420p[v]")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
