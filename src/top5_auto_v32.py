@@ -537,7 +537,7 @@ def select_dog_audition_sources(topic,candidates,output):
         "ranking_verified_for_humor":False,
         "rights_verified":False,"publication_approved":False,
         "reason":"run #123 rank1 dog-field empty frame; never place known weak fallback at rank1 when stronger source exists"
-    },ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+    },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     return selected,failures
 
 def main():
