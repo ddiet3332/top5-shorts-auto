@@ -394,7 +394,7 @@ jobs:
               if p.returncode==0:
                   result['media_info']=json.loads(p.stdout)
               result['technical_pass']=all(x.get('pass') for x in result['checks'].values())
-          (root/'SELF_CONTAINED_QA.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\\n')
+          (root/'SELF_CONTAINED_QA.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+chr(10))
           print(json.dumps({'technical_pass':result.get('technical_pass',False),'checks':result['checks']},ensure_ascii=False))
           PY
       - name: Publish a directly readable contact sheet to repository
