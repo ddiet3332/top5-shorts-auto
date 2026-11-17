@@ -194,7 +194,19 @@ def build_dynamic_subtitles(path,topic,items):
     subtitle_lines=[]
     subtitle_lines.append(cue(0,27,"MainTopic",topic["headline"],540,118,8))
     subtitle_lines.append(cue(0,27,"TopFive","TOP5",540,214,8))
-    rank_titles={5-i:clip["label"] for i,clip in enumerate(items)}
+    # Never render raw provider/source titles as rank labels: Pexels metadata is
+    # often long English text and collided with the action in mobile samples.
+    # Show short Korean action labels derived from the already-authored
+    # Korean clip captions; preserve source title/credits in review metadata.
+    def display_rank_name(clip):
+        label=str(clip.get("label") or "")
+        if label and not re.search(r"[A-Za-z]",label) and len(label)<=12:
+            return label
+        caption=str(clip.get("caption") or "")
+        if caption and not re.search(r"[A-Za-z]",caption):
+            return caption[:12]
+        return "강아지 순간 포착"
+    rank_titles={5-i:display_rank_name(clip) for i,clip in enumerate(items)}
     positions={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
     start=0
     for label,sec in SEGMENTS:
