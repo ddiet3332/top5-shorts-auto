@@ -136,9 +136,9 @@ def create_scene(source,start,seconds,destination):
     # No zoom-and-crop of a jumping animal.
     filtergraph=(
         "[0:v]split=2[base][full];"
-        "[base]scale=270:480:force_original_aspect_ratio=increase,"
-        "crop=270:480,boxblur=12:1,scale=1080:1920,"
-        "eq=brightness=-0.11:saturation=0.7[back];"
+        "[base]scale=1080:1920:force_original_aspect_ratio=decrease:flags=lanczos,"
+        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=white,"
+        "eq=brightness=-0.03:saturation=0.95[back];"
         # Dedicated 305px header protects high jumping faces.
         # Preserve all foreground pixels; vertical originals fit within the
         # remaining 1615px without forced cropping or upscaled fake detail.
