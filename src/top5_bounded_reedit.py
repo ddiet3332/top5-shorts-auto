@@ -72,6 +72,8 @@ else:
                 candidate["visible_total"]=assessment.get("visible_total")
                 candidate["visible_max"]=assessment.get("visible_max")
                 candidate["weaknesses"]=assessment.get("weaknesses",[])
+                candidate["rank_issues"]=assessment.get("rank_issues",[])
+                candidate["rank_issue_penalty"]=sum(int(x.get("severity",0)) for x in candidate["rank_issues"] if isinstance(x,dict))
                 candidate["recommended_repairs"]=assessment.get("recommended_repairs",[])
             except (subprocess.CalledProcessError,subprocess.TimeoutExpired,OSError,ValueError) as ex:
                 candidate["semantic_status"]="REVIEW_ERROR"
@@ -99,7 +101,7 @@ else:
     if reviewed:
         ranked=sorted(eligible,key=lambda a:(
             -(a.get("visible_total") if a in reviewed else -1),
-            -a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
+            a.get("rank_issue_penalty",99),-a["visual_change_pair_ratio"],a["very_similar_adjacent_pairs"],a["variant"]))
         report["selection_basis"]="AI visible-editorial score, with motion proxy tie-break"
     else:
         ranked=sorted(candidates,key=lambda a:(
@@ -108,6 +110,19 @@ else:
     # This is a bounded, auditable repair cycle. It does not certify full 80/100.
     winner=ranked[0]
     report["selected_objective_technical_pass"]=winner.get("objective_technical_pass") is True
+    # Explain why a different candidate was selected and what still needs repair.
+    report["clip_feedback"]={
+        "selected_variant":winner["variant"],
+        "rank_issues":winner.get("rank_issues",[]),
+        "remaining_rank_repairs":[{"rank":x.get("rank"),"issue":x.get("issue"),
+                                   "severity":x.get("severity")}
+                                  for x in winner.get("rank_issues",[])
+                                  if isinstance(x,dict) and x.get("severity",0)>=3],
+        "full_av_editorial_score_verified":False,
+        "next_action":"manual_full_av_review_or_new_source_audition"
+                      if winner.get("rank_issues") else "obtain_full_av_review"
+    }
+
     report.update({"technical_pass":bool(main.is_file() or passing) and winner.get("objective_technical_pass") is True,
                    "selected_variant":winner["variant"],
                    "selected_candidate":winner["video"],

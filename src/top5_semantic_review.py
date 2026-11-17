@@ -18,7 +18,9 @@ def run(video,out):
                     images.append({"type":"input_image","image_url":"data:image/jpeg;base64,"+base64.b64encode(p.read_bytes()).decode()})
                 prompt=("Assess chronological frames from a Korean TOP5 dog short. Respond ONLY as JSON with "
                         "scores object: hook (0-20), fun_reversal (0-25), ranking (0-15), flow (0-15), "
-                        "original_captions (0-10), and weaknesses and recommended_repairs arrays. "
+                        "original_captions (0-10), weaknesses and recommended_repairs arrays, and "
+                        "rank_issues array of objects {rank: integer 1-5, issue: string, severity: integer 1-5}. "
+                        "Use rank_issues only for defects directly visible in the frames; do not invent events. "
                         "Conservatively score visible evidence. Do not infer unseen motion, audio, or legal rights.")
                 payload={"model":os.getenv("TOP5_VISION_MODEL","gpt-4.1-mini"),
                          "input":[{"role":"user","content":[{"type":"input_text","text":prompt}]+images}],
@@ -36,6 +38,10 @@ def run(video,out):
                                "visible_max":sum(LIMITS[k] for k,v in valid.items() if v is not None),
                                "weaknesses":result.get("weaknesses",[]),
                                "recommended_repairs":result.get("recommended_repairs",[]),
+                               "rank_issues":[{"rank":x["rank"],"issue":str(x.get("issue",""))[:200],"severity":x["severity"]}
+                                   for x in result.get("rank_issues",[]) if isinstance(x,dict)
+                                   and type(x.get("rank")) is int and 1<=x["rank"]<=5
+                                   and type(x.get("severity")) is int and 1<=x["severity"]<=5],
                                "reason":"11 stills cannot certify audio (10 points), rights (5 points), or complete motion; 80 remains unverified"})
         except Exception as e:
             report.update({"status":"REVIEW_ERROR","reason":type(e).__name__+": "+str(e)[:200]})
