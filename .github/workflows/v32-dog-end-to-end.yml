@@ -127,6 +127,30 @@ jobs:
           subprocess.run(['/tmp/top5/bin/python','src/top5_semantic_review.py',selected,
                           str(root/'SEMANTIC_EDITORIAL_REVIEW.json')],check=True)
           PY
+      - name: Export automatically selected candidate and QA verdict
+        if: success()
+        run: |
+          python3 - <<'PY'
+          import json,shutil,subprocess
+          from pathlib import Path
+          root=Path('output/v32_dog_final_candidate')
+          compare=json.loads((root/'AUTO_ALTERNATE_EDIT.json').read_text())
+          src=Path(compare.get('selected_candidate') or root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4')
+          if not src.is_file(): raise SystemExit('Selected candidate missing: '+str(src))
+          target=root/'TOP5_DOG_AUTO_SELECTED_1080x1920.mp4'
+          shutil.copyfile(src,target)
+          subprocess.run(['ffmpeg','-v','error','-xerror','-i',str(target),
+                          '-map','0:v:0','-map','0:a:0','-f','null','-'],check=True)
+          semantic=root/'SEMANTIC_EDITORIAL_REVIEW.json'
+          review=json.loads(semantic.read_text()) if semantic.exists() else {}
+          verdict={'selected_variant':compare.get('selected_variant',0),
+                   'selected_mp4':str(target),'technical_decode_pass':True,
+                   'semantic_review_status':review.get('status','UNVERIFIED'),
+                   'editorial_score_100':None,'editorial_80_verified':False,
+                   'rights_verified':False,'publication_permitted':False}
+          (root/'AUTO_SELECTION_VERDICT.json').write_text(json.dumps(verdict,indent=2)+chr(10))
+          print(json.dumps(verdict))
+          PY
       - name: Initialize independent review evidence as unverified
         if: success()
         run: |
@@ -392,7 +416,8 @@ jobs:
           name: V32-dog-render-and-QA-${{ github.run_number }}
           path: |
             output/v32_dog_final_candidate/
-            output/v32_dog_alternate_candidate/*.mp4
+            output/v32_dog_alternate_candidate_1/
+            output/v32_dog_alternate_candidate_2/
             output/dog_audition/DOG_AUDITION.json
             output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
             output/dog_audition/*.mp4
