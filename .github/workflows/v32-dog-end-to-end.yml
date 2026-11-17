@@ -127,5 +127,7 @@ jobs:
           path: |
             output/v32_dog_final_candidate/
             output/dog_audition/DOG_AUDITION.json
+            output/dog_audition/*.jpg
+            output/dog_audition/*.png
           retention-days: 7
-          if-no-files-found: warn
+          if-no-files-found: error
