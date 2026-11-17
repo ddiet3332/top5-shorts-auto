@@ -12,7 +12,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 28
+    timeout-minutes: 35
     env:
       TOPIC: dog_surprises
     steps:
@@ -31,6 +31,8 @@ jobs:
           /tmp/top5-validation/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
       - name: Download real dog source audition
         run: /tmp/top5-validation/bin/python src/v37_dog_audition.py
+      - name: Verify source review manifest exists
+        run: test -f output/dog_audition/DOG_AUDITION.json
       - name: Build actual review MP4
         run: /tmp/top5-validation/bin/python src/top5_auto_v32.py --topic "$TOPIC" --output output/topic_run
       - name: Verify full video and audio decoding
