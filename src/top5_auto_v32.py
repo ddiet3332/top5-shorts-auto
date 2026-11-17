@@ -456,8 +456,13 @@ def select_dog_audition_sources(topic,candidates,output):
     # Sampled run #49 frames showed bag and curled-up puppy footage as weak
     # action/payoff candidates. Prefer other downloaded action families first;
     # retain these only as explicitly logged technical fallbacks.
+    # #126 contact-sheet QA: the Commons puppies-playing source shows a nearly
+    # motionless dog lying on a bed in the selected rank-2 interval (16-20s).
+    # The field source shows a distant tiny dog in a wide shot (2-4s).
+    # These are source-specific editorial warnings, NOT copyright findings.
     weak={"Pexels dog dog-field","Pexels dog dog-snow",
-          "Pexels dog dog-bag-surprise","Pexels dog dog-puppy"}
+          "Pexels dog dog-bag-surprise","Pexels dog dog-puppy",
+          "File:Puppiesplaying-tokyoarea-jan7-2020.webm"}
     strong=[r for r in rows+commons if r.get("title") not in weak]
     fallback=[r for r in rows+commons if r.get("title") in weak]
     # Prefer distinct action families; do not mistake metadata for verified humor.
@@ -508,6 +513,10 @@ def select_dog_audition_sources(topic,candidates,output):
         "weak_candidates":[r["title"] for r in fallback],
         "strong_candidates":[r["title"] for r in strong],
         "fallback_used":[r["title"] for r in combined[:5] if r in fallback],
+        "fallback_editorial_warning":(
+            "Run #126 contact-sheet QA: wide field dog is tiny; Commons puppies clip "
+            "shows low-action resting dog. Replace with independently reviewed "
+            "visible setup/action/payoff footage; fallback is never humor-cleared."),
         "semantic_humor_certified":False,"publication_approved":False
     },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     (Path(output)/"DOG_SOURCE_BRIDGE.json").write_text(json.dumps({
