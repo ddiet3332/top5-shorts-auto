@@ -518,7 +518,27 @@ def select_dog_audition_sources(topic,candidates,output):
     if len(combined)<5:
         raise RuntimeError("DOG_SOURCE_SHORTAGE: %d/5 real eligible originals; "
                            "Pexels audition now connected, no filler allowed"%len(combined))
-    return combined[:5],failures
+    # The first selected item becomes rank 5 and the LAST becomes rank 1.
+    # Previous source-priority ordering inadvertently promoted the weakest
+    # fallback (dog-field: empty grass in run #123) to the top rank and hook.
+    # Put known weak, unreviewed fallback clips in low ranks; this is a
+    # mechanical risk reduction, not a verified humor score or rights audit.
+    selected=combined[:5]
+    selected.sort(key=lambda row:(
+        0 if row in fallback else 1,
+        float(row.get("editorial_quality_heuristic",0)),
+        float(row.get("motion_proxy",0)),
+        str(row.get("title",""))))
+    (Path(output)/"DOG_RANK_ORDER_AUDIT.json").write_text(json.dumps({
+        "rank_5_to_1":[{"rank":5-i,"title":row["title"],
+                        "weak_fallback":row in fallback,
+                        "motion_proxy":row.get("motion_proxy")}
+                       for i,row in enumerate(selected)],
+        "ranking_verified_for_humor":False,
+        "rights_verified":False,"publication_approved":False,
+        "reason":"run #123 rank1 dog-field empty frame; never place known weak fallback at rank1 when stronger source exists"
+    },ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+    return selected,failures
 
 def main():
     ap=argparse.ArgumentParser()
