@@ -192,7 +192,7 @@ def select_sources(candidates,output,limit=11):
 
 def build_dynamic_subtitles(path,topic,items):
     subtitle_lines=[]
-    subtitle_lines.append(cue(0,27,"MainTopic",topic["headline"],540,140,8))
+    subtitle_lines.append(cue(0,27,"MainTopic",topic["headline"],540,126,8))
     subtitle_lines.append(cue(0,27,"TopFive","TOP5",540,214,8))
     rank_titles={5-i:clip["label"] for i,clip in enumerate(items)}
     positions={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
@@ -206,7 +206,7 @@ def build_dynamic_subtitles(path,topic,items):
                 style="Active" if rank==active else "Rank"
                 # Rank rail: a large gold marker makes the currently playing rank unambiguous.
                 if rank==active:
-                    subtitle_lines.append(cue(start,end,"Active",">",12,y,7,6))
+                    subtitle_lines.append(cue(start,end,"Active","▶",12,y,7,6))
                 subtitle_lines.append(cue(start,end,style,f"{rank}위",35,y))
                 if rank==active:
                     subtitle_lines.append(cue(start,end,"RankName",
