@@ -453,7 +453,11 @@ def select_dog_audition_sources(topic,candidates,output):
     # Deterministic no-human fallback: exclude low-action footage when at least
     # five other real, downloaded originals remain. Never invent extra sources.
     # These are mechanical proxies, NOT a humor or rights approval.
-    weak={"Pexels dog dog-field","Pexels dog dog-snow"}
+    # Sampled run #49 frames showed bag and curled-up puppy footage as weak
+    # action/payoff candidates. Prefer other downloaded action families first;
+    # retain these only as explicitly logged technical fallbacks.
+    weak={"Pexels dog dog-field","Pexels dog dog-snow",
+          "Pexels dog dog-bag-surprise","Pexels dog dog-puppy"}
     strong=[r for r in rows+commons if r.get("title") not in weak]
     fallback=[r for r in rows+commons if r.get("title") in weak]
     # Prefer distinct action families; do not mistake metadata for verified humor.
@@ -478,7 +482,7 @@ def select_dog_audition_sources(topic,candidates,output):
             return "fetch"
         return "other:"+title
     # Prefer new action families for audition, never treat titles as verified comedy.
-    fresh={"dog-bag-surprise","dog-door-rush","dog-door-peek"}
+    fresh={"dog-door-rush","dog-door-peek","dog-jump-person"}
     strong.sort(key=lambda r:(0 if any(x in r.get("title","") for x in fresh) else 1,r.get("title","")))
     pool=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
     # Deterministic alternative selection for bounded automated re-edits.
