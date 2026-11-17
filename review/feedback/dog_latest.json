@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "review_basis": "previous_dog_review_frames_run_44082890443_not_latest",
+  "repairs": [
+    {
+      "rank": 3,
+      "action": "shift_highlight",
+      "delta_seconds": 1,
+      "reason": "previous inspection: static puppies rank3; move selected excerpt by 1s to test visible change"
+    }
+  ]
+}
