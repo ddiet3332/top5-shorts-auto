@@ -11,6 +11,7 @@ on:
       - 'src/top5_bounded_reedit.py'
       - 'src/top5_semantic_review.py'
       - 'src/editorial_gate.py'
+      - 'src/top5_objective_defect_qa.py'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -154,6 +155,12 @@ jobs:
           (root/'AUTO_SELECTION_VERDICT.json').write_text(json.dumps(verdict,indent=2)+chr(10))
           print(json.dumps(verdict))
           PY
+      - name: Inspect selected video for freeze, black frames and audio gaps
+        if: success()
+        run: |
+          /tmp/top5/bin/python src/top5_objective_defect_qa.py \
+            --video output/v32_dog_final_candidate/TOP5_DOG_AUTO_SELECTED_1080x1920.mp4 \
+            --output output/v32_dog_final_candidate/SELECTED_DOG_OBJECTIVE_DEFECTS.json
       - name: Evaluate 80-point gate against the actually selected dog video
         if: success()
         run: |
@@ -168,7 +175,8 @@ jobs:
               except (OSError,ValueError): return {}
           selection=read('AUTO_SELECTION_VERDICT.json')
           selected=Path(selection.get('selected_mp4',''))
-          technical={'technical_pass':selection.get('technical_decode_pass') is True and selected.is_file()}
+          defects=read('SELECTED_DOG_OBJECTIVE_DEFECTS.json')
+          technical={'technical_pass':selection.get('technical_decode_pass') is True and selected.is_file() and defects.get('technical_pass') is True}
           # An 11-frame vision score is NOT full audiovisual editorial evidence.
           # Never promote proxy scores to an 80-point verified score.
           scorecard=read('FULL_AV_EDITORIAL_SCORECARD.json')
