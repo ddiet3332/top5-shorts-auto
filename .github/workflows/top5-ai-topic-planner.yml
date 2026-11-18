@@ -101,6 +101,27 @@ jobs:
       - name: Require actual source visual review before rendering
         id: render_gate
         run: python3 src/top5_render_review_gate.py
+      - name: Report source review and render status
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          qa=Path("output/top5_source_qa/SOURCE_DOWNLOAD_QA.json")
+          gate=Path("output/top5_visual_review/RENDER_GATE.json")
+          lines=["## TOP5 production status"]
+          if qa.is_file():
+              d=json.loads(qa.read_text())
+              lines.extend([f"- Topic: {d.get('topic','unknown')}",f"- Decoded sources: {d.get('downloaded_valid_sources',0)}/5",f"- Excluded source IDs: {d.get('rejected_source_ids',[])}"])
+          else: lines.append("- Source acquisition incomplete")
+          if gate.is_file():
+              g=json.loads(gate.read_text())
+              lines.append(f"- Render approved: {g.get('approved',False)}")
+              lines.append(f"- Gate reason: {g.get('reason','unknown')}")
+          else: lines.append("- Render gate not reached")
+          lines.append("- Workflow success does not mean final video was created or publication rights cleared.")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:out.write("\n".join(lines)+"\n")
+          PY
       - name: Render V06 human-reviewed video
         if: steps.render_gate.outputs.approved == 'true'
         run: python3 src/top5_generic_v06_preview.py --reviewed-captions reviewed_top5_captions.json
