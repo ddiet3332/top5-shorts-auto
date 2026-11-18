@@ -222,7 +222,8 @@ def build_dynamic_subtitles(path,topic,items):
             return caption[:12]
         return "강아지 순간 포착"
     rank_titles={5-i:display_rank_name(clip) for i,clip in enumerate(items)}
-    positions={"hook":1,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
+    # Hook intentionally does not reveal which rank its footage belongs to.
+    positions={"hook":None,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
     start=0
     for label,sec in SEGMENTS:
         end=start+sec
@@ -323,7 +324,11 @@ def assemble_video(topic,items,output):
     work=output/"work"
     work.mkdir(parents=True,exist_ok=True)
     segment_files=[]
-    first=items[-1]
+    # Run #135 temporal QA: the hook duplicated the entire rank-1 source,
+    # reducing surprise. Prefer a different, actual selected source when
+    # available; this is diversity control, NOT proof of a funny action.
+    first=next((row for row in items[:-1]
+                if "dog-fetch" in str(row.get("title",""))),items[-2]) if len(items)>1 else items[-1]
     hook=work/"part_00.mp4"
     hook_at=max(0.0,min(first["duration_sec"]-2.1,
                           float(first.get("hook_start",first["cut_start"]+1.3))))
