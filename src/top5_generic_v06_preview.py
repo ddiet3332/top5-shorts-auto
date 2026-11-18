@@ -25,7 +25,8 @@ def render(plan_path,source_dir,out_dir):
  out=Path(out_dir);out.mkdir(parents=True,exist_ok=True)
  font=lambda n:ImageFont.truetype(FONT,n)
  title=str(plan["selected"]["topic"]).replace(" TOP5","")[:20]
- labels=[source_label(s) for s in sources]
+ labels=["장면 검수 필요"]*5
+ # Provider tags are search metadata, not verified descriptions of the visible scene.
  parts=[]
  for i,source in enumerate(sources):
   path=Path(source_dir)/source["file"]
@@ -46,10 +47,10 @@ def render(plan_path,source_dir,out_dir):
   for rank in range(5,5-i-1,-1):
    y=425+(rank-1)*160;color="#FFDB21" if rank==5-i else "white"
    d.text((20,y),f"{rank}위",font=font(48),fill=color,stroke_width=1,stroke_fill="black")
-   d.text((135,y+10),labels[5-rank][:9],font=font(25),fill=color)
+   d.text((115,y+10),labels[5-rank],font=font(25),fill=color)
   d.rounded_rectangle((95,1277,985,1411),radius=16,fill=(0,0,0,210))
-  d.text((540,1344),f"{5-i}위 · {labels[i]}",font=font(39),fill="white",anchor="mm")
-  d.text((540,1850),"태그 기반 설명 · 순위/권리 미검증",font=font(29),fill="white",anchor="mm",stroke_width=2,stroke_fill="black")
+  d.text((540,1344),f"{5-i}위 · 장면 검수 필요",font=font(43),fill="white",anchor="mm")
+  d.text((540,1850),"장면·순위·권리 검수 전",font=font(29),fill="white",anchor="mm",stroke_width=2,stroke_fill="black")
   im.save(out/("overlay_%d.png"%i))
  inputs=["-i",str(base)]
  for i in range(5):inputs+=["-loop","1","-i",str(out/("overlay_%d.png"%i))]
@@ -59,7 +60,7 @@ def render(plan_path,source_dir,out_dir):
  final=out/"TOP5_V06_GENERIC_REVIEW_25s.mp4"
  run(["ffmpeg","-hide_banner","-loglevel","error","-y",*inputs,"-filter_complex",filt,"-map","[vout]","-map","0:a:0","-t","25","-r","24","-c:v","libx264","-preset","veryfast","-crf","24","-pix_fmt","yuv420p","-c:a","aac","-b:a","96k",str(final)],timeout=360)
  run(["ffmpeg","-v","error","-xerror","-i",str(final),"-f","null","-"],timeout=150)
- result={"status":"GENERIC_V06_REVIEW_RENDERED_NOT_APPROVED","topic":plan["selected"]["topic"],"file":final.name,"sha256":hashlib.sha256(final.read_bytes()).hexdigest(),"editorial_score":None,"rights_verified":False,"publication_approved":False,"rankings_verified":False,"source_count":5,"caption_method":"pixabay_metadata_tags_not_visual_analysis","captions":labels}
+ result={"status":"GENERIC_V06_REVIEW_RENDERED_NOT_APPROVED","topic":plan["selected"]["topic"],"file":final.name,"sha256":hashlib.sha256(final.read_bytes()).hexdigest(),"editorial_score":None,"rights_verified":False,"publication_approved":False,"rankings_verified":False,"source_count":5,"caption_method":"safe_review_placeholder_not_visual_analysis","captions":labels}
  (out/"GENERIC_V06_QA.json").write_text(json.dumps(result,ensure_ascii=False,indent=2))
  return result
 def main():
