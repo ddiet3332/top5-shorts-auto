@@ -669,7 +669,7 @@ def main():
             "youtube_auto_upload": False,
         }
         (output / "REJECTED_PRODUCTION.json").write_text(
-            json.dumps(rejection, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8"
+            json.dumps(rejection, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
         raise RuntimeError("INSUFFICIENT_QUALIFIED_SOURCES: dog Gate 0-3 evidence unavailable")
     video=assemble_video(topic,final,output,hook_source)
