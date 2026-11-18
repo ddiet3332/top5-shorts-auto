@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/commons_dog_discovery.py'
       - '.github/workflows/commons-dog-discovery-pr.yml'
+      - 'src/commons_candidate_shortlist.py'
 jobs:
   discover:
     runs-on: ubuntu-latest
@@ -16,6 +17,8 @@ jobs:
           python-version: '3.11'
       - name: Search actual Wikimedia Commons video files
         run: python -m src.commons_dog_discovery --query "dog,puppy,dogs playing,puppy playing,canine,dog running,dog tricks,dog jumping" --limit 50 --output /tmp/commons_candidates.json
+      - name: Create real-source shortlist
+        run: python -m src.commons_candidate_shortlist --input /tmp/commons_candidates.json --output /tmp/commons_shortlist.json --limit 30
       - name: Validate discovery output
         run: |
           python - <<'PY'
@@ -32,4 +35,6 @@ jobs:
         if: always()
         with:
           name: commons-dog-candidate-inventory
-          path: /tmp/commons_candidates.json
+          path: |
+            /tmp/commons_candidates.json
+            /tmp/commons_shortlist.json
