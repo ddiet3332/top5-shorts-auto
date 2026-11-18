@@ -18,22 +18,25 @@ def creator_allowed(creator,counts,max_per_creator=2):
  return bool(creator) and counts[creator]<max_per_creator
 def inspect(key,plan,out,fetch=fetch_hits,rejected=None):
  out.mkdir(parents=True,exist_ok=True)
- rejected=set(rejected or []);selected=plan["selected"];seen=set();rows=[];failures=[];creator_counts=collections.Counter();skipped_same_creator=0;query_counts=collections.Counter()
- for query in selected["search_queries"]:
+ rejected=set(rejected or []);selected=plan["selected"];seen=set();rows=[];failures=[];creator_counts=collections.Counter();skipped_same_creator=0;query_counts=collections.Counter();attempted=set()
+ for query in list(selected["search_queries"])+list(selected["search_queries"]):
   if len(rows)>=5:break
-  max_this_query=3 if len(selected["search_queries"])>1 else 5
+  # First pass distributes sources across queries; second pass fills any shortfall.
+  first_pass=sum(query_counts.values())<5 and not all(q in attempted for q in selected["search_queries"])
+  max_this_query=3 if first_pass and len(selected["search_queries"])>1 else 5
+  attempted.add(query)
   try:hits=fetch(key,query)
   except Exception as e:failures.append({"query":query,"reason":type(e).__name__});continue
   for hit in hits:
    if len(rows)>=5 or query_counts[query]>=max_this_query:break
    ident=hit.get("id");tags=str(hit.get("tags") or "").lower();creator=str(hit.get("user") or "").strip()
    if not isinstance(ident,int) or ident in seen or ident in rejected:continue
-   if not topic_metadata_match(tags,selected["search_queries"]):continue
+   if not topic_metadata_match(tags,[query]):continue
    seen.add(ident)
    if not creator_allowed(creator,creator_counts):
     skipped_same_creator+=1
     continue
-   if any(x in tags for x in ("cartoon","animation","animated","cgi","illustration","3d render")):continue
+   if any(x in tags for x in ("cartoon","animation","animated","cgi","illustration","3d render","motion graphics","motion graphic")):continue
    if float(hit.get("duration") or 0)<5.3:continue
    variants=hit.get("videos") or {}
    video=next((variants.get(k) for k in ("medium","small","large") if (variants.get(k) or {}).get("url")),None)
