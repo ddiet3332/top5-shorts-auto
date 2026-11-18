@@ -38,6 +38,10 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_top5_free_topic_planner.py'
       - name: Plan free topic (no footage or publishing)
         run: python3 src/top5_free_topic_planner.py --slot "${{ steps.slot.outputs.slot }}"
+      - name: Check real stock footage availability (metadata only)
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: python3 src/top5_free_footage_preflight.py
       - name: Save selection for next slot
         env:
           GH_TOKEN: ${{ github.token }}
@@ -49,6 +53,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: top5-topic-plan-${{ steps.slot.outputs.slot }}
-          path: output/topic_plan.json
+          path: |
+            output/topic_plan.json
+            output/topic_footage_preflight.json
           if-no-files-found: warn
           retention-days: 14
