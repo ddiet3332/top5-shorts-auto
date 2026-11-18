@@ -41,7 +41,10 @@ def main():
  rotated=CATALOG[start:]+CATALOG[:start]
  eligible=[x for x in rotated if x[0] not in same_day and x[1] not in used]
  if not eligible:eligible=[x for x in rotated if x[0] not in same_day]
- if not eligible:raise SystemExit("BLOCKED_NO_DISTINCT_CATEGORY")
+ # Repeated manual runs can exhaust all categories for a date. Prefer a new topic
+ # even if category repeats; do not fail solely because of category history.
+ if not eligible:eligible=[x for x in rotated if x[1] not in used]
+ if not eligible:eligible=rotated[:]
  category,topic,q1,q2=eligible[0]
  selected={"topic":topic,"category":category,"search_queries":[q1,q2],"selection_method":"free_curated_catalog_rotation","estimated_topic_score":None}
  report={"date":day,"slot":a.slot,"status":"TOPIC_PLANNED_NOT_PRODUCED","selected":selected,"alternatives":[{"topic":t,"category":c,"search_queries":[x,y]} for c,t,x,y in eligible[1:10]],"minimum_final_video_score":75,"source_footage_verified":False,"video_created":False,"editorial_score":None,"rights_verified":False,"publication_approved":False,"cost_note":"No paid model/API calls; external footage APIs may have limits"}
