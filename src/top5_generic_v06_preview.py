@@ -17,7 +17,21 @@ def source_label(source):
   val=TAG_KO.get(tag)
   if val and val not in labels and val not in ("나비","곤충"):labels.append(val)
  return " · ".join(labels[:2]) or "나비 영상"
-def render(plan_path,source_dir,out_dir):
+def load_reviewed_captions(review_path,sources):
+ if not review_path:return None
+ review=json.loads(Path(review_path).read_text())
+ if review.get("verified_by_human") is not True:raise ValueError("Caption review must be explicitly human verified")
+ entries=review.get("entries")
+ if not isinstance(entries,list) or len(entries)!=5:raise ValueError("Exactly five reviewed entries required")
+ result=[]
+ for i,e in enumerate(entries):
+  if str(e.get("source_id"))!=str(sources[i].get("id")):raise ValueError("Caption/source order mismatch at "+str(i))
+  name=e.get("rank_name");caption=e.get("caption")
+  if not isinstance(name,str) or not 2<=len(name.strip())<=16:raise ValueError("Invalid rank name")
+  if not isinstance(caption,str) or not 3<=len(caption.strip())<=38:raise ValueError("Invalid caption")
+  result.append((name.strip(),caption.strip()))
+ return result
+def render(plan_path,source_dir,out_dir,review_path=None):
  plan=json.loads(Path(plan_path).read_text());audit=json.loads((Path(source_dir)/"SOURCE_DOWNLOAD_QA.json").read_text())
  sources=audit.get("sources",[])
  if len(sources)!=5 or audit.get("downloaded_valid_sources")!=5:raise ValueError("Five decoded sources required")
@@ -25,7 +39,9 @@ def render(plan_path,source_dir,out_dir):
  out=Path(out_dir);out.mkdir(parents=True,exist_ok=True)
  font=lambda n:ImageFont.truetype(FONT,n)
  title=str(plan["selected"]["topic"]).replace(" TOP5","")[:20]
- labels=["장면 검수 필요"]*5
+ reviewed=load_reviewed_captions(review_path,sources)
+ labels=[x[0] for x in reviewed] if reviewed else ["장면 검수 필요"]*5
+ captions=[x[1] for x in reviewed] if reviewed else ["장면 검수 필요"]*5
  # Provider tags are search metadata, not verified descriptions of the visible scene.
  parts=[]
  for i,source in enumerate(sources):
@@ -49,7 +65,7 @@ def render(plan_path,source_dir,out_dir):
    d.text((20,y),f"{rank}위",font=font(48),fill=color,stroke_width=1,stroke_fill="black")
    d.text((115,y+10),labels[5-rank],font=font(25),fill=color)
   d.rounded_rectangle((95,1277,985,1411),radius=16,fill=(0,0,0,210))
-  d.text((540,1344),f"{5-i}위 · 장면 검수 필요",font=font(43),fill="white",anchor="mm")
+  d.text((540,1344),captions[i],font=font(43),fill="white",anchor="mm")
   d.text((540,1850),"장면·순위·권리 검수 전",font=font(29),fill="white",anchor="mm",stroke_width=2,stroke_fill="black")
   im.save(out/("overlay_%d.png"%i))
  inputs=["-i",str(base)]
@@ -60,10 +76,10 @@ def render(plan_path,source_dir,out_dir):
  final=out/"TOP5_V06_GENERIC_REVIEW_25s.mp4"
  run(["ffmpeg","-hide_banner","-loglevel","error","-y",*inputs,"-filter_complex",filt,"-map","[vout]","-map","0:a:0","-t","25","-r","24","-c:v","libx264","-preset","veryfast","-crf","24","-pix_fmt","yuv420p","-c:a","aac","-b:a","96k",str(final)],timeout=360)
  run(["ffmpeg","-v","error","-xerror","-i",str(final),"-f","null","-"],timeout=150)
- result={"status":"GENERIC_V06_REVIEW_RENDERED_NOT_APPROVED","topic":plan["selected"]["topic"],"file":final.name,"sha256":hashlib.sha256(final.read_bytes()).hexdigest(),"editorial_score":None,"rights_verified":False,"publication_approved":False,"rankings_verified":False,"source_count":5,"caption_method":"safe_review_placeholder_not_visual_analysis","captions":labels}
+ result={"status":"GENERIC_V06_REVIEW_RENDERED_NOT_APPROVED","topic":plan["selected"]["topic"],"file":final.name,"sha256":hashlib.sha256(final.read_bytes()).hexdigest(),"editorial_score":None,"rights_verified":False,"publication_approved":False,"rankings_verified":False,"source_count":5,"caption_method":"human_reviewed_source_matched" if reviewed else "safe_review_placeholder_not_visual_analysis","captions":captions,"rank_names":labels,"human_caption_reviewed":bool(reviewed)}
  (out/"GENERIC_V06_QA.json").write_text(json.dumps(result,ensure_ascii=False,indent=2))
  return result
 def main():
- p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--sources",default="output/top5_source_qa");p.add_argument("--output",default="output/top5_v06_review");a=p.parse_args()
- print(json.dumps(render(a.plan,a.sources,a.output),ensure_ascii=False))
+ p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--sources",default="output/top5_source_qa");p.add_argument("--output",default="output/top5_v06_review");p.add_argument("--reviewed-captions",default=None);a=p.parse_args()
+ print(json.dumps(render(a.plan,a.sources,a.output,a.reviewed_captions),ensure_ascii=False))
 if __name__=="__main__":main()
