@@ -54,6 +54,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_top5_public_video_discovery.py
       - name: Search Wikimedia Commons and Internet Archive for source candidates
         run: python3 src/top5_public_video_discovery.py
+      - name: Test topic relevance hard gate
+        run: python3 -m unittest discover -s tests -p test_top5_topic_relevance_gate.py
       - name: Test downloaded source gate
         run: python3 -m unittest discover -s tests -p 'test_top5_free_source_download.py'
       - name: Download and decode 5 distinct sources
