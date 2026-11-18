@@ -8,7 +8,7 @@ from pathlib import Path
 
 VIDEO_EXT=(".mp4",".webm",".mov",".m4v",".ogv")
 GOOD_LICENSE=("creativecommons.org/licenses/by/","creativecommons.org/publicdomain/zero/")
-BAD_TITLE=("hot dog","watch dogs","prairie dog","dog park","dog shelter","dog food","dog show","dog training lecture","council","meeting","news","podcast","twitch","gameplay","movie trailer","funny or die","sesame street","wegman dogs")
+BAD_TITLE=("hot dog","watch dogs","prairie dog","dog park","dog shelter","dog food","dog show","dog training lecture","council","meeting","news","podcast","twitch","gameplay","movie trailer","funny or die","sesame street","wegman dogs","kills","murder","president","politics","flaherty","rotary","shooting","crime","death")
 DOG_WORD=re.compile(r"\b(dog|dogs|puppy|puppies|canine|pup)\b",re.I)
 MAX_SIZE=125*1024*1024
 
