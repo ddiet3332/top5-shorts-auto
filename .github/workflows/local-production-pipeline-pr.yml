@@ -16,5 +16,5 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install pytest numpy opencv-python-headless
-      - run: python -m pytest -q tests/test_local_production_pipeline.py tests/test_verified_v32_handoff.py tests/test_v32_render_gate.py
+      - run: python -m pytest -q tests/test_local_production_pipeline.py tests/test_local_semantic_pipeline.py tests/test_verified_v32_handoff.py tests/test_v32_render_gate.py
       - run: python -m py_compile src/local_production_pipeline.py
