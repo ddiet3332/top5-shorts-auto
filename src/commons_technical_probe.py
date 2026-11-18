@@ -7,6 +7,7 @@ import argparse
 import json
 import subprocess
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 MAX_BYTES=125*1024*1024
@@ -15,10 +16,15 @@ def probe(inventory, output_dir, max_files=12):
     out=Path(output_dir)
     out.mkdir(parents=True,exist_ok=True)
     results=[]
+    rate_limited=False
     for source in inventory.get("candidates",[])[:max_files]:
         row={"id":source["id"],"title":source["title"],
              "source_url":source["source_url"],"license_raw":source["license_raw"],
              "rights_verified":False,"publication_approved":False}
+        if rate_limited:
+            row.update({"technical_pass":False,"code":"SKIP_PROVIDER_RATE_LIMITED"})
+            results.append(row)
+            continue
         try:
             size=int(source["size_bytes"])
             if size<=0 or size>MAX_BYTES:
@@ -56,11 +62,13 @@ def probe(inventory, output_dir, max_files=12):
                         "local_path":str(target)})
             row["code"]="PASS_TECHNICAL_ONLY" if row["technical_pass"] else "REJECT_TECHNICAL"
         except (OSError,ValueError,KeyError,subprocess.SubprocessError,TimeoutError) as exc:
-            row.update({"technical_pass":False,"code":"REJECT_PROBE_ERROR",
+            if isinstance(exc,urllib.error.HTTPError) and exc.code==429:
+                rate_limited=True
+            row.update({"technical_pass":False,"code":"DEFER_PROVIDER_RATE_LIMITED" if rate_limited else "REJECT_PROBE_ERROR",
                         "error":type(exc).__name__,"error_detail":str(exc)[:240]})
         results.append(row)
     return {"status":"TECHNICAL_PROBE_NOT_RIGHTS_APPROVAL",
-            "probed":len(results),"technical_pass_count":sum(x["technical_pass"] for x in results),
+            "probed":len(results),"provider_rate_limited":rate_limited,"technical_pass_count":sum(x["technical_pass"] for x in results),
             "results":results}
 
 def main():
