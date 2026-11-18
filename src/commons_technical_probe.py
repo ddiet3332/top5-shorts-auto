@@ -67,8 +67,9 @@ def probe(inventory, output_dir, max_files=12):
             row.update({"technical_pass":False,"code":"DEFER_PROVIDER_RATE_LIMITED" if rate_limited else "REJECT_PROBE_ERROR",
                         "error":type(exc).__name__,"error_detail":str(exc)[:240]})
         results.append(row)
-    return {"status":"TECHNICAL_PROBE_NOT_RIGHTS_APPROVAL",
-            "probed":len(results),"provider_rate_limited":rate_limited,"technical_pass_count":sum(x["technical_pass"] for x in results),
+    passed=sum(x["technical_pass"] for x in results)
+    return {"status":"BLOCKED_PROVIDER_RATE_LIMIT" if rate_limited else ("TECHNICAL_PROBE_PASSED_PENDING_RIGHTS" if passed else "NO_TECHNICALLY_QUALIFIED_SOURCES"),
+            "probed":len(results),"provider_rate_limited":rate_limited,"technical_pass_count":passed,
             "results":results}
 
 def main():
