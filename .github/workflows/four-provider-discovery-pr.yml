@@ -18,11 +18,11 @@ jobs:
       - name: Unit test four-provider fail-closed behavior
         run: python -m unittest discover -s tests -p test_four_provider_discovery.py -v
       - name: Collect Commons real discovery inventory
-        run: python -m src.commons_dog_discovery --query 'dog,puppy,dogs playing,puppy playing,dog jumping,dog running,dog funny,dog fetching' --limit 30 --output /tmp/commons_inventory.json
+        run: python -m src.commons_dog_discovery --query 'puppy,puppies,puppy playing,puppy sleeping,puppy cuddling,dog wagging tail,cute puppy,dog playing' --limit 30 --output /tmp/commons_inventory.json
       - name: Collect Archive real discovery inventory
         run: python -m src.archive_dog_discovery --output /tmp/archive_inventory.json --rows 100
       - name: Shortlist Commons candidates for media verification
-        run: python -m src.commons_candidate_shortlist --input /tmp/commons_inventory.json --output /tmp/commons_shortlist.json --limit 30
+        run: python -m src.commons_candidate_shortlist --input /tmp/commons_inventory.json --output /tmp/commons_shortlist.json --limit 30 --theme cute
       - name: Preflight Archive original files and license metadata
         run: python -m src.archive_video_preflight --input /tmp/archive_inventory.json --output /tmp/archive_preflight.json --max-items 60
       - name: Report actual metadata eligibility and fail closed on unverified rights
@@ -41,7 +41,7 @@ jobs:
             "render_ready":False,
             "status":"BLOCKED_PENDING_REAL_MEDIA_DOWNLOAD_RIGHTS_AND_GATE_2_3"
           }
-          Path('/tmp/four_provider_readiness.json').write_text(json.dumps(result,indent=2)+'\\n')
+          Path('/tmp/four_provider_readiness.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result))
           PY
       - name: Combine four providers (optional official API keys)
