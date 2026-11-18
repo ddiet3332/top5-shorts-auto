@@ -17,6 +17,11 @@ def build(qa,registry):
   if not item.get("rights_evidence_url") or not item.get("license") or item.get("rights_reviewed") is not True:return {"approved":False,"reason":"RIGHTS_EVIDENCE_MISSING","source_id":source.get("id")}
   if item.get("scene_relevant") is not True or item.get("scene_reviewed") is not True or not str(item.get("scene_description") or "").strip():
    return {"approved":False,"reason":"SCENE_RELEVANCE_NOT_VERIFIED","source_id":source.get("id")}
+  # Motion-dependent titles require independently reviewed temporal evidence.
+  # A single still frame or Pixabay tag is insufficient to claim flight.
+  if "비행" in str(qa.get("topic") or ""):
+   if item.get("motion_reviewed") is not True or item.get("motion_matches_topic") is not True:
+    return {"approved":False,"reason":"TOPIC_MOTION_NOT_VERIFIED","source_id":source.get("id")}
   if item.get("distinct_action") is not True:
    return {"approved":False,"reason":"DISTINCT_TOP5_ACTION_NOT_VERIFIED","source_id":source.get("id")}
   if item.get("third_party_rights_cleared") is not True or item.get("likeness_rights_cleared") is not True:
