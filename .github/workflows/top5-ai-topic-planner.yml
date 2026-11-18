@@ -1,5 +1,9 @@
-name: TOP5 FREE topic planning AM PM (not video production)
+name: TOP5 FREE automatic video review production
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/top5-run-request.txt'
   schedule:
     - cron: '0 0 * * *'  # 09:00 Asia/Seoul
     - cron: '0 9 * * *'  # 18:00 Asia/Seoul
