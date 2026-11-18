@@ -30,7 +30,7 @@ jobs:
       - name: Inspect actual per-item metadata and original video file list
         run: python -m src.archive_video_preflight --input /tmp/archive_dog_inventory.json --output /tmp/archive_video_preflight.json --max-items 20
       - name: Install ffprobe for real media validation
-        if: github.event_name == 'workflow_dispatch' && inputs.download_originals
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
       - name: Download and validate actual original media
         if: github.event_name == 'workflow_dispatch' && inputs.download_originals
