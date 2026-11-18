@@ -53,7 +53,7 @@ def run(commons,archive,pexels_key=None,pixabay_key=None,pexels_reader=pexels,pi
             result=reader(key)
             rows=result.get("candidates",[])
             providers[name]={"status":result["status"],"count":len(rows)}
-            all_rows.extend(rows)
+            all_rows.extend({**row,"rights_verified":False,"publication_approved":False} for row in rows)
         except (OSError,ValueError,KeyError,TimeoutError) as exc:
             providers[name]={"status":"PROVIDER_ERROR","error":type(exc).__name__,"count":0}
     unique={}
