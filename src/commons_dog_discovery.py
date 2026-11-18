@@ -53,13 +53,29 @@ def discover(query="dog", limit=30):
     return {"status":"DISCOVERY_ONLY_NOT_RIGHTS_APPROVED",
             "query":query,"count":len(candidates),"candidates":candidates}
 
+def discover_many(queries, limit=50):
+    collected={}
+    attempts=[]
+    for query in queries:
+        try:
+            result=discover(query,limit)
+            attempts.append({"query":query,"count":result["count"],"error":None})
+            for item in result["candidates"]:
+                collected.setdefault(item["id"],item)
+        except (OSError,ValueError,TimeoutError) as exc:
+            attempts.append({"query":query,"count":0,"error":type(exc).__name__})
+    return {"status":"DISCOVERY_ONLY_NOT_RIGHTS_APPROVED",
+            "count":len(collected),"attempts":attempts,
+            "candidates":list(collected.values())}
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--query",default="dog")
     parser.add_argument("--limit",type=int,default=30)
     parser.add_argument("--output",required=True)
     args=parser.parse_args()
-    result=discover(args.query,args.limit)
+    queries=[q.strip() for q in args.query.split(",") if q.strip()]
+    result=discover_many(queries,args.limit)
     target=Path(args.output)
     target.parent.mkdir(parents=True,exist_ok=True)
     target.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
