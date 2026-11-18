@@ -25,6 +25,25 @@ jobs:
         run: python -m src.commons_candidate_shortlist --input /tmp/commons_inventory.json --output /tmp/commons_shortlist.json --limit 30
       - name: Preflight Archive original files and license metadata
         run: python -m src.archive_video_preflight --input /tmp/archive_inventory.json --output /tmp/archive_preflight.json --max-items 60
+      - name: Report actual metadata eligibility and fail closed on unverified rights
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path('/tmp/commons_shortlist.json').read_text())
+          a=json.loads(Path('/tmp/archive_preflight.json').read_text())
+          result={
+            "commons_shortlisted":len(c.get("candidates",[])),
+            "archive_metadata_qualified":a.get("metadata_qualified",0),
+            "real_downloaded_files":0,
+            "six_distinct_technical_sources_verified":False,
+            "rights_approved":False,
+            "render_ready":False,
+            "status":"BLOCKED_PENDING_REAL_MEDIA_DOWNLOAD_RIGHTS_AND_GATE_2_3"
+          }
+          Path('/tmp/four_provider_readiness.json').write_text(json.dumps(result,indent=2)+'\\n')
+          print(json.dumps(result))
+          PY
       - name: Combine four providers (optional official API keys)
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
@@ -40,3 +59,4 @@ jobs:
             /tmp/four_provider_inventory.json
             /tmp/commons_shortlist.json
             /tmp/archive_preflight.json
+            /tmp/four_provider_readiness.json
