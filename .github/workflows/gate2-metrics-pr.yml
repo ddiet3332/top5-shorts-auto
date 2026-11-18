@@ -1,0 +1,19 @@
+name: Gate 2 metric tests
+on:
+  pull_request:
+    paths:
+      - 'src/gate2_metrics.py'
+      - 'tests/test_gate2_metrics.py'
+      - '.github/workflows/gate2-metrics-pr.yml'
+jobs:
+  gate2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/test_gate2_metrics.py
