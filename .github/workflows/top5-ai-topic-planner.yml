@@ -27,7 +27,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install FFmpeg
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-nanum && python3 -m pip install --break-system-packages Pillow
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null || [ ! -f /usr/share/fonts/truetype/nanum/NanumGothicBold.ttf ]; then
+            timeout 90s sudo apt-get update -qq
+            timeout 120s sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg fonts-nanum
+          fi
+          python3 -c 'import PIL' || timeout 60s python3 -m pip install --break-system-packages Pillow
+          ffmpeg -version | head -n 1
+          test -f /usr/share/fonts/truetype/nanum/NanumGothicBold.ttf
       - name: Resolve scheduled slot
         id: slot
         env:
