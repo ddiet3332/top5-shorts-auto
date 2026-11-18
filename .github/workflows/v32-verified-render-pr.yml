@@ -1,0 +1,21 @@
+name: V32 verified render handoff tests
+on:
+  pull_request:
+    paths:
+      - 'src/top5_auto_v32.py'
+      - 'src/v32_render_gate.py'
+      - 'tests/test_v32_render_gate.py'
+      - '.github/workflows/v32-verified-render-pr.yml'
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m py_compile src/top5_auto_v32.py src/v32_render_gate.py
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/test_v32_render_gate.py tests/test_verified_v32_handoff.py

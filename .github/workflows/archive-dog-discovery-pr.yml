@@ -1,0 +1,118 @@
+name: Discover alternate dog video sources (unapproved)
+on:
+  workflow_dispatch:
+    inputs:
+      download_originals:
+        description: 'Run bounded real video download and ffprobe (no rights approval)'
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - 'src/archive_dog_discovery.py'
+      - 'tests/test_archive_dog_discovery.py'
+      - 'src/archive_video_preflight.py'
+      - 'src/archive_bounded_download.py'
+      - 'src/archive_gate_bridge.py'
+      - 'src/archive_license_evidence.py'
+      - 'tests/test_archive_bounded_download.py'
+      - 'tests/test_archive_video_preflight.py'
+      - '.github/workflows/archive-dog-discovery-pr.yml'
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test alternative provider safety
+        run: python -m pip install pytest && python -m pytest -q tests/test_archive_dog_discovery.py tests/test_archive_video_preflight.py tests/test_archive_bounded_download.py
+      - name: Discover real Internet Archive metadata
+        run: python -m src.archive_dog_discovery --output /tmp/archive_dog_inventory.json --rows 100
+      - name: Inspect actual per-item metadata and original video file list
+        run: python -m src.archive_video_preflight --input /tmp/archive_dog_inventory.json --output /tmp/archive_video_preflight.json --max-items 60
+      - name: Explain preflight rejection reasons
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          p=Path('/tmp/archive_video_preflight.json')
+          data=json.loads(p.read_text())
+          print('PREFLIGHT_REJECTION_COUNTS',json.dumps(dict(sorted(Counter(x.get('status','UNKNOWN') for x in data.get('results',[])).items()))))
+          for x in data.get('results',[]):
+              if x.get('status')=='PREFLIGHT_METADATA_ONLY_PENDING_DOWNLOAD_AND_RIGHTS':
+                  print('PREFLIGHT_CANDIDATE',x.get('id'),x.get('title'),len(x.get('files',[])))
+          PY
+      - name: Install ffprobe for real media validation
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download and validate actual original media
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: python -m src.archive_bounded_download --input /tmp/archive_video_preflight.json --output-dir /tmp/archive_real_probe --max-files 6
+      - name: Print real source download failure details
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/archive_real_probe/technical_probe.json')
+          if p.exists():
+              for x in json.loads(p.read_text()).get('results',[]):
+                  print(x.get('id'),x.get('status'),x.get('error'),x.get('detail'),x.get('duration_sec'))
+          PY
+      - name: Capture CC license page snapshots for downloaded media
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: python -m src.archive_license_evidence --probe /tmp/archive_real_probe/technical_probe.json --output-dir /tmp/archive_real_probe/licenses --output /tmp/archive_real_probe/license_evidence.json
+      - name: Build real-source Gate0-3 candidate manifest
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: python -m src.archive_gate_bridge --probe /tmp/archive_real_probe/technical_probe.json --license-evidence /tmp/archive_real_probe/license_evidence.json --output /tmp/archive_real_probe/gate_candidates.json
+      - name: Check whether any verified real media can enter local model gates
+        id: media-ready
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path('/tmp/archive_real_probe/gate_candidates.json')
+          count=len(json.loads(p.read_text()).get('candidates',[])) if p.exists() else 0
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write(f'count={count}\n')
+          print('real_media_with_license_evidence=',count)
+          PY
+      - name: Install free local YOLO and VLM CPU dependencies
+        if: steps.media-ready.outputs.count != '0' && steps.media-ready.outputs.count != ''
+        run: |
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install ultralytics opencv-python-headless numpy 'transformers>=4.49,<5' accelerate pillow sentencepiece
+          mkdir -p /tmp/archive_real_probe/models
+          curl --fail --location --connect-timeout 15 --max-time 120 --output /tmp/archive_real_probe/models/yolov8n.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n.pt
+      - name: Run real YOLO and VLM on downloaded source candidates
+        if: steps.media-ready.outputs.count != '0'
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+          YOLO_CONFIG_DIR: /tmp/ultralytics-config
+        run: |
+          python -m src.local_production_pipeline --candidates /tmp/archive_real_probe/gate_candidates.json --output-dir /tmp/archive_real_probe/local_gates --dog-weights /tmp/archive_real_probe/models/yolov8n.pt --run-local-semantic || test $? -eq 2
+      - name: Show discovery and safety state
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/archive_dog_inventory.json'))
+          assert all(not c['rights_verified'] and not c['publication_approved'] for c in data['candidates'])
+          print('status=',data['status'],'count=',data['count'])
+          for c in data['candidates'][:15]:
+              print(c['id'],c['title'],c['license_url'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: archive-dog-unapproved-inventory
+          path: |
+            /tmp/archive_dog_inventory.json
+            /tmp/archive_video_preflight.json
+            /tmp/archive_real_probe/technical_probe.json
+            /tmp/archive_real_probe/license_evidence.json
+            /tmp/archive_real_probe/gate_candidates.json
+            /tmp/archive_real_probe/local_gates/GATE_RESULTS.json
+            /tmp/archive_real_probe/local_gates/VERIFIED_V32_HANDOFF.json

@@ -1,0 +1,44 @@
+name: Real free local YOLO model inference smoke
+on:
+  pull_request:
+    paths:
+      - 'src/smoke_real_dog_model.py'
+      - 'src/local_dog_detector.py'
+      - '.github/workflows/real-free-model-smoke-pr.yml'
+  workflow_dispatch:
+jobs:
+  real-inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CPU inference dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ultralytics opencv-python-headless numpy
+      - name: Fetch pretrained weights explicitly and record SHA
+        run: |
+          mkdir -p model_assets
+          curl --fail --location --retry 2 --connect-timeout 15 --max-time 120 \
+            --output model_assets/yolov8n.pt \
+            https://github.com/ultralytics/assets/releases/download/v8.3.0/yolov8n.pt
+          sha256sum model_assets/yolov8n.pt | tee model_assets/WEIGHTS_SHA256.txt
+          test -s model_assets/yolov8n.pt
+      - name: Execute real CPU YOLO inference (synthetic input, no editorial claims)
+        env:
+          YOLO_CONFIG_DIR: /tmp/ultralytics-config
+        run: python -m src.smoke_real_dog_model --weights model_assets/yolov8n.pt --output model_assets/INFERENCE_EVIDENCE.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-free-model-smoke-evidence
+          path: |
+            model_assets/INFERENCE_EVIDENCE.json
+            model_assets/WEIGHTS_SHA256.txt
+          if-no-files-found: warn
+          retention-days: 7

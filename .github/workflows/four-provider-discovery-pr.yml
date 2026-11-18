@@ -1,0 +1,70 @@
+name: Four-provider dog footage discovery (inventory only)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/four_provider_discovery.py'
+      - 'tests/test_four_provider_discovery.py'
+      - '.github/workflows/four-provider-discovery-pr.yml'
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Unit test four-provider fail-closed behavior
+        run: python -m unittest discover -s tests -p test_four_provider_discovery.py -v
+      - name: Collect Commons real discovery inventory
+        run: python -m src.commons_dog_discovery --query 'puppy,puppies,puppy playing,puppy sleeping,puppy cuddling,dog wagging tail,cute puppy,dog playing' --limit 30 --output /tmp/commons_inventory.json
+      - name: Collect Archive real discovery inventory
+        run: python -m src.archive_dog_discovery --output /tmp/archive_inventory.json --rows 100
+      - name: Shortlist Commons candidates for media verification
+        run: python -m src.commons_candidate_shortlist --input /tmp/commons_inventory.json --output /tmp/commons_shortlist.json --limit 30 --theme cute
+      - name: Preflight Archive original files and license metadata
+        run: python -m src.archive_video_preflight --input /tmp/archive_inventory.json --output /tmp/archive_preflight.json --max-items 60
+      - name: Report actual metadata eligibility and fail closed on unverified rights
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          c=json.loads(Path('/tmp/commons_shortlist.json').read_text())
+          a=json.loads(Path('/tmp/archive_preflight.json').read_text())
+          result={
+            "commons_shortlisted":len(c.get("candidates",[])),
+            "archive_metadata_qualified":a.get("metadata_qualified",0),
+            "real_downloaded_files":0,
+            "six_distinct_technical_sources_verified":False,
+            "rights_approved":False,
+            "render_ready":False,
+            "status":"BLOCKED_PENDING_REAL_MEDIA_DOWNLOAD_RIGHTS_AND_GATE_2_3"
+          }
+          Path('/tmp/four_provider_readiness.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          PY
+      - name: Verify Pixabay API key availability without exposing secret
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          print('PIXABAY_API_KEY configured:', bool(os.environ.get('PIXABAY_API_KEY')))
+          PY
+      - name: Combine four providers (optional official API keys)
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: python -m src.four_provider_discovery --commons /tmp/commons_inventory.json --archive /tmp/archive_inventory.json --output /tmp/four_provider_inventory.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: four-provider-unapproved-dog-inventory
+          path: |
+            /tmp/commons_inventory.json
+            /tmp/archive_inventory.json
+            /tmp/four_provider_inventory.json
+            /tmp/commons_shortlist.json
+            /tmp/archive_preflight.json
+            /tmp/four_provider_readiness.json

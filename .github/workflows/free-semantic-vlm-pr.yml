@@ -1,0 +1,47 @@
+name: Free local semantic VLM CPU smoke
+on:
+  pull_request:
+    paths:
+      - 'src/local_semantic_vlm.py'
+      - '.github/workflows/free-semantic-vlm-pr.yml'
+  workflow_dispatch:
+jobs:
+  inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU-only open-weight VLM dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install 'transformers>=4.49,<5' accelerate pillow opencv-python-headless sentencepiece
+      - name: Generate explicit synthetic semantic smoke frames
+        run: |
+          python - <<'PY'
+          import cv2,numpy as np
+          w=cv2.VideoWriter('/tmp/semantic_smoke.mp4',cv2.VideoWriter_fourcc(*'mp4v'),6,(384,672))
+          assert w.isOpened()
+          for i in range(12):
+              f=np.zeros((672,384,3),dtype=np.uint8)
+              cv2.circle(f,(80+i*12,300),45,(255,255,255),-1)
+              w.write(f)
+          w.release()
+          PY
+      - name: Execute actual local semantic model inference
+        env:
+          HF_HUB_DISABLE_TELEMETRY: '1'
+          TOKENIZERS_PARALLELISM: 'false'
+        run: python -m src.local_semantic_vlm --video /tmp/semantic_smoke.mp4 --output /tmp/SEMANTIC_EVIDENCE.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: free-local-semantic-inference-evidence
+          path: /tmp/SEMANTIC_EVIDENCE.json
+          if-no-files-found: warn
+          retention-days: 7

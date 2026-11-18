@@ -1,0 +1,27 @@
+name: Integrated free-only gate regression
+on:
+  pull_request:
+    paths:
+      - 'src/quality_gates.py'
+      - 'src/qualified_selection.py'
+      - 'src/gate2_metrics.py'
+      - 'src/gate3_semantic.py'
+      - 'src/free_inference_policy.py'
+      - 'src/source_schema_adapter.py'
+      - 'src/local_motion_metrics.py'
+      - 'src/local_dog_detector.py'
+      - 'src/free_gate_runner.py'
+      - 'tests/test_*.py'
+      - '.github/workflows/integrated-free-gates-pr.yml'
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install pytest numpy opencv-python-headless
+      - run: python -m pytest -q tests/test_quality_gates.py tests/test_qualified_selection.py tests/test_gate2_metrics.py tests/test_gate3_semantic.py tests/test_free_inference_policy.py tests/test_source_schema_adapter.py tests/test_local_motion_metrics.py tests/test_local_dog_detector.py tests/test_free_gate_runner.py

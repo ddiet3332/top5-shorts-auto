@@ -1,0 +1,19 @@
+name: License evidence capture tests
+on:
+  pull_request:
+    paths:
+      - 'src/license_snapshot.py'
+      - 'tests/test_license_snapshot.py'
+      - '.github/workflows/license-evidence-pr.yml'
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/test_license_snapshot.py

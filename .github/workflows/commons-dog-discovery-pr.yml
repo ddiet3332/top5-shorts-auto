@@ -1,0 +1,71 @@
+name: Discover real Commons dog footage (unapproved inventory)
+on:
+  workflow_dispatch:
+    inputs:
+      allow_live_download:
+        description: 'Explicitly permit a bounded live source download (may return HTTP 429)'
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - 'src/commons_dog_discovery.py'
+      - '.github/workflows/commons-dog-discovery-pr.yml'
+      - 'src/commons_candidate_shortlist.py'
+      - 'src/commons_technical_probe.py'
+      - 'tests/test_commons_technical_probe.py'
+      - 'src/commons_production_readiness.py'
+      - 'tests/test_commons_production_readiness.py'
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run rate-limit regression test
+        run: python -m pip install pytest && python -m pytest -q tests/test_commons_technical_probe.py tests/test_commons_production_readiness.py
+      - name: Search actual Wikimedia Commons video files
+        run: python -m src.commons_dog_discovery --query "dog,puppy,dogs playing,puppy playing,canine,dog running,dog tricks,dog jumping" --limit 50 --output /tmp/commons_candidates.json
+      - name: Create real-source shortlist
+        run: python -m src.commons_candidate_shortlist --input /tmp/commons_candidates.json --output /tmp/commons_shortlist.json --limit 30
+      - name: Install video probe tools
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download and probe bounded real source sample
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
+        run: python -m src.commons_technical_probe --input /tmp/commons_shortlist.json --output-dir /tmp/commons_probe --max-files 8
+      - name: Enforce six-source production readiness gate
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
+        run: python -m src.commons_production_readiness --input /tmp/commons_probe/technical_probe.json --output /tmp/commons_probe/production_readiness.json
+      - name: Print technical probe rejection diagnostics
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open("/tmp/commons_probe/technical_probe.json"))
+          for row in data["results"]:
+              print(row["id"],row["code"],row.get("error"),row.get("error_detail"),row.get("duration_sec"),row.get("width"),row.get("height"))
+          PY
+      - name: Validate discovery output
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/commons_candidates.json'))
+          assert data['status']=='DISCOVERY_ONLY_NOT_RIGHTS_APPROVED'
+          assert all(not x['rights_verified'] and not x['publication_approved'] for x in data['candidates'])
+          print('candidate_count=',data['count'])
+          print('search_attempts=',data['attempts'])
+          for row in data['candidates']:
+              print(row['id'],row['title'],row['source_url'],row['license_raw'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: commons-dog-candidate-inventory
+          path: |
+            /tmp/commons_candidates.json
+            /tmp/commons_shortlist.json
+            /tmp/commons_probe/technical_probe.json
+            /tmp/commons_probe/production_readiness.json
