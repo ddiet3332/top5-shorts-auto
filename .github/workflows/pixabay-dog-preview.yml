@@ -1,0 +1,43 @@
+name: TOP5 real dog footage review MP4
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pixabay-dog-preview.yml'
+      - 'src/pixabay_dog_preview.py'
+  workflow_dispatch:
+    inputs:
+      query:
+        description: 'Pixabay dog video query'
+        required: true
+        default: 'funny puppy'
+permissions:
+  contents: read
+jobs:
+  build-real-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Fetch real source videos and render technical review MP4
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          SEARCH_QUERY: ${{ inputs.query || 'funny puppy' }}
+        run: python3 src/pixabay_dog_preview.py --query "$SEARCH_QUERY"
+      - name: Decode full MP4 and inspect frame count
+        if: success()
+        run: |
+          ffmpeg -v error -i output/dog_pixabay_preview/DOG_TOP5_SOURCE_REVIEW_ONLY_25s.mp4 -f null -
+          ffprobe -v error -show_entries stream=width,height,nb_frames,duration -of json output/dog_pixabay_preview/DOG_TOP5_SOURCE_REVIEW_ONLY_25s.mp4
+      - name: Upload real MP4 and honest QA audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-real-pixabay-source-review
+          path: |
+            output/dog_pixabay_preview/DOG_TOP5_SOURCE_REVIEW_ONLY_25s.mp4
+            output/dog_pixabay_preview/DOG_PIXABAY_RENDER_AUDIT.json
+          if-no-files-found: warn
+          retention-days: 7
