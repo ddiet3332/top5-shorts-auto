@@ -1,5 +1,11 @@
 name: Pixabay dog source inventory (unapproved)
 on:
+  push:
+    branches: [feat/pixabay-safe-dog-inventory-20261118]
+    paths:
+      - '.github/workflows/pixabay-dog-inventory.yml'
+      - 'src/pixabay_dog_inventory.py'
+      - 'tests/test_pixabay_dog_inventory.py'
   workflow_dispatch:
     inputs:
       query:
