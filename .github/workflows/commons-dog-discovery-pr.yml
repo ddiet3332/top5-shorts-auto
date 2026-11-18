@@ -30,7 +30,7 @@ jobs:
           import json
           data=json.load(open("/tmp/commons_probe/technical_probe.json"))
           for row in data["results"]:
-              print(row["id"],row["code"],row.get("error"),row.get("duration_sec"),row.get("width"),row.get("height"))
+              print(row["id"],row["code"],row.get("error"),row.get("error_detail"),row.get("duration_sec"),row.get("width"),row.get("height"))
           PY
       - name: Validate discovery output
         run: |
