@@ -653,6 +653,25 @@ def main():
         json.dumps(hook_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if hook_source is None:
         raise RuntimeError("INSUFFICIENT_INDEPENDENT_HOOK: sixth unique playable source required")
+    # Fail closed: existing dog source metadata is not editorial proof.
+    # Until Gate 0-3 evidence is produced and verified, do not render a
+    # technically successful but unqualified dog TOP5 MP4.
+    if topic["topic_id"] == "dog_surprises":
+        rejection = {
+            "status": "INSUFFICIENT_QUALIFIED_SOURCES",
+            "reason": "Gate 0-3 candidate evidence and six independently qualified originals not established",
+            "qualified_sources": 0,
+            "required_sources": 6,
+            "editorial_score_100": None,
+            "rights_verified": False,
+            "humor_certified": False,
+            "publication_approved": False,
+            "youtube_auto_upload": False,
+        }
+        (output / "REJECTED_PRODUCTION.json").write_text(
+            json.dumps(rejection, ensure_ascii=False, indent=2) + "\\n", encoding="utf-8"
+        )
+        raise RuntimeError("INSUFFICIENT_QUALIFIED_SOURCES: dog Gate 0-3 evidence unavailable")
     video=assemble_video(topic,final,output,hook_source)
     qa=technical_qa(video,output,topic,final)
     qa["version"]="V37"
