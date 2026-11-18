@@ -22,10 +22,13 @@ def summarize_detections(box_fractions: list[float | None]) -> dict:
     }
 
 def detect_dog_metrics(video_path: str | Path, weights_path: str | Path, sample_fps: float = 3.0) -> dict:
-    import cv2
     weights = Path(weights_path)
     if not weights.is_file() or weights.stat().st_size == 0:
         raise DogDetectionUnavailable("LOCAL_MODEL_UNAVAILABLE")
+    try:
+        import cv2
+    except ImportError as exc:
+        raise DogDetectionUnavailable("LOCAL_DETECTOR_DEPENDENCY_UNAVAILABLE") from exc
     try:
         from ultralytics import YOLO
     except ImportError as exc:
