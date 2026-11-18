@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "paid_api_enabled": false,
+  "allow_network_model_api": false,
+  "allow_paid_fallback": false,
+  "gate2": {
+    "provider": "local_yolo",
+    "requires_local_weights": true
+  },
+  "gate3": {
+    "provider": "local_vision",
+    "requires_local_weights": true,
+    "on_model_unavailable": "REJECT_SEMANTIC_UNAVAILABLE",
+    "on_timeout": "REJECT_SEMANTIC_UNAVAILABLE",
+    "on_invalid_response": "REJECT_SEMANTIC_PARSE"
+  },
+  "limits": {
+    "max_model_runtime_seconds_per_candidate": 120,
+    "max_candidates_per_run": 60
+  },
+  "flags": {
+    "editorial_score_100": null,
+    "rights_verified": false,
+    "humor_certified": false,
+    "publication_approved": false,
+    "youtube_auto_upload": false
+  }
+}
