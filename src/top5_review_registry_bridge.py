@@ -15,6 +15,12 @@ def build(qa,registry):
   if len(found)!=1:return {"approved":False,"reason":"SOURCE_NOT_INDEPENDENTLY_APPROVED","source_id":source.get("id")}
   item=found[0]
   if not item.get("rights_evidence_url") or not item.get("license") or item.get("rights_reviewed") is not True:return {"approved":False,"reason":"RIGHTS_EVIDENCE_MISSING","source_id":source.get("id")}
+  if item.get("scene_relevant") is not True or item.get("scene_reviewed") is not True or not str(item.get("scene_description") or "").strip():
+   return {"approved":False,"reason":"SCENE_RELEVANCE_NOT_VERIFIED","source_id":source.get("id")}
+  if item.get("distinct_action") is not True:
+   return {"approved":False,"reason":"DISTINCT_TOP5_ACTION_NOT_VERIFIED","source_id":source.get("id")}
+  if item.get("third_party_rights_cleared") is not True or item.get("likeness_rights_cleared") is not True:
+   return {"approved":False,"reason":"THIRD_PARTY_OR_LIKENESS_RIGHTS_UNRESOLVED","source_id":source.get("id")}
   matched.append({"source_id":source["id"],"rank_name":item.get("rank_name"),"caption":item.get("caption")})
  return {"approved":True,"topic":qa.get("topic"),"verified_by_human":True,"approved_for_render":True,"entries":matched}
 def main():
