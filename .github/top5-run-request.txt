@@ -1,4 +1,3 @@
-Explicit user-requested full TOP5 pipeline run
-Date: 2026-11-18
-Requested slot: PM (push event uses PM unless UTC hour 00)
-Purpose: verify source creator diversity, 15-frame QA sheet, render and independent QA.
+Explicit TOP5 source-first candidate collection request
+Date: 2026-11-19 KST 00:07
+Purpose: verify PR #98 review-before-render gate; collect 5 sources and 15-frame sheet, no unreviewed MP4.
