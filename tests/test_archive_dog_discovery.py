@@ -21,3 +21,12 @@ def test_rejects_malicious_identifier():
         def read(self,*args): return b'{"response":{"docs":[{"identifier":"../escape","title":"Dog"}]}}'
     with patch("src.archive_dog_discovery.urllib.request.urlopen",return_value=Response()):
         assert discover()["count"]==0
+
+def test_unrelated_search_results_are_filtered():
+    class Response(FakeResponse):
+        def read(self,*args):
+            return b'{"response":{"docs":[{"identifier":"celebrity","title":"Celebrity Interview"},{"identifier":"puppy-video","title":"Puppy Playing"}]}}'
+    with patch("src.archive_dog_discovery.urllib.request.urlopen",return_value=Response()):
+        result=discover()
+    assert result["count"]==1
+    assert result["candidates"][0]["id"]=="puppy-video"
