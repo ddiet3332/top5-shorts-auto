@@ -79,6 +79,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_top5_metadata_captions.py
       - name: Test reviewed-caption source matching
         run: python3 -m unittest discover -s tests -p test_top5_reviewed_captions.py
+      - name: Resolve previously human-reviewed source fingerprints into this run
+        run: python3 src/top5_review_registry_bridge.py
       - name: Require actual source visual review before rendering
         id: render_gate
         run: python3 src/top5_render_review_gate.py
