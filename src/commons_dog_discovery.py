@@ -16,7 +16,7 @@ def discover(query="dog", limit=30):
     params=urllib.parse.urlencode({
         "action":"query","generator":"search","gsrsearch":f"filetype:video {query}",
         "gsrnamespace":"6","gsrlimit":str(min(max(limit,1),50)),
-        "prop":"imageinfo","iiprop":"url|size|mime|extmetadata",
+        "prop":"imageinfo","iiprop":"url|size|mime|extmetadata|metadata",
         "format":"json","formatversion":"2"})
     req=urllib.request.Request(API+"?"+params,headers={
         "User-Agent":"Top5ShortsAuto/0.1 (research; no automatic publication)",
@@ -30,6 +30,7 @@ def discover(query="dog", limit=30):
         if not mime.startswith("video/"):
             continue
         meta=info.get("extmetadata") or {}
+        media_meta={str(x.get("name","")).lower():x.get("value") for x in info.get("metadata",[])}
         def field(key):
             return str((meta.get(key) or {}).get("value") or "")
         candidates.append({
@@ -40,6 +41,7 @@ def discover(query="dog", limit=30):
             "download_url":info.get("url"),
             "size_bytes":info.get("size"),
             "mime":mime,
+            "media_metadata":media_meta,
             "creator_raw_html":field("Artist"),
             "license_raw":field("LicenseShortName"),
             "license_url":field("LicenseUrl"),
