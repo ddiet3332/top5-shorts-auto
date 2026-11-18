@@ -1,0 +1,38 @@
+name: TOP5 dog three-provider discovery
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/three-provider-dog-discovery.yml'
+      - 'src/three_provider_dog_discovery.py'
+      - 'tests/test_three_provider_dog_discovery.py'
+  workflow_dispatch:
+    inputs:
+      query:
+        description: Dog video search keywords
+        default: funny puppy
+        required: true
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run isolated regression
+        run: python3 -m unittest discover -s tests -p 'test_three_provider_dog_discovery.py' -v
+      - name: Discover Pexels Pixabay Wikimedia metadata
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          SEARCH_QUERY: ${{ inputs.query || 'funny puppy' }}
+        run: python3 src/three_provider_dog_discovery.py --query "$SEARCH_QUERY"
+      - name: Upload rights-unapproved inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-three-provider-review-only
+          path: output/THREE_PROVIDER_DOG_REVIEW.json
+          if-no-files-found: warn
+          retention-days: 7
