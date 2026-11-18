@@ -12,6 +12,8 @@ on:
       - 'tests/test_archive_dog_discovery.py'
       - 'src/archive_video_preflight.py'
       - 'src/archive_bounded_download.py'
+      - 'src/archive_gate_bridge.py'
+      - 'src/archive_license_evidence.py'
       - 'tests/test_archive_bounded_download.py'
       - 'tests/test_archive_video_preflight.py'
       - '.github/workflows/archive-dog-discovery-pr.yml'
@@ -36,6 +38,12 @@ jobs:
       - name: Download and validate actual original media
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
         run: python -m src.archive_bounded_download --input /tmp/archive_video_preflight.json --output-dir /tmp/archive_real_probe --max-files 6
+      - name: Capture CC license page snapshots for downloaded media
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: python -m src.archive_license_evidence --probe /tmp/archive_real_probe/technical_probe.json --output-dir /tmp/archive_real_probe/licenses --output /tmp/archive_real_probe/license_evidence.json
+      - name: Build real-source Gate0-3 candidate manifest
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: python -m src.archive_gate_bridge --probe /tmp/archive_real_probe/technical_probe.json --license-evidence /tmp/archive_real_probe/license_evidence.json --output /tmp/archive_real_probe/gate_candidates.json
       - name: Show discovery and safety state
         run: |
           python - <<'PY'
@@ -54,3 +62,5 @@ jobs:
             /tmp/archive_dog_inventory.json
             /tmp/archive_video_preflight.json
             /tmp/archive_real_probe/technical_probe.json
+            /tmp/archive_real_probe/license_evidence.json
+            /tmp/archive_real_probe/gate_candidates.json
