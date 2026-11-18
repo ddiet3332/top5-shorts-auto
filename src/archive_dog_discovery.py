@@ -28,6 +28,10 @@ def discover(query="(title:dog OR title:dogs OR title:puppy OR title:puppies) AN
         if isinstance(licenseurl,list):
             licenseurl=licenseurl[0] if licenseurl else ""
         title=str(doc.get("title") or "")
+        # Search index may include non-CC media; do not send these to per-item download checks.
+        license_text=str(licenseurl).lower()
+        if not ("creativecommons.org/licenses/by/" in license_text or "creativecommons.org/publicdomain/zero/" in license_text):
+            continue
         if not any(word in title.lower().split() for word in ("dog","dogs","puppy","puppies")):
             continue
         items.append({"id":identifier,"title":doc.get("title"),
