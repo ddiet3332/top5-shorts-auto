@@ -13,6 +13,7 @@ on:
         default: 'funny puppy'
 permissions:
   contents: read
+  issues: write
 jobs:
   build-real-review:
     runs-on: ubuntu-latest
@@ -41,3 +42,25 @@ jobs:
             output/dog_pixabay_preview/DOG_PIXABAY_RENDER_AUDIT.json
           if-no-files-found: warn
           retention-days: 7
+      - name: Report execution to tracking issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_RESULT: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          report=Path("output/dog_pixabay_preview/DOG_PIXABAY_RENDER_AUDIT.json")
+          if report.exists():
+              data=json.loads(report.read_text(encoding="utf-8"))
+              count=data.get("usable_previews",0)
+              status=data.get("status","UNKNOWN")
+              filename=data.get("video_filename") or "NONE"
+          else:
+              count=0;status="NO_AUDIT_FILE";filename="NONE"
+          text=f"Automated dog footage build: {os.environ['RUN_RESULT']}\nRun: {os.environ['RUN_URL']}\nReal previews: {count}\nStatus: {status}\nMP4: {filename}\nRights/publication: BLOCKED"
+          Path("/tmp/dog_run_comment.txt").write_text(text,encoding="utf-8")
+          PY
+          gh issue comment 18 --repo "${{ github.repository }}" --body-file /tmp/dog_run_comment.txt
