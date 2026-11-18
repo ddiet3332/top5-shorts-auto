@@ -62,8 +62,10 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_top5_metadata_captions.py
       - name: Test reviewed-caption source matching
         run: python3 -m unittest discover -s tests -p test_top5_reviewed_captions.py
-      - name: Render V06 generic review video
-        run: python3 src/top5_generic_v06_preview.py
+      - name: Require actual source visual review before rendering
+        run: python3 src/top5_render_review_gate.py
+      - name: Render V06 human-reviewed video
+        run: python3 src/top5_generic_v06_preview.py --reviewed-captions reviewed_top5_captions.json
       - name: Test 75-point editorial threshold
         run: python3 -m unittest discover -s tests -p test_top5_75_threshold.py
       - name: Test hard source diversity gate
@@ -88,6 +90,7 @@ jobs:
             output/top5_source_qa/source_*.mp4
             output/top5_visual_review/TOP5_SOURCE_CONTACT_SHEET.jpg
             output/top5_visual_review/VISUAL_REVIEW_MANIFEST.json
+            output/top5_visual_review/RENDER_GATE.json
             output/top5_v06_review/TOP5_V06_GENERIC_REVIEW_25s.mp4
             output/top5_v06_review/GENERIC_V06_QA.json
             output/top5_v06_review/INDEPENDENT_REVIEW_QA.json
