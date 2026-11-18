@@ -25,7 +25,7 @@ def test_rejects_malicious_identifier():
 def test_unrelated_search_results_are_filtered():
     class Response(FakeResponse):
         def read(self,*args):
-            return b'{"response":{"docs":[{"identifier":"celebrity","title":"Celebrity Interview"},{"identifier":"puppy-video","title":"Puppy Playing"}]}}'
+            return b'{"response":{"docs":[{"identifier":"celebrity","title":"Celebrity Interview"},{"identifier":"puppy-video","title":"Puppy Playing","licenseurl":"https://creativecommons.org/licenses/by/4.0/"}]}}'
     with patch("src.archive_dog_discovery.urllib.request.urlopen",return_value=Response()):
         result=discover()
     assert result["count"]==1
