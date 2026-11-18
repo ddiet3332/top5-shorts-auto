@@ -2,13 +2,22 @@
 from __future__ import annotations
 import argparse
 import json
+import hashlib
 from pathlib import Path
 
 def assess(report, required=6):
     rows=report.get("results",[])
-    qualified=[r for r in rows if r.get("technical_pass") is True
-               and r.get("local_path") and r.get("duration_sec")
-               and r.get("width") and r.get("height")]
+    qualified=[]
+    for row in rows:
+        if row.get("technical_pass") is not True or not all(row.get(k) for k in ("local_path","duration_sec","width","height","sha256")):
+            continue
+        source=Path(row["local_path"])
+        if not source.is_file() or not source.stat().st_size:
+            continue
+        digest=hashlib.sha256(source.read_bytes()).hexdigest()
+        if digest!=row["sha256"]:
+            continue
+        qualified.append(row)
     distinct={r["id"] for r in qualified}
     blocked=bool(report.get("provider_rate_limited"))
     return {"status":("BLOCKED_PROVIDER_RATE_LIMIT" if blocked else
