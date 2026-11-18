@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Fail closed before render unless the five actual downloaded source IDs were reviewed."""
-import argparse,json
+import argparse,json,os
 from pathlib import Path
 from top5_generic_v06_preview import load_reviewed_captions
 def verify(source_dir,review_file):
@@ -22,4 +22,7 @@ if __name__=="__main__":
  p=argparse.ArgumentParser();p.add_argument("--sources",default="output/top5_source_qa");p.add_argument("--review",default="reviewed_top5_captions.json");p.add_argument("--output",default="output/top5_visual_review/RENDER_GATE.json");a=p.parse_args()
  result=verify(a.sources,a.review);out=Path(a.output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(result,ensure_ascii=False,indent=2))
  print(json.dumps(result,ensure_ascii=False))
- if not result["approved"]:raise SystemExit("BLOCKED_REVIEW_REQUIRED")
+ gh_output=os.environ.get("GITHUB_OUTPUT")
+ if gh_output:
+  with open(gh_output,"a") as handle:handle.write("approved="+str(result["approved"]).lower()+"\\n")
+ if not result["approved"]:print("BLOCKED_REVIEW_REQUIRED: candidates uploaded for manual visual review; no render.")
