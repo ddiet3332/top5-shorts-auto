@@ -1,0 +1,55 @@
+name: TOP5 AI topic planning AM PM (not video production)
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 09:00 Asia/Seoul
+    - cron: '0 9 * * *'  # 18:00 Asia/Seoul
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'AM or PM'
+        type: choice
+        options: [AM, PM]
+        required: true
+permissions:
+  contents: read
+  issues: read
+concurrency:
+  group: top5-topic-planner
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TOP5_TOPIC_MODEL: ${{ vars.TOP5_TOPIC_MODEL || 'gpt-4.1-mini' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve scheduled slot
+        id: slot
+        env:
+          INPUT_SLOT: ${{ inputs.slot }}
+        run: |
+          if [ -n "$INPUT_SLOT" ]; then SLOT="$INPUT_SLOT"; elif [ "$(date -u +%H)" = "00" ]; then SLOT=AM; else SLOT=PM; fi
+          echo "slot=$SLOT" >> "$GITHUB_OUTPUT"
+      - name: Read previous topic selections from tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate "repos/${{ github.repository }}/issues/18/comments?per_page=100" --jq '.[] | select(.body | startswith("TOP5_TOPIC_HISTORY ")) | .body | ltrimstr("TOP5_TOPIC_HISTORY ") | fromjson' | jq -s '.' > topic_history.json
+      - name: Plan AI topic (no footage or publishing)
+        run: python3 src/top5_ai_topic_planner.py --slot "${{ steps.slot.outputs.slot }}"
+      - name: Save selection for next slot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          jq -c '{date,slot,topic:.selected.topic,category:.selected.category}' output/topic_plan.json | sed 's/^/TOP5_TOPIC_HISTORY /' > /tmp/topic_history_comment.txt
+          gh issue comment 18 --repo "${{ github.repository }}" --body-file /tmp/topic_history_comment.txt
+      - name: Upload topic plan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: top5-topic-plan-${{ steps.slot.outputs.slot }}
+          path: output/topic_plan.json
+          if-no-files-found: warn
+          retention-days: 14
