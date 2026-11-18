@@ -56,6 +56,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_top5_metadata_captions.py
       - name: Render V06 generic review video
         run: python3 src/top5_generic_v06_preview.py
+      - name: Independently validate rendered video and flag editorial risks
+        run: python3 src/top5_independent_review_qa.py
       - name: Save selection for next slot
         env:
           GH_TOKEN: ${{ github.token }}
@@ -74,5 +76,6 @@ jobs:
             output/top5_source_qa/source_*.mp4
             output/top5_v06_review/TOP5_V06_GENERIC_REVIEW_25s.mp4
             output/top5_v06_review/GENERIC_V06_QA.json
+            output/top5_v06_review/INDEPENDENT_REVIEW_QA.json
           if-no-files-found: warn
           retention-days: 14
