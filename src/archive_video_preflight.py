@@ -49,10 +49,10 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument("--input",required=True)
     p.add_argument("--output",required=True)
-    p.add_argument("--max-items",type=int,default=20)
+    p.add_argument("--max-items",type=int,default=50)
     args=p.parse_args()
     data=json.loads(Path(args.input).read_text(encoding="utf-8"))
-    results=[preflight_item(x["id"]) for x in data.get("candidates",[])[:max(0,min(args.max_items,50))]]
+    results=[preflight_item(x["id"]) for x in data.get("candidates",[])[:max(0,min(args.max_items,60))]]
     qualified=[x for x in results if x["status"]=="PREFLIGHT_METADATA_ONLY_PENDING_DOWNLOAD_AND_RIGHTS"]
     result={"status":"PREFLIGHT_ONLY_NOT_RIGHTS_APPROVAL","checked":len(results),"metadata_qualified":len(qualified),"results":results}
     Path(args.output).write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
