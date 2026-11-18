@@ -725,7 +725,7 @@ jobs:
       - name: Generate 60-frame temporal evidence for action and payoff review
         if: always()
         run: |
-          python3 - <<'PY'
+          /tmp/top5/bin/python - <<'PY'
           from pathlib import Path
           import json, subprocess
           from PIL import Image,ImageDraw
