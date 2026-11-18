@@ -24,6 +24,14 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
       - name: Download and probe bounded real source sample
         run: python -m src.commons_technical_probe --input /tmp/commons_shortlist.json --output-dir /tmp/commons_probe --max-files 8
+      - name: Print technical probe rejection diagnostics
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open("/tmp/commons_probe/technical_probe.json"))
+          for row in data["results"]:
+              print(row["id"],row["code"],row.get("error"),row.get("duration_sec"),row.get("width"),row.get("height"))
+          PY
       - name: Validate discovery output
         run: |
           python - <<'PY'
