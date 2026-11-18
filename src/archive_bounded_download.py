@@ -45,7 +45,7 @@ def fetch_file(row, destination, opener=urllib.request.urlopen):
         metadata=json.loads(probe.stdout)
         streams=[s for s in metadata.get("streams",[]) if s.get("codec_type")=="video"]
         duration=float(metadata.get("format",{}).get("duration") or 0)
-        if not streams or not 5<=duration<=60 or max(int(s.get("width") or 0) for s in streams)<720:
+        if not streams or not 5<=duration<=60 or min(int(s.get("width") or 0),int(s.get("height") or 0))<720:
             raise ValueError("Media fails duration/resolution gate")
         return {"status":"TECHNICAL_PASS_PENDING_SEMANTIC_AND_RIGHTS","local_path":str(destination),
                 "sha256":digest.hexdigest(),"downloaded_bytes":size,"duration_sec":duration,
