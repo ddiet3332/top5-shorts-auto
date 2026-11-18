@@ -15,6 +15,7 @@ def test_429_stops_all_subsequent_downloads(tmp_path):
     with patch("src.commons_technical_probe.urllib.request.urlopen",side_effect=deny):
         result=probe({"candidates":candidates},tmp_path)
     assert result["provider_rate_limited"]
+    assert result["status"]=="BLOCKED_PROVIDER_RATE_LIMIT"
     assert len(calls)==1
     assert [x["code"] for x in result["results"]]==[
         "DEFER_PROVIDER_RATE_LIMITED","SKIP_PROVIDER_RATE_LIMITED","SKIP_PROVIDER_RATE_LIMITED"]
