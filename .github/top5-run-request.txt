@@ -1,3 +1,1 @@
-Explicit TOP5 source-first candidate collection request
-Date: 2026-11-19 KST 00:07
-Purpose: verify PR #98 review-before-render gate; collect 5 sources and 15-frame sheet, no unreviewed MP4.
+2026-11-19 00:15 KST: validate Wikimedia Commons and Internet Archive public discovery adapters, real API results, license metadata, source review gate.
