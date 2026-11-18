@@ -12,7 +12,7 @@ from v28_fullscreen_builder import ASS_HEAD,W,H,FPS,SEGMENTS
 class V32Tests(unittest.TestCase):
     def test_locked_visual_contract(self):
         self.assertIn("Style: Caption,NanumSquare,60,",ASS_HEAD)
-        self.assertIn("Style: MainTopic,NanumSquare,59,",ASS_HEAD)
+        self.assertIn("Style: MainTopic,NanumSquare,78,",ASS_HEAD)
         self.assertEqual((W,H,FPS),(1080,1920,24))
         self.assertEqual(sum(n for _,n in SEGMENTS),30)
     def test_curation_page_allowlisted(self):
