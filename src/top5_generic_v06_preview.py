@@ -21,8 +21,8 @@ def render(plan_path,source_dir,out_dir):
   path=Path(source_dir)/source["file"]
   if not path.is_file():raise ValueError("Missing source file")
   part=out/("normalized_%d.mp4"%i)
-  vf="scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=24,format=yuv420p"
-  run(["ffmpeg","-hide_banner","-loglevel","error","-y","-i",str(path),"-t","5","-vf",vf,"-an","-c:v","libx264","-preset","veryfast","-crf","25","-pix_fmt","yuv420p",str(part)])
+  vf="[0:v]split=2[bg][fg];[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:2[blur];[fg]scale=1080:1600:force_original_aspect_ratio=decrease[subject];[blur][subject]overlay=(W-w)/2:(H-h)/2,setsar=1,fps=24,format=yuv420p[v]"
+  run(["ffmpeg","-hide_banner","-loglevel","error","-y","-i",str(path),"-t","5","-filter_complex",vf,"-map","[v]","-an","-c:v","libx264","-preset","veryfast","-crf","25","-pix_fmt","yuv420p",str(part)])
   parts.append(part)
  concat=out/"concat.txt";concat.write_text("".join("file '"+p.name+"'\n" for p in parts))
  base=out/"base.mp4"
