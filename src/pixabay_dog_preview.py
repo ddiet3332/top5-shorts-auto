@@ -14,6 +14,7 @@ import urllib.request
 from pixabay_dog_inventory import collect
 
 DOG=re.compile(r"(?<![a-z])(dog|dogs|puppy|puppies|canine|pup)(?![a-z])",re.I)
+REJECT=re.compile(r"(?<![a-z])(cartoon|animation|animated|3d|cgi|render|illustration|wolf|wolves|fox|robot|ai-generated|ai generated)(?![a-z])",re.I)
 def run(cmd):
     subprocess.run(cmd,check=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,timeout=210)
 
@@ -58,6 +59,7 @@ def build(key,output,query="funny puppy"):
     for hit in candidates:
         if len(parts)>=5: break
         if not DOG.search(hit.get("tags","")): continue
+        if REJECT.search(hit.get("tags","")): continue
         if float(hit.get("duration") or 0)<5.3: continue
         video=hit.get("videos") or {}
         variant=next((video.get(k) for k in ("medium","small","large") if (video.get(k) or {}).get("url")),None)
