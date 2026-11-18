@@ -1,0 +1,17 @@
+name: V32 fail-closed syntax check
+on:
+  pull_request:
+    paths:
+      - 'src/top5_auto_v32.py'
+      - '.github/workflows/v32-fail-closed-pr.yml'
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m py_compile src/top5_auto_v32.py
