@@ -11,7 +11,7 @@ from pathlib import Path
 
 API="https://archive.org/advancedsearch.php"
 
-def discover(query="(title:dog OR title:dogs OR title:puppy OR title:puppies) AND mediatype:movies",rows=40):
+def discover(query="(title:dog OR title:dogs OR title:puppy OR title:puppies) AND mediatype:movies",rows=100):
     params=urllib.parse.urlencode({"q":query,"fl[]":["identifier","title","licenseurl","creator","year"],
                                    "rows":str(min(max(rows,1),100)),"page":"1","output":"json"},doseq=True)
     request=urllib.request.Request(API+"?"+params,headers={
@@ -28,10 +28,6 @@ def discover(query="(title:dog OR title:dogs OR title:puppy OR title:puppies) AN
         if isinstance(licenseurl,list):
             licenseurl=licenseurl[0] if licenseurl else ""
         title=str(doc.get("title") or "")
-        # Search index may include non-CC media; do not send these to per-item download checks.
-        license_text=str(licenseurl).lower()
-        if not ("creativecommons.org/licenses/by/" in license_text or "creativecommons.org/publicdomain/zero/" in license_text):
-            continue
         if not any(word in title.lower().split() for word in ("dog","dogs","puppy","puppies")):
             continue
         items.append({"id":identifier,"title":doc.get("title"),
@@ -45,7 +41,7 @@ def discover(query="(title:dog OR title:dogs OR title:puppy OR title:puppies) AN
 def main():
     p=argparse.ArgumentParser()
     p.add_argument("--output",required=True)
-    p.add_argument("--rows",type=int,default=40)
+    p.add_argument("--rows",type=int,default=100)
     a=p.parse_args()
     try:
         result=discover(rows=a.rows)
