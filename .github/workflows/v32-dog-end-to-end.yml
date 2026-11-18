@@ -722,6 +722,45 @@ jobs:
               branch:context.payload.repository.default_branch
             });
             core.info('Review MP4: https://github.com/'+owner+'/'+repo+'/raw/HEAD/'+dest);
+      - name: Generate 60-frame temporal evidence for action and payoff review
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, subprocess
+          from PIL import Image,ImageDraw
+          root=Path('output/top5_review_light')
+          video=root/'TOP5_DOG_SELECTED_540x960.mp4'
+          if not video.is_file():
+              print('No selected review MP4; temporal evidence unavailable')
+          else:
+              frames=root/'temporal_2fps'
+              frames.mkdir(exist_ok=True)
+              subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
+                  '-i',str(video),'-vf','fps=2,scale=180:320',
+                  str(frames/'frame_%03d.jpg')],check=True,timeout=120)
+              paths=sorted(frames.glob('frame_*.jpg'))[:60]
+              if len(paths)<58:
+                  raise RuntimeError('Temporal frame evidence incomplete')
+              canvas=Image.new('RGB',(180*10,345*6),'white')
+              draw=ImageDraw.Draw(canvas)
+              for i,p in enumerate(paths):
+                  x=(i%10)*180;y=(i//10)*345
+                  with Image.open(p) as im: canvas.paste(im.convert('RGB'),(x,y+25))
+                  draw.text((x+5,y+5),f'{i/2:.1f}s',fill='black')
+              canvas.save(root/'TOP5_TEMPORAL_60FRAME.jpg',quality=82)
+              (root/'TEMPORAL_REVIEW_STATUS.json').write_text(json.dumps({
+                  'frame_count':len(paths),'interval_seconds':0.5,
+                  'full_motion_review_complete':False,
+                  'audio_listening_review_complete':False,
+                  'editorial_score_100':None,
+                  'publication_approved':False,
+                  'known_risks':['hook and rank1 reuse same source footage',
+                      'rank5 weak/static puppy','rank4 distant dog in field',
+                      'metadata/motion proxies do not prove comedy'],
+                  'note':'Temporal sheet is visual sampling, not subjective approval'
+              },indent=2)+'\\n')
+          PY
       - name: Upload lightweight video-only inspection artifact
         if: always()
         uses: actions/upload-artifact@v4
