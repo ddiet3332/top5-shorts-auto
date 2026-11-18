@@ -25,7 +25,6 @@ jobs:
       - name: Query Pixabay without exposing secret
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
-          PIXABAY_API_NAME: ${{ secrets.PIXABAY_API_NAME }}
           SEARCH_QUERY: ${{ inputs.query || 'funny puppy' }}
         run: python3 src/pixabay_dog_inventory.py --query "$SEARCH_QUERY" --output output/PIXABAY_DOG_UNAPPROVED.json
       - name: Upload unapproved metadata inventory
