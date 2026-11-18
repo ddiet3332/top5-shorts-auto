@@ -1,1 +1,1 @@
-2026-11-19 00:50 KST: retry full three-provider pipeline after fixing topic-relevance regression test; retain rights and review blockers.
+2026-11-19 00:57 KST: verify no-apt font setup, topic relevance fixture and source review bridge in one production run.
