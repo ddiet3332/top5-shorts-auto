@@ -18,7 +18,7 @@ jobs:
       - name: Unit test four-provider fail-closed behavior
         run: python -m unittest discover -s tests -p test_four_provider_discovery.py -v
       - name: Collect Commons real discovery inventory
-        run: python -m src.commons_dog_discovery --output /tmp/commons_inventory.json
+        run: python -m src.commons_dog_discovery --query 'dog,puppy,dogs playing,puppy playing,dog jumping,dog running,dog funny,dog fetching' --limit 30 --output /tmp/commons_inventory.json
       - name: Collect Archive real discovery inventory
         run: python -m src.archive_dog_discovery --output /tmp/archive_inventory.json --rows 100
       - name: Combine four providers (optional official API keys)
