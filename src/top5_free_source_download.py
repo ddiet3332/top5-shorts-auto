@@ -5,6 +5,7 @@ No automatic editorial score, rights clearance, or publication approval.
 import argparse,collections,hashlib,json,os,subprocess,urllib.parse,urllib.request
 from pathlib import Path
 from pixabay_dog_preview import download,probe
+from top5_topic_relevance_gate import topic_metadata_match
 
 def fetch_hits(key,query):
  params=urllib.parse.urlencode({"key":key,"q":query,"per_page":80,"safesearch":"true"})
@@ -26,6 +27,7 @@ def inspect(key,plan,out,fetch=fetch_hits):
    if len(rows)>=5:break
    ident=hit.get("id");tags=str(hit.get("tags") or "").lower();creator=str(hit.get("user") or "").strip()
    if not isinstance(ident,int) or ident in seen:continue
+   if not topic_metadata_match(tags,selected["search_queries"]):continue
    seen.add(ident)
    if not creator_allowed(creator,creator_counts):
     skipped_same_creator+=1
