@@ -23,4 +23,12 @@ class RegistryTests(unittest.TestCase):
  def test_missing_rights_blocks(self):
   self.reviews[0]["rights_reviewed"]=False
   self.assertFalse(build(self.qa,{"reviews":self.reviews})["approved"])
+ def test_flight_requires_motion_evidence(self):
+  self.qa["topic"]="잠자리의 비행 TOP5"
+  for x in self.reviews:x["topic"]="잠자리의 비행 TOP5"
+  self.assertEqual(build(self.qa,{"reviews":self.reviews})["reason"],"TOPIC_MOTION_NOT_VERIFIED")
+  for x in self.reviews:x.update({"motion_reviewed":True,"motion_matches_topic":True})
+  self.assertTrue(build(self.qa,{"reviews":self.reviews})["approved"])
+  self.reviews[3]["motion_matches_topic"]=False
+  self.assertEqual(build(self.qa,{"reviews":self.reviews})["source_id"],3)
 if __name__=="__main__":unittest.main()
