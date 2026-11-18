@@ -18,6 +18,21 @@ class SourceDownloadTests(unittest.TestCase):
     self.assertFalse(r["publication_approved"])
     self.assertTrue((Path(d)/"SOURCE_DOWNLOAD_QA.json").exists())
   finally:m.download,m.probe,m.decode=old
+ def test_two_queries_are_balanced(self):
+  old=(m.download,m.probe,m.decode)
+  try:
+   m.download=lambda url,path,max_bytes: path.write_bytes(b"test")
+   m.probe=lambda path:6.0
+   m.decode=lambda path:None
+   def fetch(key,q):
+    base=1 if q=="funny dog playing" else 101
+    return [{"id":base+i,"tags":"funny, dog, puppy, playful, playing","duration":8,"videos":{"medium":{"url":"https://cdn.pixabay.com/a.mp4"}},"pageURL":"https://pixabay.com/videos/example","user":"creator"+str(i)} for i in range(8)]
+   with tempfile.TemporaryDirectory() as d:
+    r=m.inspect("fake",{"selected":{"topic":"강아지의 웃긴 행동 TOP5","category":"animals","search_queries":["funny dog playing","playful puppy"]}},Path(d),fetch=fetch)
+    self.assertEqual(r["downloaded_valid_sources"],5)
+    self.assertEqual(r["query_counts"]["funny dog playing"],3)
+    self.assertEqual(r["query_counts"]["playful puppy"],2)
+  finally:m.download,m.probe,m.decode=old
  def test_creator_cap(self):
   self.assertTrue(m.creator_allowed("A",{"A":1}))
   self.assertFalse(m.creator_allowed("A",{"A":2}))
