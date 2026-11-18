@@ -38,6 +38,17 @@ jobs:
       - name: Download and validate actual original media
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
         run: python -m src.archive_bounded_download --input /tmp/archive_video_preflight.json --output-dir /tmp/archive_real_probe --max-files 6
+      - name: Print real source download failure details
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/archive_real_probe/technical_probe.json')
+          if p.exists():
+              for x in json.loads(p.read_text()).get('results',[]):
+                  print(x.get('id'),x.get('status'),x.get('error'),x.get('detail'),x.get('duration_sec'))
+          PY
       - name: Capture CC license page snapshots for downloaded media
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
         run: python -m src.archive_license_evidence --probe /tmp/archive_real_probe/technical_probe.json --output-dir /tmp/archive_real_probe/licenses --output /tmp/archive_real_probe/license_evidence.json
