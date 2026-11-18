@@ -63,14 +63,19 @@ jobs:
       - name: Test reviewed-caption source matching
         run: python3 -m unittest discover -s tests -p test_top5_reviewed_captions.py
       - name: Require actual source visual review before rendering
+        id: render_gate
         run: python3 src/top5_render_review_gate.py
       - name: Render V06 human-reviewed video
+        if: steps.render_gate.outputs.approved == 'true'
         run: python3 src/top5_generic_v06_preview.py --reviewed-captions reviewed_top5_captions.json
       - name: Test 75-point editorial threshold
+        if: steps.render_gate.outputs.approved == 'true'
         run: python3 -m unittest discover -s tests -p test_top5_75_threshold.py
       - name: Test hard source diversity gate
+        if: steps.render_gate.outputs.approved == 'true'
         run: python3 -m unittest discover -s tests -p test_top5_source_diversity_gate.py
       - name: Independently validate rendered video and flag editorial risks
+        if: steps.render_gate.outputs.approved == 'true'
         run: python3 src/top5_independent_review_qa.py
       - name: Save selection for next slot
         env:
