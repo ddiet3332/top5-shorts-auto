@@ -12,7 +12,9 @@ EXCLUDE=("compilation","movie","film","trailer","missile","prairie dog",
          "hot dog","donut","parade","factory","animation","animated",
          "documentary","meat trade","investigation","creamery")
 
-def shortlist(inventory, limit=20):
+CUTE_TERMS=("puppy","puppies","playing","sleeping","sleepy","cuddling","cuddle","wagging","tail","little","small","retriever","goldendoodle","toy","cute","adorable")
+
+def shortlist(inventory, limit=20, theme="funny"):
     rows=[]
     for item in inventory.get("candidates",[]):
         title=str(item.get("title") or "").lower()
@@ -35,7 +37,10 @@ def shortlist(inventory, limit=20):
         item=dict(item)
         item["shortlist_status"]="REQUIRES_MEDIA_PROBE_AND_PER_FILE_RIGHTS_REVIEW"
         rows.append(item)
-    rows.sort(key=lambda x:(not any(k in x["title"].lower() for k in ("playing","jump","trick","fetch","funny")),x["size_bytes"]))
+    if theme=="cute":
+        rows.sort(key=lambda x:(-sum(k in x["title"].lower() for k in CUTE_TERMS),x["size_bytes"]))
+    else:
+        rows.sort(key=lambda x:(not any(k in x["title"].lower() for k in ("playing","jump","trick","fetch","funny")),x["size_bytes"]))
     return {"status":"UNAPPROVED_SHORTLIST","count":min(len(rows),limit),
             "eligible_metadata_candidates":len(rows),"candidates":rows[:limit]}
 
@@ -44,8 +49,9 @@ def main():
     p.add_argument("--input",required=True)
     p.add_argument("--output",required=True)
     p.add_argument("--limit",type=int,default=20)
+    p.add_argument("--theme",choices=("funny","cute"),default="funny")
     a=p.parse_args()
-    result=shortlist(json.loads(Path(a.input).read_text(encoding="utf-8")),a.limit)
+    result=shortlist(json.loads(Path(a.input).read_text(encoding="utf-8")),a.limit,a.theme)
     Path(a.output).write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print(json.dumps({"status":result["status"],"count":result["count"],
                       "eligible_metadata_candidates":result["eligible_metadata_candidates"]}))
