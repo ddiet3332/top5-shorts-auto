@@ -1,0 +1,30 @@
+name: Pixabay dog source inventory (unapproved)
+on:
+  workflow_dispatch:
+    inputs:
+      query:
+        description: 'English Pixabay video search'
+        required: true
+        default: 'funny puppy'
+permissions:
+  contents: read
+jobs:
+  pixabay-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Query Pixabay without exposing secret
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          PIXABAY_API_NAME: ${{ secrets.PIXABAY_API_NAME }}
+          SEARCH_QUERY: ${{ inputs.query || 'funny puppy' }}
+        run: python3 src/pixabay_dog_inventory.py --query "$SEARCH_QUERY" --output output/PIXABAY_DOG_UNAPPROVED.json
+      - name: Upload unapproved metadata inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixabay-dog-unapproved-inventory
+          path: output/PIXABAY_DOG_UNAPPROVED.json
+          if-no-files-found: warn
+          retention-days: 7
