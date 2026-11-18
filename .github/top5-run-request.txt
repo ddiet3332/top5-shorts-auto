@@ -1,1 +1,1 @@
-2026-11-19 01:33 KST: retry with exhausted-category planner fallback and rejected source replacement.
+2026-11-19 01:39 KST: verify dragonfly reviewed rejection registry and production summary reporting.
