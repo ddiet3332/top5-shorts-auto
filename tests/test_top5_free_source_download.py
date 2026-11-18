@@ -53,4 +53,30 @@ class SourceDownloadTests(unittest.TestCase):
   self.assertTrue(m.creator_allowed("A",{"A":1}))
   self.assertFalse(m.creator_allowed("A",{"A":2}))
   self.assertFalse(m.creator_allowed("",{}))
+ def test_sparse_second_query_backfills_from_first(self):
+  old=(m.download,m.probe,m.decode)
+  try:
+   m.download=lambda url,path,max_bytes:path.write_bytes(b"test")
+   m.probe=lambda path:6.0
+   m.decode=lambda path:None
+   def fetch(key,q):
+    if q=="mechanical motion":return []
+    return [{"id":i,"tags":"machine, gears, machinery, industrial","duration":8,"videos":{"medium":{"url":"https://cdn.pixabay.com/a.mp4"}},"pageURL":"https://pixabay.com/videos/example","user":"creator"+str(i)} for i in range(1,9)]
+   with tempfile.TemporaryDirectory() as d:
+    result=m.inspect("fake",{"selected":{"topic":"만족스러운 기계 움직임 TOP5","category":"objects","search_queries":["satisfying machinery","mechanical motion"]}},Path(d),fetch=fetch)
+    self.assertEqual(result["downloaded_valid_sources"],5)
+    self.assertEqual(result["query_counts"]["satisfying machinery"],5)
+  finally:m.download,m.probe,m.decode=old
+ def test_motion_graphics_rejected(self):
+  old=(m.download,m.probe,m.decode)
+  try:
+   m.download=lambda url,path,max_bytes:path.write_bytes(b"test")
+   m.probe=lambda path:6.0
+   m.decode=lambda path:None
+   hits=[{"id":i,"tags":"machinery, motion graphics" if i==1 else "machinery, industrial, machine","duration":8,"videos":{"medium":{"url":"https://cdn.pixabay.com/a.mp4"}},"pageURL":"https://pixabay.com/videos/example","user":"creator"+str(i)} for i in range(1,8)]
+   with tempfile.TemporaryDirectory() as d:
+    result=m.inspect("fake",{"selected":{"topic":"기계 TOP5","category":"objects","search_queries":["machinery"]}},Path(d),fetch=lambda key,q:hits)
+    self.assertEqual(result["downloaded_valid_sources"],5)
+    self.assertNotIn(1,[x["id"] for x in result["sources"]])
+  finally:m.download,m.probe,m.decode=old
 if __name__=="__main__":unittest.main()
