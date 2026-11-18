@@ -24,5 +24,5 @@ if __name__=="__main__":
  print(json.dumps(result,ensure_ascii=False))
  gh_output=os.environ.get("GITHUB_OUTPUT")
  if gh_output:
-  with open(gh_output,"a") as handle:handle.write("approved="+str(result["approved"]).lower()+"\\n")
+  with open(gh_output,"a") as handle:handle.write("approved="+str(result["approved"]).lower()+"\n")
  if not result["approved"]:print("BLOCKED_REVIEW_REQUIRED: candidates uploaded for manual visual review; no render.")
