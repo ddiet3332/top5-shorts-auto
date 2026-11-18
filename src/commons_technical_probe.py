@@ -5,6 +5,7 @@ Evidence is technical only. No source is marked rights verified or publishable.
 from __future__ import annotations
 import argparse
 import json
+import hashlib
 import subprocess
 import urllib.request
 import urllib.error
@@ -58,7 +59,7 @@ def probe(inventory, output_dir, max_files=12):
             width=int(video["width"])
             height=int(video["height"])
             row.update({"duration_sec":duration,"width":width,"height":height,
-                        "downloaded_bytes":total,"technical_pass":5<=duration<=60 and min(width,height)>=720,
+                        "downloaded_bytes":total,"sha256":hashlib.sha256(target.read_bytes()).hexdigest(),"technical_pass":5<=duration<=60 and min(width,height)>=720,
                         "local_path":str(target)})
             row["code"]="PASS_TECHNICAL_ONLY" if row["technical_pass"] else "REJECT_TECHNICAL"
         except (OSError,ValueError,KeyError,subprocess.SubprocessError,TimeoutError) as exc:
