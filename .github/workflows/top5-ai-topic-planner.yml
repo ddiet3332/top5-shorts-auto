@@ -86,6 +86,10 @@ jobs:
         run: python3 src/top5_free_source_download.py
       - name: Generate visual review contact sheet from real source frames
         run: python3 src/top5_source_contact_sheet.py
+      - name: Generate source-linked manual review worksheet
+        run: python3 src/top5_source_review_worksheet.py
+      - name: Test source review worksheet
+        run: python3 -m unittest discover -s tests -p test_top5_source_review_worksheet.py
       - name: Test metadata-based Korean captions
         run: python3 -m unittest discover -s tests -p test_top5_metadata_captions.py
       - name: Test reviewed-caption source matching
@@ -130,6 +134,7 @@ jobs:
             output/top5_source_qa/source_*.mp4
             output/top5_visual_review/TOP5_SOURCE_CONTACT_SHEET.jpg
             output/top5_visual_review/VISUAL_REVIEW_MANIFEST.json
+            output/top5_visual_review/SOURCE_REVIEW_WORKSHEET.json
             output/top5_visual_review/RENDER_GATE.json
             output/top5_v06_review/TOP5_V06_GENERIC_REVIEW_25s.mp4
             output/top5_v06_review/GENERIC_V06_QA.json
