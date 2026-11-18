@@ -63,7 +63,7 @@ jobs:
           from pathlib import Path
           p=Path('/tmp/archive_real_probe/gate_candidates.json')
           count=len(json.loads(p.read_text()).get('candidates',[])) if p.exists() else 0
-          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write(f'count={count}\\n')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write(f'count={count}\n')
           print('real_media_with_license_evidence=',count)
           PY
       - name: Install free local YOLO and VLM CPU dependencies
