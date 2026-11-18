@@ -13,7 +13,7 @@ APPROVAL_DEFAULTS = {
     "publication_approved": False,
     "youtube_auto_upload": False,
 }
-ALLOWED_PROVIDERS = {"pexels", "pixabay", "wikimedia_commons", "owned", "contracted"}
+ALLOWED_PROVIDERS = {"pexels", "pixabay", "wikimedia_commons", "internet_archive", "owned", "contracted"}
 
 @dataclass(frozen=True)
 class GateDecision:
