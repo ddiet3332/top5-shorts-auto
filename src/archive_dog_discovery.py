@@ -11,7 +11,7 @@ from pathlib import Path
 
 API="https://archive.org/advancedsearch.php"
 
-def discover(query="(dog OR puppy) AND mediatype:movies",rows=40):
+def discover(query="(title:dog OR title:dogs OR title:puppy OR title:puppies) AND mediatype:movies",rows=40):
     params=urllib.parse.urlencode({"q":query,"fl[]":["identifier","title","licenseurl","creator","year"],
                                    "rows":str(min(max(rows,1),100)),"page":"1","output":"json"},doseq=True)
     request=urllib.request.Request(API+"?"+params,headers={
@@ -27,6 +27,9 @@ def discover(query="(dog OR puppy) AND mediatype:movies",rows=40):
         licenseurl=doc.get("licenseurl") or ""
         if isinstance(licenseurl,list):
             licenseurl=licenseurl[0] if licenseurl else ""
+        title=str(doc.get("title") or "")
+        if not any(word in title.lower().split() for word in ("dog","dogs","puppy","puppies")):
+            continue
         items.append({"id":identifier,"title":doc.get("title"),
             "creator":doc.get("creator"),"license_url":licenseurl,
             "source_url":"https://archive.org/details/"+urllib.parse.quote(identifier),
