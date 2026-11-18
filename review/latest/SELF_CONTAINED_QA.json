@@ -1,51 +1,8 @@
 {
   "video": "output/top5_review_light/TOP5_DOG_SELECTED_540x960.mp4",
-  "exists": true,
-  "checks": {
-    "decode": {
-      "exit_code": 0,
-      "pass": true,
-      "findings": []
-    },
-    "blackdetect": {
-      "exit_code": 0,
-      "pass": true,
-      "findings": []
-    },
-    "silencedetect": {
-      "exit_code": 0,
-      "pass": true,
-      "findings": []
-    },
-    "volume": {
-      "exit_code": 0,
-      "pass": true,
-      "findings": [
-        "[Parsed_volumedetect_0 @ 0x7f8004002000] mean_volume: -22.9 dB",
-        "[Parsed_volumedetect_0 @ 0x7f8004002000] max_volume: -2.7 dB"
-      ]
-    }
-  },
+  "exists": false,
+  "checks": {},
   "editorial_score_100": null,
   "rights_verified": false,
-  "youtube_auto_upload": false,
-  "media_info": {
-    "programs": [],
-    "stream_groups": [],
-    "streams": [
-      {
-        "codec_type": "video",
-        "width": 540,
-        "height": 960
-      },
-      {
-        "codec_type": "audio"
-      }
-    ],
-    "format": {
-      "duration": "30.016000",
-      "size": "1589819"
-    }
-  },
-  "technical_pass": true
+  "youtube_auto_upload": false
 }
