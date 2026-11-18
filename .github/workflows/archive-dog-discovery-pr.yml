@@ -5,6 +5,8 @@ on:
     paths:
       - 'src/archive_dog_discovery.py'
       - 'tests/test_archive_dog_discovery.py'
+      - 'src/archive_video_preflight.py'
+      - 'tests/test_archive_video_preflight.py'
       - '.github/workflows/archive-dog-discovery-pr.yml'
 jobs:
   discover:
@@ -16,9 +18,11 @@ jobs:
         with:
           python-version: '3.11'
       - name: Test alternative provider safety
-        run: python -m pip install pytest && python -m pytest -q tests/test_archive_dog_discovery.py
+        run: python -m pip install pytest && python -m pytest -q tests/test_archive_dog_discovery.py tests/test_archive_video_preflight.py
       - name: Discover real Internet Archive metadata
         run: python -m src.archive_dog_discovery --output /tmp/archive_dog_inventory.json --rows 60
+      - name: Inspect actual per-item metadata and original video file list
+        run: python -m src.archive_video_preflight --input /tmp/archive_dog_inventory.json --output /tmp/archive_video_preflight.json --max-items 20
       - name: Show discovery and safety state
         run: |
           python - <<'PY'
@@ -33,4 +37,6 @@ jobs:
         if: always()
         with:
           name: archive-dog-unapproved-inventory
-          path: /tmp/archive_dog_inventory.json
+          path: |
+            /tmp/archive_dog_inventory.json
+            /tmp/archive_video_preflight.json
