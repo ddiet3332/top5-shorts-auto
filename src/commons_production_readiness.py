@@ -18,7 +18,7 @@ def assess(report, required=6):
         if digest!=row["sha256"]:
             continue
         qualified.append(row)
-    distinct={r["id"] for r in qualified}
+    distinct={r["sha256"] for r in qualified}
     blocked=bool(report.get("provider_rate_limited"))
     return {"status":("BLOCKED_PROVIDER_RATE_LIMIT" if blocked else
                       "READY_FOR_GATE2_GATE3_AND_RIGHTS_REVIEW" if len(distinct)>=required else
