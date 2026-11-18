@@ -32,6 +32,19 @@ jobs:
         run: python -m src.archive_dog_discovery --output /tmp/archive_dog_inventory.json --rows 100
       - name: Inspect actual per-item metadata and original video file list
         run: python -m src.archive_video_preflight --input /tmp/archive_dog_inventory.json --output /tmp/archive_video_preflight.json --max-items 60
+      - name: Explain preflight rejection reasons
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+          p=Path('/tmp/archive_video_preflight.json')
+          data=json.loads(p.read_text())
+          print('PREFLIGHT_REJECTION_COUNTS',json.dumps(dict(sorted(Counter(x.get('status','UNKNOWN') for x in data.get('results',[])).items()))))
+          for x in data.get('results',[]):
+              if x.get('status')=='PREFLIGHT_METADATA_ONLY_PENDING_DOWNLOAD_AND_RIGHTS':
+                  print('PREFLIGHT_CANDIDATE',x.get('id'),x.get('title'),len(x.get('files',[])))
+          PY
       - name: Install ffprobe for real media validation
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
