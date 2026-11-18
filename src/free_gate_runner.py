@@ -50,6 +50,7 @@ def evaluate_candidate(candidate, *, motion_reader=None, dog_reader=None, semant
         result["reject_code"] = decision.code
         return result
     result["gate_2_passed"] = True
+    result["motion_score"] = round(min(float(metrics["late_early_motion_ratio"]), 5.0), 4)
     if semantic_response is None:
         result["reject_code"] = "REJECT_SEMANTIC_UNAVAILABLE"
         return result
