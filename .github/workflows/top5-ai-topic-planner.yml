@@ -56,6 +56,8 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_top5_metadata_captions.py
       - name: Render V06 generic review video
         run: python3 src/top5_generic_v06_preview.py
+      - name: Test 75-point editorial threshold
+        run: python3 -m unittest discover -s tests -p test_top5_75_threshold.py
       - name: Independently validate rendered video and flag editorial risks
         run: python3 src/top5_independent_review_qa.py
       - name: Save selection for next slot
