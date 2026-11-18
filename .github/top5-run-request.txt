@@ -1,0 +1,4 @@
+Explicit user-requested full TOP5 pipeline run
+Date: 2026-11-18
+Requested slot: PM (push event uses PM unless UTC hour 00)
+Purpose: verify source creator diversity, 15-frame QA sheet, render and independent QA.
