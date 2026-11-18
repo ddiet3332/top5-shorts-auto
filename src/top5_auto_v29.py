@@ -171,8 +171,8 @@ def select_sources(candidates,output,limit=11):
         print("SOURCE",number,title,"PASS" if not failure else failure,flush=True)
         if len(eligible)>=6:
             break
-    if len(eligible)<5:
-        raise RuntimeError(f"Only {len(eligible)} eligible playable sources, need 5")
+    if len(eligible)<6:
+        raise RuntimeError(f"Only {len(eligible)} eligible playable sources; require 5 ranked clips plus a distinct hook")
     # Distinctness constraint: not more than two identical label categories.
     used=[]
     label_counts={}
@@ -184,11 +184,14 @@ def select_sources(candidates,output,limit=11):
         if len(used)==5:
             break
     if len(used)<5:
-        used=eligible[:5]
+        raise RuntimeError("Insufficient label-diverse sources; refuse fallback filler")
     # Ordered from 5th to 1st by technical/editing heuristic, not an
     # objective ranking of how funny real-world events are.
     used.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
-    return used,attempts
+    remaining=[r for r in eligible if r["title"] not in {x["title"] for x in used}]
+    if not remaining:
+        raise RuntimeError("No sixth independent source available for opening hook")
+    return used,attempts,remaining[0]
 
 def cue_with_ass_override(start,end,style,plain_text,x,y,align,layer,override):
     """Insert trusted ASS styling after cue() escapes user-visible text.
@@ -320,15 +323,14 @@ def save_license_and_status(topic,items,recommendations,attempts,output):
          "creative_action_human_verified":False,"publication_approved":False},
          ensure_ascii=False,indent=2),encoding="utf-8")
 
-def assemble_video(topic,items,output):
+def assemble_video(topic,items,output,hook_source):
     work=output/"work"
     work.mkdir(parents=True,exist_ok=True)
     segment_files=[]
-    # Run #135 temporal QA: the hook duplicated the entire rank-1 source,
-    # reducing surprise. Prefer a different, actual selected source when
-    # available; this is diversity control, NOT proof of a funny action.
-    first=next((row for row in items[:-1]
-                if "dog-fetch" in str(row.get("title",""))),items[-2]) if len(items)>1 else items[-1]
+    # Hook must use a sixth, non-ranked source; no fail-open reuse.
+    first=hook_source
+    if first["title"] in {row["title"] for row in items}:
+        raise ValueError("Hook source duplicates a ranked source")
     hook=work/"part_00.mp4"
     hook_at=max(0.0,min(first["duration_sec"]-2.1,
                           float(first.get("hook_start",first["cut_start"]+1.3))))
@@ -418,9 +420,9 @@ def main():
     topics=json.loads(Path(args.topics).read_text(encoding="utf-8"))
     topic,candidates,recommended=recommend_topics(topics,args.topic)
     print("TOPIC RECOMMENDED",topic["topic_id"],"candidate count",len(candidates),flush=True)
-    items,attempts=select_sources(candidates,output)
+    items,attempts,hook_source=select_sources(candidates,output)
     save_license_and_status(topic,items,recommended,attempts,output)
-    video=assemble_video(topic,items,output)
+    video=assemble_video(topic,items,output,hook_source)
     qa=technical_qa(video,output,topic,items)
     print("SUCCESS REVIEW ONLY",video,qa["full_decode"],flush=True)
 
