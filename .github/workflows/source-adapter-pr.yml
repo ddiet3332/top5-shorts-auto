@@ -1,0 +1,19 @@
+name: Source adapter tests
+on:
+  pull_request:
+    paths:
+      - 'src/source_schema_adapter.py'
+      - 'tests/test_source_schema_adapter.py'
+      - '.github/workflows/source-adapter-pr.yml'
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install pytest
+      - run: python -m pytest -q tests/test_source_schema_adapter.py
