@@ -489,13 +489,13 @@ def select_dog_audition_sources(topic,candidates,output):
     # Prefer new action families for audition, never treat titles as verified comedy.
     fresh={"dog-door-rush","dog-door-peek","dog-jump-person"}
     strong.sort(key=lambda r:(0 if any(x in r.get("title","") for x in fresh) else 1,r.get("title","")))
-    pool=strong+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
+    # Known visually weak sources are NOT allowed back into a new render.\n    # If fewer than five distinct strong candidates exist, stop and source more.\n    # This is a quality gate, not a claim that remaining footage is humorous.\n    pool=list(strong)
     # Deterministic alternative selection for bounded automated re-edits.
     # Variant 0 is default. Variants 1-3 rotate downloaded strong sources.
     variant=max(0,min(3,int(os.environ.get("TOP5_REPAIR_VARIANT","0"))))
     if variant and len(strong)>5:
         shift=variant%len(strong)
-        pool=strong[shift:]+strong[:shift]+sorted(fallback,key=lambda r:-float(r.get("motion_proxy",0)))
+        pool=strong[shift:]+strong[:shift]
     combined=[]
     seen=set()
     for item in pool:
