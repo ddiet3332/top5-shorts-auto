@@ -1,14 +1,9 @@
 {
   "schema_version": 1,
-  "review_basis": "previous_dog_review_frames_run_44082890443_not_latest",
-  "repairs": [
-    {
-      "rank": 3,
-      "action": "shift_highlight",
-      "delta_seconds": 1,
-      "reason": "previous inspection: static puppies rank3; move selected excerpt by 1s to test visible change"
-    }
-  ],
-  "test_cycle": 2,
-  "expected_feedback_application": "rank3 shift_highlight +1 second"
+  "review_basis": "V32 run 44376165430: earlier rank3 +1s shift was based on run 44082890443, not this selected-source set",
+  "repairs": [],
+  "test_cycle": 3,
+  "expected_feedback_application": "none: new source-specific temporal review required before moving cut points",
+  "rights_verified": false,
+  "publication_approved": false
 }
