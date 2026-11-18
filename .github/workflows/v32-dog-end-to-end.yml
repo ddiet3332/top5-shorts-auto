@@ -761,6 +761,17 @@ jobs:
                   'note':'Temporal sheet is visual sampling, not subjective approval'
               },indent=2)+'\\n')
           PY
+      - name: Upload temporal 60-frame evidence after it is generated
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-DOG-TEMPORAL-EVIDENCE-${{ github.run_number }}
+          path: |
+            output/top5_review_light/TOP5_TEMPORAL_60FRAME.jpg
+            output/top5_review_light/TEMPORAL_REVIEW_STATUS.json
+            output/top5_review_light/temporal_2fps/
+          retention-days: 7
+          if-no-files-found: warn
       - name: Upload lightweight video-only inspection artifact
         if: always()
         uses: actions/upload-artifact@v4
