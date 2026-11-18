@@ -43,6 +43,7 @@ def evaluate_candidate(candidate, *, motion_reader=None, dog_reader=None, semant
     except (KeyError, TypeError, ValueError, RuntimeError, OSError) as exc:
         result["reject_code"] = "REJECT_LOCAL_ANALYSIS_UNAVAILABLE"
         result["analysis_error"] = type(exc).__name__
+        result["analysis_error_detail"] = str(exc)[:160]
         return result
     decision = evaluate_gate2(metrics, THRESHOLDS)
     result["gate2_code"] = decision.code
