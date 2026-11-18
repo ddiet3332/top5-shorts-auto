@@ -13,6 +13,8 @@ on:
       - 'src/commons_candidate_shortlist.py'
       - 'src/commons_technical_probe.py'
       - 'tests/test_commons_technical_probe.py'
+      - 'src/commons_production_readiness.py'
+      - 'tests/test_commons_production_readiness.py'
 jobs:
   discover:
     runs-on: ubuntu-latest
@@ -23,7 +25,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Run rate-limit regression test
-        run: python -m pip install pytest && python -m pytest -q tests/test_commons_technical_probe.py
+        run: python -m pip install pytest && python -m pytest -q tests/test_commons_technical_probe.py tests/test_commons_production_readiness.py
       - name: Search actual Wikimedia Commons video files
         run: python -m src.commons_dog_discovery --query "dog,puppy,dogs playing,puppy playing,canine,dog running,dog tricks,dog jumping" --limit 50 --output /tmp/commons_candidates.json
       - name: Create real-source shortlist
@@ -34,6 +36,9 @@ jobs:
       - name: Download and probe bounded real source sample
         if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
         run: python -m src.commons_technical_probe --input /tmp/commons_shortlist.json --output-dir /tmp/commons_probe --max-files 8
+      - name: Enforce six-source production readiness gate
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
+        run: python -m src.commons_production_readiness --input /tmp/commons_probe/technical_probe.json --output /tmp/commons_probe/production_readiness.json
       - name: Print technical probe rejection diagnostics
         if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
         run: |
@@ -63,3 +68,4 @@ jobs:
             /tmp/commons_candidates.json
             /tmp/commons_shortlist.json
             /tmp/commons_probe/technical_probe.json
+            /tmp/commons_probe/production_readiness.json
