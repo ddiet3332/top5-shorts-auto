@@ -16,9 +16,9 @@ def decode(path):
 def creator_allowed(creator,counts,max_per_creator=2):
  """Do not let one uploader dominate a five-source TOP5 video."""
  return bool(creator) and counts[creator]<max_per_creator
-def inspect(key,plan,out,fetch=fetch_hits):
+def inspect(key,plan,out,fetch=fetch_hits,rejected=None):
  out.mkdir(parents=True,exist_ok=True)
- selected=plan["selected"];seen=set();rows=[];failures=[];creator_counts=collections.Counter();skipped_same_creator=0;query_counts=collections.Counter()
+ rejected=set(rejected or []);selected=plan["selected"];seen=set();rows=[];failures=[];creator_counts=collections.Counter();skipped_same_creator=0;query_counts=collections.Counter()
  for query in selected["search_queries"]:
   if len(rows)>=5:break
   max_this_query=3 if len(selected["search_queries"])>1 else 5
@@ -27,7 +27,7 @@ def inspect(key,plan,out,fetch=fetch_hits):
   for hit in hits:
    if len(rows)>=5 or query_counts[query]>=max_this_query:break
    ident=hit.get("id");tags=str(hit.get("tags") or "").lower();creator=str(hit.get("user") or "").strip()
-   if not isinstance(ident,int) or ident in seen:continue
+   if not isinstance(ident,int) or ident in seen or ident in rejected:continue
    if not topic_metadata_match(tags,selected["search_queries"]):continue
    seen.add(ident)
    if not creator_allowed(creator,creator_counts):
@@ -48,14 +48,20 @@ def inspect(key,plan,out,fetch=fetch_hits):
     rows.append({"id":ident,"provider":"pixabay","query":query,"page_url":hit.get("pageURL"),"tags":hit.get("tags"),"creator":hit.get("user"),"duration_sec":round(probe(path),2),"file":path.name,"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"full_video_decode":True,"editorial_score":None,"rights_verified":False,"publication_approved":False})
    except Exception as e:
     failures.append({"id":ident,"reason":type(e).__name__});path.unlink(missing_ok=True)
- report={"topic":selected["topic"],"category":selected["category"],"status":"DOWNLOADED_5_TECHNICALLY_VALID_SOURCES_REVIEW_ONLY" if len(rows)==5 else "BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES","downloaded_valid_sources":len(rows),"max_sources_per_creator":2,"creator_counts":dict(creator_counts),"query_counts":dict(query_counts),"skipped_creator_limit_or_missing":skipped_same_creator,"sources":rows,"failures":failures[:20],"editorial_score":None,"rights_verified":False,"publication_approved":False,"final_video_created":False}
+ report={"topic":selected["topic"],"category":selected["category"],"status":"DOWNLOADED_5_TECHNICALLY_VALID_SOURCES_REVIEW_ONLY" if len(rows)==5 else "BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES","downloaded_valid_sources":len(rows),"max_sources_per_creator":2,"creator_counts":dict(creator_counts),"query_counts":dict(query_counts),"rejected_source_ids":sorted(rejected),"skipped_creator_limit_or_missing":skipped_same_creator,"sources":rows,"failures":failures[:20],"editorial_score":None,"rights_verified":False,"publication_approved":False,"final_video_created":False}
  (out/"SOURCE_DOWNLOAD_QA.json").write_text(json.dumps(report,ensure_ascii=False,indent=2))
  return report
 def main():
- p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--output",default="output/top5_source_qa");a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--output",default="output/top5_source_qa");p.add_argument("--rejections",default="review/rejected_source_ids.json");a=p.parse_args()
  key=os.environ.get("PIXABAY_API_KEY")
  if not key:raise SystemExit("BLOCKED_NO_PIXABAY_API_KEY")
- try:r=inspect(key,json.loads(Path(a.plan).read_text()),Path(a.output))
+ try:
+  plan=json.loads(Path(a.plan).read_text())
+  registry_path=Path(a.rejections)
+  registry=json.loads(registry_path.read_text()) if registry_path.is_file() else {}
+  rejected=registry.get(plan["selected"]["topic"],[])
+  if not isinstance(rejected,list) or any(type(x) is not int for x in rejected):raise ValueError("Invalid rejected source IDs")
+  r=inspect(key,plan,Path(a.output),rejected=rejected)
  except Exception as e:raise SystemExit("BLOCKED_SOURCE_QA_ERROR: "+type(e).__name__)
  print(json.dumps({"status":r["status"],"downloaded_valid_sources":r["downloaded_valid_sources"]}))
  if r["downloaded_valid_sources"]!=5:raise SystemExit("BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES")
