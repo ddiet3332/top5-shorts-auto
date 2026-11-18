@@ -50,6 +50,10 @@ jobs:
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: python3 src/top5_free_footage_preflight.py
+      - name: Test public video discovery adapters
+        run: python3 -m unittest discover -s tests -p test_top5_public_video_discovery.py
+      - name: Search Wikimedia Commons and Internet Archive for source candidates
+        run: python3 src/top5_public_video_discovery.py
       - name: Test downloaded source gate
         run: python3 -m unittest discover -s tests -p 'test_top5_free_source_download.py'
       - name: Download and decode 5 distinct sources
@@ -91,6 +95,7 @@ jobs:
           path: |
             output/topic_plan.json
             output/topic_footage_preflight.json
+            output/top5_external_sources/DISCOVERY.json
             output/top5_source_qa/SOURCE_DOWNLOAD_QA.json
             output/top5_source_qa/source_*.mp4
             output/top5_visual_review/TOP5_SOURCE_CONTACT_SHEET.jpg
