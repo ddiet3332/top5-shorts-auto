@@ -7,8 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 BASE=Path("output/dog_pixabay_preview")
 SOURCE=BASE/"DOG_TOP5_SOURCE_REVIEW_ONLY_25s.mp4"
 OUT=BASE/"CUTE_DOG_TOP5_V06_AUTO_25s.mp4"
-NAMES=["표정 부자","얌전한 아기","옆모습 심쿵","들판 요정","꿀잠 천사"]
-CAPTIONS=["이 표정은 반칙이지!","가만히 있어도 심쿵!","옆모습까지 귀여워","들판에서 만난 천사","잠든 모습도 사랑스러워"]
+NAMES=["귀여움 발견","사랑스러운 순간","눈길 가는 강아지","심쿵 순간","오늘의 귀요미"]
+CAPTIONS=["귀여운 순간 포착!","보고 또 봐도 귀여워","눈을 뗄 수가 없네","오늘도 심쿵 주의!","오늘의 귀요미 등장!"]
 FONT="/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf"
 
 def main():
