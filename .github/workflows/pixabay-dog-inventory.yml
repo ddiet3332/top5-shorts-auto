@@ -1,0 +1,37 @@
+name: Pixabay dog source inventory (unapproved)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pixabay-dog-inventory.yml'
+      - 'src/pixabay_dog_inventory.py'
+      - 'tests/test_pixabay_dog_inventory.py'
+  workflow_dispatch:
+    inputs:
+      query:
+        description: 'English Pixabay video search'
+        required: true
+        default: 'funny puppy'
+permissions:
+  contents: read
+jobs:
+  pixabay-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test fail-closed Pixabay metadata parsing
+        run: python3 -m unittest discover -s tests -p 'test_pixabay_dog_inventory.py' -v
+      - name: Query Pixabay without exposing secret
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          SEARCH_QUERY: ${{ inputs.query || 'funny puppy' }}
+        run: python3 src/pixabay_dog_inventory.py --query "$SEARCH_QUERY" --output output/PIXABAY_DOG_UNAPPROVED.json
+      - name: Upload unapproved metadata inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixabay-dog-unapproved-inventory
+          path: output/PIXABAY_DOG_UNAPPROVED.json
+          if-no-files-found: warn
+          retention-days: 7
