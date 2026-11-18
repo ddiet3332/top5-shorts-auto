@@ -31,7 +31,7 @@ jobs:
       - name: Discover real Internet Archive metadata
         run: python -m src.archive_dog_discovery --output /tmp/archive_dog_inventory.json --rows 60
       - name: Inspect actual per-item metadata and original video file list
-        run: python -m src.archive_video_preflight --input /tmp/archive_dog_inventory.json --output /tmp/archive_video_preflight.json --max-items 20
+        run: python -m src.archive_video_preflight --input /tmp/archive_dog_inventory.json --output /tmp/archive_video_preflight.json --max-items 50
       - name: Install ffprobe for real media validation
         if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.download_originals)
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
