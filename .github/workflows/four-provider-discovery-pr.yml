@@ -21,6 +21,10 @@ jobs:
         run: python -m src.commons_dog_discovery --query 'dog,puppy,dogs playing,puppy playing,dog jumping,dog running,dog funny,dog fetching' --limit 30 --output /tmp/commons_inventory.json
       - name: Collect Archive real discovery inventory
         run: python -m src.archive_dog_discovery --output /tmp/archive_inventory.json --rows 100
+      - name: Shortlist Commons candidates for media verification
+        run: python -m src.commons_candidate_shortlist --input /tmp/commons_inventory.json --output /tmp/commons_shortlist.json --limit 30
+      - name: Preflight Archive original files and license metadata
+        run: python -m src.archive_video_preflight --input /tmp/archive_inventory.json --output /tmp/archive_preflight.json --max-items 60
       - name: Combine four providers (optional official API keys)
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
@@ -34,3 +38,5 @@ jobs:
             /tmp/commons_inventory.json
             /tmp/archive_inventory.json
             /tmp/four_provider_inventory.json
+            /tmp/commons_shortlist.json
+            /tmp/archive_preflight.json
