@@ -9,12 +9,16 @@ import hashlib
 import json
 from pathlib import Path
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import Request, build_opener, HTTPRedirectHandler
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise LicenseCaptureError('LICENSE_REDIRECT_FORBIDDEN')
 
 class LicenseCaptureError(RuntimeError):
     pass
 
-def snapshot_license(url: str, destination: str | Path, *, opener=urlopen, max_bytes=2_000_000):
+def snapshot_license(url: str, destination: str | Path, *, opener=None, max_bytes=2_000_000):
     parsed=urlsplit(url)
     if parsed.scheme != "https" or not parsed.hostname:
         raise LicenseCaptureError("LICENSE_URL_NOT_HTTPS")
@@ -26,6 +30,8 @@ def snapshot_license(url: str, destination: str | Path, *, opener=urlopen, max_b
     if parsed.hostname.lower() not in hosts:
         raise LicenseCaptureError("LICENSE_HOST_NOT_ALLOWED")
     request=Request(url,headers={"User-Agent":"TOP5-LicenseEvidence/1.0"})
+    if opener is None:
+        opener = build_opener(NoRedirect()).open
     try:
         with opener(request,timeout=15) as response:
             data=response.read(max_bytes+1)
