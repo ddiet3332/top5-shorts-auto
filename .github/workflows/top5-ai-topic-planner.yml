@@ -19,9 +19,11 @@ concurrency:
 jobs:
   plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Resolve scheduled slot
         id: slot
         env:
@@ -44,6 +46,12 @@ jobs:
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: python3 src/top5_free_footage_preflight.py
+      - name: Test downloaded source gate
+        run: python3 -m unittest discover -s tests -p 'test_top5_free_source_download.py'
+      - name: Download and decode 5 distinct sources
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: python3 src/top5_free_source_download.py
       - name: Save selection for next slot
         env:
           GH_TOKEN: ${{ github.token }}
@@ -58,5 +66,7 @@ jobs:
           path: |
             output/topic_plan.json
             output/topic_footage_preflight.json
+            output/top5_source_qa/SOURCE_DOWNLOAD_QA.json
+            output/top5_source_qa/source_*.mp4
           if-no-files-found: warn
           retention-days: 14
