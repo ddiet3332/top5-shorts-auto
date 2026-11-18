@@ -44,6 +44,14 @@ jobs:
           Path('/tmp/four_provider_readiness.json').write_text(json.dumps(result,indent=2)+'\n')
           print(json.dumps(result))
           PY
+      - name: Verify Pixabay API key availability without exposing secret
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          python - <<'PY'
+          import os
+          print('PIXABAY_API_KEY configured:', bool(os.environ.get('PIXABAY_API_KEY')))
+          PY
       - name: Combine four providers (optional official API keys)
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
