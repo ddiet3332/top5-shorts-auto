@@ -13,13 +13,13 @@ from .local_dog_detector import detect_dog_metrics
 from .verified_v32_handoff import verified_handoff
 from .v32_render_gate import validate_render_handoff, RenderGateRejected
 
-def run(candidates, *, output_dir, dog_weights, semantic_responses=None,
+def run(candidates, *, output_dir, dog_weights, semantic_responses=None, semantic_reader=None,
         motion_reader=extract_motion_metrics, dog_reader=None):
     output=Path(output_dir)
     output.mkdir(parents=True,exist_ok=True)
     if dog_reader is None:
         dog_reader=lambda path: detect_dog_metrics(path,dog_weights)
-    gate=evaluate_manifest(candidates,output/"GATE_RESULTS.json",
+    if semantic_reader is not None:\n        semantic_responses=dict(semantic_responses or {})\n        for source in candidates:\n            identifier=str(source.get("id") or source.get("source_page") or "")\n            if identifier not in semantic_responses:\n                try:\n                    verdict=semantic_reader(source["local_path"])\n                    semantic_responses[identifier]=verdict["raw_response"]\n                except (KeyError, RuntimeError, ValueError, OSError, ImportError) as exc:\n                    semantic_responses[identifier]=None\n    gate=evaluate_manifest(candidates,output/"GATE_RESULTS.json",
                            motion_reader=motion_reader,dog_reader=dog_reader,
                            semantic_responses=semantic_responses or {})
     handoff=verified_handoff(candidates,gate["candidates"],
@@ -43,7 +43,7 @@ def main(argv=None):
     p.add_argument("--candidates",required=True)
     p.add_argument("--output-dir",required=True)
     p.add_argument("--dog-weights",required=True)
-    p.add_argument("--semantic-responses")
+    p.add_argument("--semantic-responses")\n    p.add_argument("--run-local-semantic",action="store_true",\n                   help="Run actual local VLM for missing semantic evidence (downloads model weights)")
     a=p.parse_args(argv)
     candidates=json.loads(Path(a.candidates).read_text(encoding="utf-8"))
     if isinstance(candidates,dict):
