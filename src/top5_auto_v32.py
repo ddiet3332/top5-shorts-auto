@@ -653,6 +653,27 @@ def main():
         json.dumps(hook_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if hook_source is None:
         raise RuntimeError("INSUFFICIENT_INDEPENDENT_HOOK: sixth unique playable source required")
+    # Never render dog candidates without six independent, locally checked
+    # originals and an exact SHA256 match to this edit's ranked/hook sources.
+    if topic["topic_id"] == "dog_surprises":
+        from v32_render_gate import validate_render_handoff, RenderGateRejected
+        handoff_path = output / "VERIFIED_V32_HANDOFF.json"
+        try:
+            validate_render_handoff(handoff_path, final, hook_source)
+        except RenderGateRejected as exc:
+            rejection = {
+                "status": "INSUFFICIENT_QUALIFIED_SOURCES",
+                "reason": str(exc),
+                "editorial_score_100": None,
+                "rights_verified": False,
+                "humor_certified": False,
+                "publication_approved": False,
+                "youtube_auto_upload": False,
+            }
+            (output / "REJECTED_PRODUCTION.json").write_text(
+                json.dumps(rejection, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
+            raise RuntimeError("INSUFFICIENT_QUALIFIED_SOURCES: verified V32 handoff unavailable") from exc
     video=assemble_video(topic,final,output,hook_source)
     qa=technical_qa(video,output,topic,final)
     qa["version"]="V37"
