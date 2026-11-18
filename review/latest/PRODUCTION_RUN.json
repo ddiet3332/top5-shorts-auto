@@ -4,8 +4,21 @@
   "workflow": "V32 dog end-to-end MP4 build",
   "trigger": "push",
   "source_sha": "7c39b00f8e52f1d81caabc8fb39be25dc1062189",
-  "status": "STARTED",
+  "status": "MP4_NOT_CREATED",
   "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44247866295",
+  "selected_mp4_sha256": null,
+  "feedback": {
+    "applied": [
+      {
+        "rank": 3,
+        "action": "shift_highlight"
+      }
+    ],
+    "rejected": [],
+    "rights_verified": false,
+    "publication_approved": false,
+    "status": "APPLIED"
+  },
   "editorial_score_100": null,
   "rights_verified": false,
   "youtube_auto_upload": false
