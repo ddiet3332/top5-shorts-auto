@@ -7,7 +7,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from .free_gate_runner import evaluate_manifest
+from .free_gate_runner import evaluate_manifest\nfrom .quality_gates import predownload_gate\nfrom .source_schema_adapter import normalize_v32_source
 from .local_motion_metrics import extract_motion_metrics
 from .local_dog_detector import detect_dog_metrics
 from .verified_v32_handoff import verified_handoff
@@ -19,7 +19,7 @@ def run(candidates, *, output_dir, dog_weights, semantic_responses=None, semanti
     output.mkdir(parents=True,exist_ok=True)
     if dog_reader is None:
         dog_reader=lambda path: detect_dog_metrics(path,dog_weights)
-    if semantic_reader is not None:\n        semantic_responses=dict(semantic_responses or {})\n        for source in candidates:\n            identifier=str(source.get("id") or source.get("source_page") or "")\n            if identifier not in semantic_responses:\n                try:\n                    verdict=semantic_reader(source["local_path"])\n                    semantic_responses[identifier]=verdict["raw_response"]\n                except (KeyError, RuntimeError, ValueError, OSError, ImportError) as exc:\n                    semantic_responses[identifier]=None\n    gate=evaluate_manifest(candidates,output/"GATE_RESULTS.json",
+    if semantic_reader is not None:\n        semantic_responses=dict(semantic_responses or {})\n        for source in candidates:\n            identifier=str(source.get("id") or source.get("source_page") or "")\n            if identifier not in semantic_responses and predownload_gate(normalize_v32_source(source)).accepted:\n                try:\n                    verdict=semantic_reader(source["local_path"])\n                    semantic_responses[identifier]=verdict["raw_response"]\n                except (KeyError, RuntimeError, ValueError, OSError, ImportError) as exc:\n                    semantic_responses[identifier]=None\n    gate=evaluate_manifest(candidates,output/"GATE_RESULTS.json",
                            motion_reader=motion_reader,dog_reader=dog_reader,
                            semantic_responses=semantic_responses or {})
     handoff=verified_handoff(candidates,gate["candidates"],
