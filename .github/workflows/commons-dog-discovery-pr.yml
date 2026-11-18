@@ -1,6 +1,11 @@
 name: Discover real Commons dog footage (unapproved inventory)
 on:
   workflow_dispatch:
+    inputs:
+      allow_live_download:
+        description: 'Explicitly permit a bounded live source download (may return HTTP 429)'
+        type: boolean
+        default: false
   pull_request:
     paths:
       - 'src/commons_dog_discovery.py'
@@ -24,10 +29,13 @@ jobs:
       - name: Create real-source shortlist
         run: python -m src.commons_candidate_shortlist --input /tmp/commons_candidates.json --output /tmp/commons_shortlist.json --limit 30
       - name: Install video probe tools
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
       - name: Download and probe bounded real source sample
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
         run: python -m src.commons_technical_probe --input /tmp/commons_shortlist.json --output-dir /tmp/commons_probe --max-files 8
       - name: Print technical probe rejection diagnostics
+        if: github.event_name == 'workflow_dispatch' && inputs.allow_live_download
         run: |
           python - <<'PY'
           import json
