@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install FFmpeg
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-nanum && python3 -m pip install --break-system-packages Pillow
       - name: Resolve scheduled slot
         id: slot
         env:
@@ -52,6 +52,8 @@ jobs:
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: python3 src/top5_free_source_download.py
+      - name: Render V06 generic review video
+        run: python3 src/top5_generic_v06_preview.py
       - name: Save selection for next slot
         env:
           GH_TOKEN: ${{ github.token }}
@@ -68,5 +70,7 @@ jobs:
             output/topic_footage_preflight.json
             output/top5_source_qa/SOURCE_DOWNLOAD_QA.json
             output/top5_source_qa/source_*.mp4
+            output/top5_v06_review/TOP5_V06_GENERIC_REVIEW_25s.mp4
+            output/top5_v06_review/GENERIC_V06_QA.json
           if-no-files-found: warn
           retention-days: 14
