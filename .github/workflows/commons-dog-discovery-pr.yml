@@ -1,0 +1,34 @@
+name: Discover real Commons dog footage (unapproved inventory)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/commons_dog_discovery.py'
+      - '.github/workflows/commons-dog-discovery-pr.yml'
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Search actual Wikimedia Commons video files
+        run: python -m src.commons_dog_discovery --query "dog funny" --limit 50 --output /tmp/commons_candidates.json
+      - name: Validate discovery output
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/commons_candidates.json'))
+          assert data['status']=='DISCOVERY_ONLY_NOT_RIGHTS_APPROVED'
+          assert all(not x['rights_verified'] and not x['publication_approved'] for x in data['candidates'])
+          print('candidate_count=',data['count'])
+          for row in data['candidates']:
+              print(row['id'],row['title'],row['source_url'],row['license_raw'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: commons-dog-candidate-inventory
+          path: /tmp/commons_candidates.json
