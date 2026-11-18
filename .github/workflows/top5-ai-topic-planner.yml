@@ -1,4 +1,4 @@
-name: TOP5 AI topic planning AM PM (not video production)
+name: TOP5 FREE topic planning AM PM (not video production)
 on:
   schedule:
     - cron: '0 0 * * *'  # 09:00 Asia/Seoul
@@ -20,9 +20,6 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      TOP5_TOPIC_MODEL: ${{ vars.TOP5_TOPIC_MODEL || 'gpt-4.1-mini' }}
     steps:
       - uses: actions/checkout@v4
       - name: Resolve scheduled slot
@@ -37,8 +34,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api --paginate "repos/${{ github.repository }}/issues/18/comments?per_page=100" --jq '.[] | select(.body | startswith("TOP5_TOPIC_HISTORY ")) | .body | ltrimstr("TOP5_TOPIC_HISTORY ") | fromjson' | jq -s '.' > topic_history.json
-      - name: Plan AI topic (no footage or publishing)
-        run: python3 src/top5_ai_topic_planner.py --slot "${{ steps.slot.outputs.slot }}"
+      - name: Run free planner tests
+        run: python3 -m unittest discover -s tests -p 'test_top5_free_topic_planner.py'
+      - name: Plan free topic (no footage or publishing)
+        run: python3 src/top5_free_topic_planner.py --slot "${{ steps.slot.outputs.slot }}"
       - name: Save selection for next slot
         env:
           GH_TOKEN: ${{ github.token }}
