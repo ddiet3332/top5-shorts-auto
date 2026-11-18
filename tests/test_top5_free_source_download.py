@@ -9,7 +9,7 @@ class SourceDownloadTests(unittest.TestCase):
    m.download=lambda url,path,max_bytes: path.write_bytes(b"test")
    m.probe=lambda path:6.0
    m.decode=lambda path:None
-   hits=[{"id":i,"tags":"nature","duration":8,"videos":{"medium":{"url":"https://cdn.pixabay.com/a.mp4"}},"pageURL":"https://pixabay.com/videos/example","user":"creator"+str((i-1)//2)} for i in range(1,6)]
+   hits=[{"id":i,"tags":"waterfall, river, nature","duration":8,"videos":{"medium":{"url":"https://cdn.pixabay.com/a.mp4"}},"pageURL":"https://pixabay.com/videos/example","user":"creator"+str((i-1)//2)} for i in range(1,6)]
    with tempfile.TemporaryDirectory() as d:
     r=m.inspect("fake",{"selected":{"topic":"폭포","category":"nature","search_queries":["waterfall"]}},Path(d),fetch=lambda key,q:hits)
     self.assertEqual(r["downloaded_valid_sources"],5)
