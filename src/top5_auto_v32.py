@@ -547,7 +547,7 @@ def select_dog_audition_sources(topic,candidates,output):
         "rights_verified":False,"publication_approved":False,
         "reason":"run #123 rank1 dog-field empty frame; never place known weak fallback at rank1 when stronger source exists"
     },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    return selected,failures
+    return selected,failures,combined
 
 def main():
     ap=argparse.ArgumentParser()
@@ -563,8 +563,9 @@ def main():
         json.dumps({"chosen_topic":topic["topic_id"],"topics":recommendations,
         "method":"metadata availability and previous editorial judgments",
         "measured_trends_or_views":False},ensure_ascii=False,indent=2)+"\n")
+    hook_pool=[]
     if topic["topic_id"]=="dog_surprises":
-        selected,attempts=select_dog_audition_sources(topic,candidates,output)
+        selected,attempts,hook_pool=select_dog_audition_sources(topic,candidates,output)
     else:
         if len(candidates)<5: raise RuntimeError("insufficient rights-metadata sources")
         selected,attempts=select_sources(candidates,output)
@@ -623,7 +624,37 @@ def main():
         "selected":selected_evidence,"rights_verified":False,
         "editorial_score_verified":False,"publication_approved":False
     },ensure_ascii=False,indent=2)+chr(10),encoding="utf-8")
-    video=assemble_video(topic,final,output)
+
+    # An independent sixth source is required for the hook, never a ranked clip.
+    ranked_titles={row["title"] for row in final}
+    ranked_hashes={row["sha256"] for row in selected_evidence}
+    hook_source=None
+    hook_audit={"independent_hook":False,"rights_verified":False,
+                "publication_approved":False}
+    for candidate in sorted(hook_pool,key=lambda row:-float(row.get("motion_proxy",0))):
+        if candidate["title"] in ranked_titles:
+            continue
+        path=Path(candidate["local_path"])
+        if not path.is_file() or path.stat().st_size==0:
+            continue
+        duration=float(candidate.get("duration_sec",0))
+        if duration<2.1:
+            continue
+        digest=hashlib.sha256(path.read_bytes()).hexdigest()
+        if digest in ranked_hashes:
+            continue
+        hook_source=dict(candidate)
+        hook_source["hook_start"]=max(0.0,min(duration-2.1,
+            float(candidate.get("cut_start",0))+1.3))
+        hook_audit.update({"independent_hook":True,"sha256":digest,
+                           "title":candidate["title"],"source_page":candidate.get("source_page"),
+                           "editorial_action_verified":False})
+        break
+    (output/"INDEPENDENT_HOOK_AUDIT.json").write_text(
+        json.dumps(hook_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    if hook_source is None:
+        raise RuntimeError("INSUFFICIENT_INDEPENDENT_HOOK: sixth unique playable source required")
+    video=assemble_video(topic,final,output,hook_source)
     qa=technical_qa(video,output,topic,final)
     qa["version"]="V37"
     qa["curated_new_video_used"]=bool(audit["download_ok"]) if topic["topic_id"]!="dog_surprises" else len([item for item in final if item.get("provider")=="pexels"])>0
