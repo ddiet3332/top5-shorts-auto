@@ -45,8 +45,7 @@ def run(candidates, *, output_dir, dog_weights, semantic_responses=None, semanti
             handoff["ranked"]=[]
             handoff["hook"]=None
             (output/"VERIFIED_V32_HANDOFF.json").write_text(
-                json.dumps(handoff,ensure_ascii=False,indent=2)+"
-",encoding="utf-8")
+                json.dumps(handoff,ensure_ascii=False,indent=2)+chr(10),encoding="utf-8")
     return {"status":handoff["status"],"qualified_count":gate["qualified_count"],
             "render_eligible":handoff["status"].startswith("SIX_SOURCES"),
             "publication_approved":False}
@@ -68,8 +67,12 @@ def main(argv=None):
     responses={}
     if a.semantic_responses:
         responses=json.loads(Path(a.semantic_responses).read_text(encoding="utf-8"))
+    reader=None
+    if a.run_local_semantic:
+        from .local_semantic_vlm import run_semantic
+        reader=run_semantic
     result=run(candidates,output_dir=a.output_dir,dog_weights=a.dog_weights,
-               semantic_responses=responses)
+               semantic_responses=responses,semantic_reader=reader)
     print(json.dumps(result,ensure_ascii=False))
     return 0 if result["render_eligible"] else 2
 
