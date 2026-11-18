@@ -1,1 +1,1 @@
-2026-11-19 01:27 KST: verify rejected source replacement with topic-specific exclusion registry.
+2026-11-19 01:33 KST: retry with exhausted-category planner fallback and rejected source replacement.
