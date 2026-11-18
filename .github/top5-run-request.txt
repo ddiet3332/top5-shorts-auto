@@ -1,1 +1,1 @@
-2026-11-19 00:57 KST: verify no-apt font setup, topic relevance fixture and source review bridge in one production run.
+2026-11-19 01:02 KST: verify cached apt FFmpeg installation, font setup and source QA pipeline after runner missing-binary failure.
