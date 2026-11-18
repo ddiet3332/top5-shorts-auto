@@ -30,13 +30,20 @@ jobs:
         timeout-minutes: 5
         run: |
           set -euo pipefail
-          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null || [ ! -f /usr/share/fonts/truetype/nanum/NanumGothicBold.ttf ]; then
-            timeout 90s sudo apt-get update -qq
-            timeout 120s sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ffmpeg fonts-nanum
-          fi
+          command -v ffmpeg
+          command -v ffprobe
           python3 -c 'import PIL' || timeout 60s python3 -m pip install --break-system-packages Pillow
+          FONT=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf
+          if [ ! -s "$FONT" ]; then
+            sudo mkdir -p /usr/share/fonts/truetype/nanum
+            curl --fail --location --retry 2 --connect-timeout 8 --max-time 45 --silent --show-error \
+              https://raw.githubusercontent.com/google/fonts/main/ofl/nanumgothic/NanumGothic-Bold.ttf \
+              -o /tmp/NanumGothicBold.ttf
+            test "$(stat -c%s /tmp/NanumGothicBold.ttf)" -gt 100000
+            sudo cp /tmp/NanumGothicBold.ttf "$FONT"
+          fi
+          test -s "$FONT"
           ffmpeg -version | head -n 1
-          test -f /usr/share/fonts/truetype/nanum/NanumGothicBold.ttf
       - name: Resolve scheduled slot
         id: slot
         env:
