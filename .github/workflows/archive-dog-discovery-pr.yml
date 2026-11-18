@@ -1,0 +1,33 @@
+name: Discover alternate dog video sources (unapproved)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/archive_dog_discovery.py'
+      - '.github/workflows/archive-dog-discovery-pr.yml'
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Discover real Internet Archive metadata
+        run: python -m src.archive_dog_discovery --output /tmp/archive_dog_inventory.json --rows 60
+      - name: Show discovery and safety state
+        run: |
+          python - <<'PY'
+          import json
+          data=json.load(open('/tmp/archive_dog_inventory.json'))
+          assert all(not c['rights_verified'] and not c['publication_approved'] for c in data['candidates'])
+          print('status=',data['status'],'count=',data['count'])
+          for c in data['candidates'][:15]:
+              print(c['id'],c['title'],c['license_url'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: archive-dog-unapproved-inventory
+          path: /tmp/archive_dog_inventory.json
