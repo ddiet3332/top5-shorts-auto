@@ -45,9 +45,9 @@ def main():
     p.add_argument("--query", default="funny puppy")
     p.add_argument("--output", default="output/PIXABAY_DOG_UNAPPROVED.json")
     args = p.parse_args()
-    key = os.environ.get("PIXABAY_API_KEY") or os.environ.get("PIXABAY_API_NAME")
+    key = os.environ.get("PIXABAY_API_KEY")
     if not key:
-        raise SystemExit("BLOCKED: set PIXABAY_API_KEY (or legacy PIXABAY_API_NAME) GitHub Actions secret")
+        raise SystemExit("BLOCKED: set PIXABAY_API_KEY GitHub Actions secret")
     try:
         inventory = collect(key, args.query)
     except Exception as e:
