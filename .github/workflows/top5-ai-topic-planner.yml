@@ -154,6 +154,7 @@ jobs:
             output/top5_source_qa/SOURCE_DOWNLOAD_QA.json
             output/top5_source_qa/source_*.mp4
             output/top5_visual_review/TOP5_SOURCE_CONTACT_SHEET.jpg
+            output/top5_visual_review/TOP5_TEMPORAL_9FRAMES_PER_SOURCE.jpg
             output/top5_visual_review/VISUAL_REVIEW_MANIFEST.json
             output/top5_visual_review/SOURCE_REVIEW_WORKSHEET.json
             output/top5_visual_review/RENDER_GATE.json
