@@ -57,7 +57,7 @@ def probe(inventory, output_dir, max_files=12):
             row["code"]="PASS_TECHNICAL_ONLY" if row["technical_pass"] else "REJECT_TECHNICAL"
         except (OSError,ValueError,KeyError,subprocess.SubprocessError,TimeoutError) as exc:
             row.update({"technical_pass":False,"code":"REJECT_PROBE_ERROR",
-                        "error":type(exc).__name__})
+                        "error":type(exc).__name__,"error_detail":str(exc)[:240]})
         results.append(row)
     return {"status":"TECHNICAL_PROBE_NOT_RIGHTS_APPROVAL",
             "probed":len(results),"technical_pass_count":sum(x["technical_pass"] for x in results),
