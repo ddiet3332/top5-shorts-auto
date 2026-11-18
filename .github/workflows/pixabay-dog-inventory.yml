@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+      - name: Test fail-closed Pixabay metadata parsing
+        run: python3 -m unittest discover -s tests -p 'test_pixabay_dog_inventory.py' -v
       - name: Query Pixabay without exposing secret
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
