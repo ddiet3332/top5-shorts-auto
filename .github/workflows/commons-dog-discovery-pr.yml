@@ -6,6 +6,7 @@ on:
       - 'src/commons_dog_discovery.py'
       - '.github/workflows/commons-dog-discovery-pr.yml'
       - 'src/commons_candidate_shortlist.py'
+      - 'src/commons_technical_probe.py'
 jobs:
   discover:
     runs-on: ubuntu-latest
@@ -19,6 +20,10 @@ jobs:
         run: python -m src.commons_dog_discovery --query "dog,puppy,dogs playing,puppy playing,canine,dog running,dog tricks,dog jumping" --limit 50 --output /tmp/commons_candidates.json
       - name: Create real-source shortlist
         run: python -m src.commons_candidate_shortlist --input /tmp/commons_candidates.json --output /tmp/commons_shortlist.json --limit 30
+      - name: Install video probe tools
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download and probe bounded real source sample
+        run: python -m src.commons_technical_probe --input /tmp/commons_shortlist.json --output-dir /tmp/commons_probe --max-files 8
       - name: Validate discovery output
         run: |
           python - <<'PY'
@@ -38,3 +43,4 @@ jobs:
           path: |
             /tmp/commons_candidates.json
             /tmp/commons_shortlist.json
+            /tmp/commons_probe/technical_probe.json
