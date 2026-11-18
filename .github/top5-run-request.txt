@@ -1,1 +1,1 @@
-2026-11-19 00:40 KST: verify bounded setup, review fingerprint bridge, rights fail-closed gate, three-provider discovery and source candidate generation.
+2026-11-19 00:50 KST: retry full three-provider pipeline after fixing topic-relevance regression test; retain rights and review blockers.
