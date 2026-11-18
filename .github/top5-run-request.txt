@@ -1,1 +1,1 @@
-2026-11-19 01:23 KST: validate query-balanced TOP5 source selection and review worksheet.
+2026-11-19 01:27 KST: verify rejected source replacement with topic-specific exclusion registry.
