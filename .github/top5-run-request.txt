@@ -3,3 +3,4 @@
 2026-11-19 17:37 KST: retry PM planner after FFmpeg installation timeout fix.
 2026-11-19 18:05 KST: rerun PM after rejecting fly and abstract-background false positives for soap-bubble topic; maintain manual render gate.
 2026-11-19 18:22 KST: user-requested automated unapproved MP4 review render after real source download; no fabricated editorial or rights approval.
+2026-11-19 18:34 KST: rerun after visual QA rejection registry (cat 39009,161726,143890) and static-scene filter; create review-only MP4.
