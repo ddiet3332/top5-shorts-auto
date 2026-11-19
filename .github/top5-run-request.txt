@@ -2,3 +2,4 @@
 2026-11-19 17:29 KST: user-requested early PM (18:00) topic planner and production attempt; keep scheduled 18:00 run unchanged.
 2026-11-19 17:37 KST: retry PM planner after FFmpeg installation timeout fix.
 2026-11-19 18:05 KST: rerun PM after rejecting fly and abstract-background false positives for soap-bubble topic; maintain manual render gate.
+2026-11-19 18:22 KST: user-requested automated unapproved MP4 review render after real source download; no fabricated editorial or rights approval.
