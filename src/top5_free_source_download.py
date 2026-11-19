@@ -26,7 +26,7 @@ def obvious_topic_mismatch(tags, topic):
  if "기계 움직임" in topic:
   machine=re.search(r"\b(machine(?:s|ry)?|gears?|engines?|robots?|pistons?)\b",tags)
   physical_context=re.search(
-   r"\b(construction|agricultur(?:e|al)|manufacturing|factory|tractor|excavator|lathe|harvester|crane|milling)\b",tags)
+   r"\b(construction|agricultur(?:e|al)|manufacturing|industrial|factory|tractor|excavator|lathe|harvester|crane|milling)\b",tags)
   generated=re.search(r"\b(doodle|abstract|scoreboard|countdown|wallpaper|3d|fantasy|fractal)\b",tags)
   return not (machine and physical_context) or bool(generated)
  if "고양이" in topic and any(x in tags for x in ("sleep", "sleeping", "coziness", "cozyness", "wallpaper", "background", "cat eyes", "kitten eyes")):
