@@ -25,7 +25,7 @@ def obvious_topic_mismatch(tags, topic):
   return not re.search(r"\bdomino(?:es|s)?\b",tags) or bool(re.search(r"\bjenga\b",tags))
  if "기계 움직임" in topic:
   return (not re.search(r"\b(machine(?:s|ry)?|gears?|engines?|robots?|pistons?)\b",tags)
-          or bool(re.search(r"\b(doodle|abstract|scoreboard|countdown)\b",tags)))
+          or bool(re.search(r"\b(doodle|abstract|scoreboard|countdown|wallpaper|3d)\b",tags)))
  if "고양이" in topic and any(x in tags for x in ("sleep", "sleeping", "coziness", "cozyness", "wallpaper", "background", "cat eyes", "kitten eyes")):
   return True
  if "비눗방울" in topic:
