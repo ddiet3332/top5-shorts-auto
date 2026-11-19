@@ -16,6 +16,17 @@ def decode(path):
 def creator_allowed(creator,counts,max_per_creator=2):
  """Do not let one uploader dominate a five-source TOP5 video."""
  return bool(creator) and counts[creator]<max_per_creator
+def obvious_topic_mismatch(tags, topic):
+ """Conservative negative filter: reject obvious lexical false positives, not approve footage."""
+ tags=str(tags or "").lower()
+ topic=str(topic or "")
+ if "비눗방울" in topic:
+  if any(x in tags for x in ("bubble-headed fly", "bladder-headed fly", "fly art", "insect", "confetti", "wallpaper", "backdrop", "bokeh")):
+   return True
+  if not any(x in tags for x in ("soap bubble", "soap bubbles", "blowing bubbles", "bubble blowing", "frozen soap")):
+   return True
+ return False
+
 def inspect(key,plan,out,fetch=fetch_hits,rejected=None):
  out.mkdir(parents=True,exist_ok=True)
  rejected=set(rejected or []);selected=plan["selected"];seen=set();rows=[];failures=[];creator_counts=collections.Counter();skipped_same_creator=0;query_counts=collections.Counter();attempted=set()
@@ -32,6 +43,7 @@ def inspect(key,plan,out,fetch=fetch_hits,rejected=None):
    ident=hit.get("id");tags=str(hit.get("tags") or "").lower();creator=str(hit.get("user") or "").strip()
    if not isinstance(ident,int) or ident in seen or ident in rejected:continue
    if not topic_metadata_match(tags,[query]):continue
+   if obvious_topic_mismatch(tags,selected["topic"]):continue
    seen.add(ident)
    if not creator_allowed(creator,creator_counts):
     skipped_same_creator+=1
