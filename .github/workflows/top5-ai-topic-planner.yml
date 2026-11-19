@@ -31,8 +31,9 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
-            echo 'FFmpeg absent from runner; install from cached apt package indexes'
-            timeout 110s sudo apt-get install -y -qq ffmpeg
+            echo 'FFmpeg is not preinstalled on this fresh runner; installing with bounded network retries'
+            timeout 75s sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 || echo 'apt index refresh timed out; using available indexes'
+            timeout 360s sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 ffmpeg
           fi
           command -v ffmpeg
           command -v ffprobe
