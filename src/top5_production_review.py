@@ -144,6 +144,10 @@ def write_report(out, report):
         lines.append(f"| {name} | {row['max']} | {value} |")
     if checks:
         lines.extend(["", f"기술 검사 결과 · `{json.dumps(checks, ensure_ascii=False)}`"])
+    if report.get("topic_attempts"):
+        lines.extend(["", "원본 확보 기록", ""])
+        lines.extend(f"- {item['topic']} · {item['downloaded_valid_sources']}/5"
+                     for item in report["topic_attempts"])
     if report.get("failure"):
         lines.extend(["", f"실패 원인 · {report['failure']}"])
     (out / "QA.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -173,7 +177,8 @@ def produce(plan_path, source_dir, out, review_path=None, qa_path=None, rights_p
     final = out / VIDEO
     final.unlink(missing_ok=True)
     plan = read(plan_path)
-    sources = read(source_dir / "SOURCE_DOWNLOAD_QA.json")["sources"]
+    acquisition = read(source_dir / "SOURCE_DOWNLOAD_QA.json")
+    sources = acquisition["sources"]
     topic = plan["selected"]["topic"]
     report = {"topic": topic, "status": "TECHNICAL_FAILED", "file": None, "sha256": None,
               "editorial_score": None, "editorial_status": "EDITORIAL_UNVERIFIED",
@@ -181,7 +186,7 @@ def produce(plan_path, source_dir, out, review_path=None, qa_path=None, rights_p
               "rankings_verified": False,
               "scorecard": {key: {"max": value, "status": "UNVERIFIED", "score": None}
                             for key, value in CATEGORIES.items()},
-              "technical_checks": {}, "attempts": []}
+              "technical_checks": {}, "attempts": [], "topic_attempts": acquisition.get("topic_attempts", [])}
     save(out / "RIGHTS_EVIDENCE.json", {"status": "RIGHTS_UNVERIFIED", "sources": sources,
                                        "audio": "프로젝트 내 합성 음악 및 효과음",
                                        "reused_content_status": "UNVERIFIED"})

@@ -100,7 +100,7 @@ jobs:
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-        run: python3 src/top5_free_source_download.py
+        run: python3 src/top5_free_source_download.py --topic-attempts 3
       - name: Generate visual review contact sheet from real source frames
         run: python3 src/top5_source_contact_sheet.py
       - name: Generate source-linked manual review worksheet
@@ -138,7 +138,7 @@ jobs:
           else
             echo '## TOP5 제작 중단 · MP4 없음' >> "$GITHUB_STEP_SUMMARY"
             if [[ -f output/top5_source_qa/SOURCE_DOWNLOAD_QA.json ]]; then
-              jq -r '"확보 원본 · \(.downloaded_valid_sources)/5"' output/top5_source_qa/SOURCE_DOWNLOAD_QA.json >> "$GITHUB_STEP_SUMMARY"
+              jq -r '.topic_attempts[] | "- \(.topic) · 원본 \(.downloaded_valid_sources)/5"' output/top5_source_qa/SOURCE_DOWNLOAD_QA.json >> "$GITHUB_STEP_SUMMARY"
             fi
             mkdir -p output/top5_v06_review
             cp "$GITHUB_STEP_SUMMARY" output/top5_v06_review/QA.md

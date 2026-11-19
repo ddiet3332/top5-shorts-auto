@@ -4,6 +4,7 @@ No automatic editorial score, rights clearance, or publication approval.
 """
 import argparse,collections,datetime,hashlib,json,os,re,subprocess,urllib.parse,urllib.request
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from pixabay_dog_preview import download,probe
 from top5_topic_relevance_gate import topic_metadata_match
 
@@ -143,20 +144,58 @@ def fallback(discovery,queries,pexels_key):
     yield {**row,"file_url":variant["link"],"title":slug.replace("-"," "),
            "query":query,"license":"Pexels License","license_url":"https://www.pexels.com/license/"}
  yield from discovery.get("candidates",[])
+
+
+def acquire(key, pexels_key, plan, out, registry, prepare, discovery, max_topics):
+ """Try the planned topic and a bounded number of alternatives, keeping provenance."""
+ from top5_public_video_discovery import discover
+ selected = plan["selected"]
+ candidates = [selected, *plan.get("alternatives", [])][:max_topics]
+ attempts = []
+ out.mkdir(parents=True, exist_ok=True)
+ for index, candidate in enumerate(candidates):
+  queries = candidate["search_queries"]
+  rejected = registry.get(candidate["topic"], [])
+  if not isinstance(rejected, list) or any(type(x) is not int for x in rejected):
+   raise ValueError("원본 제외 목록 형식이 올바르지 않습니다")
+
+  def extra():
+   yield from fallback(discovery if index == 0 else discover(queries), queries, pexels_key)
+
+  with TemporaryDirectory(dir=out) as folder:
+   work = Path(folder)
+   report = inspect(key, {**plan, "selected": candidate}, work, rejected=rejected,
+                    prepare=prepare, extra=extra())
+   attempts.append({"topic":candidate["topic"],"status":report["status"],
+                    "downloaded_valid_sources":report["downloaded_valid_sources"],
+                    "failures":report["failures"]})
+   if report["downloaded_valid_sources"] == 5:
+    for row in report["sources"]:
+     (work / row["file"]).replace(out / row["file"])
+    if index:
+     plan["selected"] = {**candidate, "selection_method":"source_availability_fallback",
+                         "estimated_topic_score":None}
+    break
+ plan["source_attempts"] = attempts
+ report["topic_attempts"] = attempts
+ (out/"SOURCE_DOWNLOAD_QA.json").write_text(
+  json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+ return report
+
+
 def main():
- p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--output",default="output/top5_source_qa");p.add_argument("--rejections",default="review/rejected_source_ids.json");a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--output",default="output/top5_source_qa");p.add_argument("--rejections",default="review/rejected_source_ids.json");p.add_argument("--topic-attempts",type=int,choices=(1,2,3),default=1);a=p.parse_args()
  key=os.environ.get("PIXABAY_API_KEY")
  try:
-  from top5_production_review import prepare_source, read
+  from top5_production_review import prepare_source, read, save
   plan=read(Path(a.plan))
   registry_path=Path(a.rejections)
   registry=read(registry_path) if registry_path.is_file() else {}
-  rejected=registry.get(plan["selected"]["topic"],[])
-  if not isinstance(rejected,list) or any(type(x) is not int for x in rejected):raise ValueError("Invalid rejected source IDs")
   discovery_path=Path("output/top5_external_sources/DISCOVERY.json")
   discovery=read(discovery_path) if discovery_path.is_file() else {}
-  extra=fallback(discovery,plan["selected"]["search_queries"],os.environ.get("PEXELS_API_KEY"))
-  r=inspect(key,plan,Path(a.output),rejected=rejected,prepare=prepare_source,extra=extra)
+  r=acquire(key,os.environ.get("PEXELS_API_KEY"),plan,Path(a.output),registry,
+            prepare_source,discovery,a.topic_attempts)
+  save(Path(a.plan),plan)
  except Exception as e:raise SystemExit("BLOCKED_SOURCE_QA_ERROR: "+type(e).__name__)
  print(json.dumps({"status":r["status"],"downloaded_valid_sources":r["downloaded_valid_sources"]}))
  if r["downloaded_valid_sources"]!=5:raise SystemExit("BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES")

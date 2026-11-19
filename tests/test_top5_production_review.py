@@ -8,7 +8,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import top5_production_review as review
 from top5_free_topic_planner import trend_matches
-from top5_free_source_download import obvious_topic_mismatch
+from top5_free_source_download import acquire, obvious_topic_mismatch
 from top5_watchdog_artifacts import inspect_artifact
 
 
@@ -49,6 +49,28 @@ class ProductionReviewTests(unittest.TestCase):
         self.assertTrue(obvious_topic_mismatch("diamonds, rain, falling", topic))
         self.assertTrue(obvious_topic_mismatch("jenga, blocks, domino", topic))
         self.assertFalse(obvious_topic_mismatch("dominoes, game, tiles, falling", topic))
+
+    def test_original_topic_shortfall_preserved_after_fallback(self):
+        def fake_download(key, plan, work, **kwargs):
+            topic = plan["selected"]["topic"]
+            rows = []
+            if topic == "폭포":
+                for index in range(5):
+                    name = f"source_{index}.mp4"
+                    (work / name).write_bytes(bytes([index]))
+                    rows.append({"file": name})
+            return {"status": "PASS" if rows else "BLOCKED", "downloaded_valid_sources": len(rows),
+                    "sources": rows, "failures": []}
+
+        plan = {"selected": {"topic": "도미노", "search_queries": ["domino"]},
+                "alternatives": [{"topic": "폭포", "search_queries": ["waterfall"]}]}
+        with TemporaryDirectory() as folder:
+            out = Path(folder)
+            with patch("top5_free_source_download.inspect", side_effect=fake_download):
+                report = acquire(None, None, plan, out, {}, None, {}, 2)
+            self.assertEqual(plan["selected"]["topic"], "폭포")
+            self.assertEqual([item["downloaded_valid_sources"] for item in report["topic_attempts"]], [0, 5])
+            self.assertTrue(all((out / row["file"]).exists() for row in report["sources"]))
 
     def test_audio_repair_rechecks_candidate_and_stops_on_repeat(self):
         with TemporaryDirectory() as folder:
