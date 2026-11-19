@@ -38,22 +38,23 @@ def obvious_topic_mismatch(tags, topic):
    return True
  return False
 
-def inspect(key,plan,out,fetch=fetch_hits,rejected=None,*,prepare=None,extra=()):
+def inspect(key,plan,out,fetch=fetch_hits,rejected=None,*,prepare=None,extra=(),reserve=0):
  out.mkdir(parents=True,exist_ok=True)
  rejected=set(rejected or []);selected=plan["selected"];seen=set();rows=[];failures=[];creator_counts=collections.Counter();skipped_same_creator=0;query_counts=collections.Counter();attempted=set()
  cache={}
+ target=5+reserve
  for query in list(selected["search_queries"])+list(selected["search_queries"]):
-  if len(rows)>=5:break
+  if len(rows)>=target:break
   # First pass distributes sources across queries; second pass fills any shortfall.
   first_pass=sum(query_counts.values())<5 and not all(q in attempted for q in selected["search_queries"])
-  max_this_query=3 if first_pass and len(selected["search_queries"])>1 else 5
+  max_this_query=3 if first_pass and len(selected["search_queries"])>1 else target
   attempted.add(query)
   try:
    if query not in cache:cache[query]=fetch(key,query) if key else []
    hits=cache[query]
   except Exception as e:failures.append({"query":query,"reason":type(e).__name__});continue
   for hit in hits:
-   if len(rows)>=5 or query_counts[query]>=max_this_query:break
+   if len(rows)>=target or query_counts[query]>=max_this_query:break
    ident=hit.get("id");tags=str(hit.get("tags") or "").lower();creator=str(hit.get("user") or "").strip()
    if not isinstance(ident,int) or ident in seen or ident in rejected:continue
    if not topic_metadata_match(tags,[query]):continue
@@ -84,8 +85,8 @@ def inspect(key,plan,out,fetch=fetch_hits,rejected=None,*,prepare=None,extra=())
    except Exception as e:
     failures.append({"id":ident,"reason":str(e) if isinstance(e,ValueError) else type(e).__name__});path.unlink(missing_ok=True)
  if prepare and len(rows)<5:
-  supplement(extra,out,prepare,rows,failures,creator_counts,query_counts,selected["topic"])
- report={"topic":selected["topic"],"category":selected["category"],"status":"DOWNLOADED_5_TECHNICALLY_VALID_SOURCES_REVIEW_ONLY" if len(rows)==5 else "BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES","downloaded_valid_sources":len(rows),"max_sources_per_creator":2,"creator_counts":dict(creator_counts),"query_counts":dict(query_counts),"rejected_source_ids":sorted(rejected),"skipped_creator_limit_or_missing":skipped_same_creator,"sources":rows,"failures":failures[:20],"editorial_score":None,"rights_verified":False,"publication_approved":False,"final_video_created":False}
+  supplement(extra,out,prepare,rows,failures,creator_counts,query_counts,selected["topic"],target)
+ report={"topic":selected["topic"],"category":selected["category"],"status":"DOWNLOADED_5_TECHNICALLY_VALID_SOURCES_REVIEW_ONLY" if len(rows)>=5 else "BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES","downloaded_valid_sources":min(len(rows),5),"max_sources_per_creator":2,"creator_counts":dict(creator_counts),"query_counts":dict(query_counts),"rejected_source_ids":sorted(rejected),"skipped_creator_limit_or_missing":skipped_same_creator,"sources":rows[:5],"reserve_sources":rows[5:],"failures":failures[:20],"editorial_score":None,"rights_verified":False,"publication_approved":False,"final_video_created":False}
  (out/"SOURCE_DOWNLOAD_QA.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
  return report
 
@@ -96,10 +97,10 @@ def evidence(url, license_name, terms, attribution):
          "downloaded_at":datetime.datetime.now(datetime.timezone.utc).isoformat()}
 
 
-def supplement(candidates,out,prepare,rows,failures,creators,queries,topic):
+def supplement(candidates,out,prepare,rows,failures,creators,queries,topic,target=5):
  from top5_public_video_download_probe import fetch_limited
  for index,item in enumerate(candidates):
-  if len(rows)==5 or index>=30:break
+  if len(rows)>=target or index>=30:break
   provider=item["provider"]
   if "error" in item:
    failures.append(item)
@@ -171,12 +172,12 @@ def acquire(key, pexels_key, plan, out, registry, prepare, discovery, max_topics
   with TemporaryDirectory(dir=out) as folder:
    work = Path(folder)
    report = inspect(key, {**plan, "selected": candidate}, work, rejected=rejected,
-                    prepare=prepare, extra=extra())
+                    prepare=prepare, extra=extra(), reserve=2)
    attempts.append({"topic":candidate["topic"],"status":report["status"],
                     "downloaded_valid_sources":report["downloaded_valid_sources"],
                     "failures":report["failures"]})
    if report["downloaded_valid_sources"] == 5:
-    for row in report["sources"]:
+    for row in [*report["sources"], *report.get("reserve_sources", [])]:
      (work / row["file"]).replace(out / row["file"])
     if index:
      plan["selected"] = {**candidate, "selection_method":"source_availability_fallback",

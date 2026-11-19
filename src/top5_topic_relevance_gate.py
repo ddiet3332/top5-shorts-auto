@@ -15,4 +15,5 @@ def topic_metadata_match(tags,queries):
  groups=topic_keywords(queries)
  if not groups:return False
  words=set(re.findall(r"[a-z]{3,}",str(tags).lower()))
+ if "dominoes" in words:words.add("domino")
  return all(any(w in words or (w.endswith("s") and w[:-1] in words) or (w+"s" in words) for w in group) for group in groups)

@@ -34,7 +34,7 @@ class V28NoClutterLayoutTests(unittest.TestCase):
             cues=build_ass(p)
             self.assertEqual(len([c for c in cues if ",Caption," in c]),6)
             self.assertEqual(len([c for c in cues if ",Outro," in c]),0)
-            text=p.read_text()
+            text=p.read_text(encoding="utf-8")
             self.assertIn("0:00:02.00",text)
             self.assertNotIn("0:00:27.00,Outro",text)
             self.assertNotIn("고양이 돌발 행동 TOP5",text)
@@ -43,9 +43,9 @@ class V28NoClutterLayoutTests(unittest.TestCase):
             self.assertTrue(any("0:00:00.00,0:00:27.00,MainTopic" in c for c in cues))
             self.assertTrue(any("0:00:00.00,0:00:27.00,TopFive" in c for c in cues))
             self.assertIn("Style: Caption,NanumSquare,60,",text)
-            # V28.3 template is approved: caption font only; placement and title remain fixed.
+            # The shared legacy heading was enlarged in 6fc1ae5. V28 still uses its original anchor.
             self.assertIn("504,1190",text)
-            self.assertIn("Style: MainTopic,NanumSquare,59,",text)
+            self.assertIn("Style: MainTopic,NanumSquare,78,",text)
             self.assertIn("고양이들의 황당한 순간",text)
             self.assertIn("540,140",text)
             self.assertIn("540,214",text)

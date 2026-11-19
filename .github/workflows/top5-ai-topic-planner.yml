@@ -127,9 +127,14 @@ jobs:
           if [[ "$REVIEW_APPROVED" == true ]]; then
             args+=(--reviewed-captions reviewed_top5_captions.json)
           fi
+          if [[ -f review/production_editorial_review.json ]]; then
+            args+=(--editorial-review review/production_editorial_review.json)
+          fi
+          if [[ -f review/production_rights_review.json ]]; then
+            args+=(--rights-review review/production_rights_review.json)
+          fi
           python3 src/top5_generic_v06_preview.py "${args[@]}"
           python3 src/top5_independent_review_qa.py
-          python3 src/top5_qa_frames.py --video output/top5_v06_review/TOP5_REVIEW_1080x1920.mp4 --output output/top5_v06_review/FRAME_REVIEW --count 15
       - name: 제작 결과 요약
         if: always()
         run: |

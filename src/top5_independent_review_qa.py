@@ -16,13 +16,20 @@ def source_diversity_pass(creators,max_per_creator=2):
  return len(creators)==5 and all(isinstance(x,str) and x.strip() for x in creators) and max(collections.Counter(creators).values(),default=0)<=max_per_creator
 def audit(source_dir,render_dir):
  source_dir=Path(source_dir);render_dir=Path(render_dir)
- src=json.loads((source_dir/"SOURCE_DOWNLOAD_QA.json").read_text())
- render=json.loads((render_dir/"GENERIC_V06_QA.json").read_text())
+ src=json.loads((source_dir/"SOURCE_DOWNLOAD_QA.json").read_text(encoding="utf-8"))
+ render=json.loads((render_dir/"GENERIC_V06_QA.json").read_text(encoding="utf-8"))
  video=render_dir/render["file"]
  probe=json.loads(subprocess.check_output(["ffprobe","-v","error","-count_frames","-select_streams","v:0","-show_entries","stream=width,height,r_frame_rate,nb_read_frames","-show_entries","format=duration","-of","json",str(video)],text=True))
  stream=probe["streams"][0]
  sources=src.get("sources",[])
- ids=[s.get("id") for s in sources]; hashes=[s.get("sha256") for s in sources]
+ evidence_path=render_dir/"RIGHTS_EVIDENCE.json"
+ if render.get("timeline") and evidence_path.is_file():
+  evidence=json.loads(evidence_path.read_text(encoding="utf-8"))
+  sources=evidence["sources"]
+  if (evidence.get("video_sha256") != render.get("sha256") or
+      [row["source_sha256"] for row in render["timeline"]] != [row["sha256"] for row in sources]):
+   raise SystemExit("MP4와 원본 사용 구간의 연결 검증 실패")
+ hashes=[s.get("sha256") for s in sources]
  creators=[s.get("creator","unknown") for s in sources]
  counts=collections.Counter(creators)
  duration = 25 if render["file"] == "TOP5_V06_GENERIC_REVIEW_25s.mp4" else 30

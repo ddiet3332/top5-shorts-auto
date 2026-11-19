@@ -31,6 +31,12 @@ def load_reviewed_captions(review_path,sources):
   if not isinstance(caption,str) or not 3<=len(caption.strip())<=38:raise ValueError("Invalid caption")
   result.append((name.strip(),caption.strip()))
  return result
+
+
+class LayoutError(ValueError):
+    pass
+
+
 def fit_text(draw, text, center, bounds, size, color, stroke=0):
     for font_size in range(size, 23, -2):
         font = ImageFont.truetype(FONT, font_size)
@@ -39,7 +45,7 @@ def fit_text(draw, text, center, bounds, size, color, stroke=0):
             draw.text(center, text, font=font, fill=color, anchor="mm",
                       stroke_width=stroke, stroke_fill="black")
             return
-    raise ValueError("자막 안전 영역에 맞지 않습니다")
+    raise LayoutError("자막 안전 영역에 맞지 않습니다")
 
 
 def overlay(path, title, rank, caption):

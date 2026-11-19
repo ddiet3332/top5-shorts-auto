@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 class AutoV29Tests(unittest.TestCase):
     def test_locked_design(self):
         self.assertIn("Style: Caption,NanumSquare,60,",ASS_HEAD)
-        self.assertIn("Style: MainTopic,NanumSquare,59,",ASS_HEAD)
+        self.assertIn("Style: MainTopic,NanumSquare,78,",ASS_HEAD)
         self.assertEqual((W,H,FPS),(1080,1920,24))
         self.assertEqual(sum(sec for _,sec in SEGMENTS),30)
         self.assertEqual(CUT_LENGTHS["rank1"],6)
@@ -41,10 +41,10 @@ class AutoV29Tests(unittest.TestCase):
         with TemporaryDirectory() as t:
             out=Path(t)/"dynamic.ass"
             lines=build_dynamic_subtitles(out,topic,items)
-            content=out.read_text()
+            content=out.read_text(encoding="utf-8")
             self.assertIn("Style: Caption,NanumSquare,60,",content)
-            self.assertIn("540,140",content)
-            self.assertIn("540,214",content)
+            self.assertIn(r"\pos(540,112)}{\fs82\bord3}고양이 돌발 행동",content)
+            self.assertIn(r"\pos(540,220)}{\fs100\bord2}TOP5",content)
             self.assertIn("504,1190",content)
             self.assertEqual(sum(",Caption," in x for x in lines),6)
             self.assertIn("고양이 돌발 행동",content)
