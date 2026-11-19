@@ -8,6 +8,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import top5_production_review as review
 from top5_free_topic_planner import trend_matches
+from top5_free_source_download import obvious_topic_mismatch
 from top5_watchdog_artifacts import inspect_artifact
 
 
@@ -42,6 +43,12 @@ class ProductionReviewTests(unittest.TestCase):
     def test_trend_selection_uses_matching_catalog_keywords(self):
         self.assertEqual(trend_matches("놀라운 번개 장면 TOP5", ["축구", "서울 낙뢰"]),
                          ["서울 낙뢰"])
+
+    def test_domino_query_rejects_falling_objects_and_jenga(self):
+        topic = "신기한 도미노 장면 TOP5"
+        self.assertTrue(obvious_topic_mismatch("diamonds, rain, falling", topic))
+        self.assertTrue(obvious_topic_mismatch("jenga, blocks, domino", topic))
+        self.assertFalse(obvious_topic_mismatch("dominoes, game, tiles, falling", topic))
 
     def test_audio_repair_rechecks_candidate_and_stops_on_repeat(self):
         with TemporaryDirectory() as folder:

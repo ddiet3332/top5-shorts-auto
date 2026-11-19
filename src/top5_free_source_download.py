@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download five genuine Pixabay source clips and inspect technical integrity.
+"""Download five genuine provider source clips and inspect technical integrity.
 No automatic editorial score, rights clearance, or publication approval.
 """
 import argparse,collections,datetime,hashlib,json,os,re,subprocess,urllib.parse,urllib.request
@@ -20,6 +20,8 @@ def obvious_topic_mismatch(tags, topic):
  """Conservative negative filter: reject obvious lexical false positives, not approve footage."""
  tags=str(tags or "").lower()
  topic=str(topic or "")
+ if "도미노" in topic:
+  return not re.search(r"\bdomino(?:es|s)?\b",tags) or bool(re.search(r"\bjenga\b",tags))
  if "고양이" in topic and any(x in tags for x in ("sleep", "sleeping", "coziness", "cozyness", "wallpaper", "background", "cat eyes", "kitten eyes")):
   return True
  if "비눗방울" in topic:
@@ -48,13 +50,16 @@ def inspect(key,plan,out,fetch=fetch_hits,rejected=None,*,prepare=None,extra=())
    ident=hit.get("id");tags=str(hit.get("tags") or "").lower();creator=str(hit.get("user") or "").strip()
    if not isinstance(ident,int) or ident in seen or ident in rejected:continue
    if not topic_metadata_match(tags,[query]):continue
-   if obvious_topic_mismatch(tags,selected["topic"]):continue
+   if obvious_topic_mismatch(tags,selected["topic"]):
+    seen.add(ident)
+    failures.append({"id":ident,"reason":"주제의 핵심 대상을 확인할 수 없는 메타데이터"})
+    continue
    seen.add(ident)
    if not creator_allowed(creator,creator_counts):
     skipped_same_creator+=1
     continue
    if any(x in tags for x in ("cartoon","animation","animated","cgi","illustration","3d render","motion graphics","motion graphic","ai generated","ai-generated","artificial intelligence","generative ai")):continue
-   if float(hit.get("duration") or 0)<5.3:continue
+   if float(hit.get("duration") or 0)<(6 if prepare else 5.3):continue
    variants=hit.get("videos") or {}
    video=next((variants.get(k) for k in ("medium","small","large") if (variants.get(k) or {}).get("url")),None)
    if not video:continue
