@@ -56,16 +56,16 @@ def render(plan_path,source_dir,out_dir,review_path=None):
  run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(concat),"-f","lavfi","-i","anullsrc=r=48000:cl=stereo","-t","25","-map","0:v:0","-map","1:a:0","-c:v","copy","-c:a","aac","-b:a","96k",str(base)])
  for i in range(5):
   im=Image.new("RGBA",(1080,1920),(0,0,0,0));d=ImageDraw.Draw(im)
-  d.rectangle((0,0,1080,320),fill=(0,0,0,255))
-  d.text((540,157),title,font=font(46),fill="#FFDB21",anchor="mm")
-  d.text((540,238),"TOP5",font=font(70),fill="white",anchor="mm")
-  d.rounded_rectangle((0,335,360,1230),radius=12,fill=(0,0,0,205))
+  d.rectangle((0,0,1080,320),fill=(255,255,255,245))
+  d.text((540,157),title,font=font(46),fill="#111111",anchor="mm")
+  d.text((540,238),"TOP5",font=font(70),fill="#E53333",anchor="mm")
+  d.rounded_rectangle((0,335,360,1230),radius=12,fill=(255,255,255,220))
   for rank in range(5,5-i-1,-1):
-   y=425+(rank-1)*160;color="#FFDB21" if rank==5-i else "white"
-   d.text((20,y),f"{rank}위",font=font(48),fill=color,stroke_width=1,stroke_fill="black")
+   y=425+(rank-1)*160;color="#E53333" if rank==5-i else "#111111"
+   d.text((20,y),f"{rank}위",font=font(48),fill=color,stroke_width=1,stroke_fill="white")
    d.text((115,y+10),labels[5-rank],font=font(25),fill=color)
-  d.rounded_rectangle((95,1277,985,1411),radius=16,fill=(0,0,0,210))
-  d.text((540,1344),captions[i],font=font(43),fill="white",anchor="mm")
+  d.rounded_rectangle((95,1277,985,1411),radius=16,fill=(245,245,245,235))
+  d.text((540,1344),captions[i],font=font(43),fill="#111111",anchor="mm")
   d.text((540,1850),"장면·순위·권리 검수 전",font=font(29),fill="white",anchor="mm",stroke_width=2,stroke_fill="black")
   im.save(out/("overlay_%d.png"%i))
  inputs=["-i",str(base)]
