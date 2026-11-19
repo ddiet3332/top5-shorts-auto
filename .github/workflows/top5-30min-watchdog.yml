@@ -73,6 +73,43 @@ jobs:
             python -c 'import json,os,pathlib,sys; sys.path.insert(0,"src"); from top5_publication_gate import evaluate; root=pathlib.Path("/tmp/top5-watchdog/review"); qa=next(iter(root.rglob("editorial_qa.json")),None); rights=next(iter(root.rglob("independent_rights_review.json")),None); video=next(iter(root.rglob("TOP5_AUTO_V29_REVIEW_1080x1920.mp4")),None); read=lambda p: json.loads(p.read_text()) if p else {}; result=evaluate(read(qa),read(rights),video if video else root/"missing.mp4"); summary=pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]); summary.open("a").write("80+ verified against MP4: "+str(result["report_80"])+"; rights passed: "+str(result["rights_gate_passed"])+"; YouTube upload: DISABLED\\n")'
             exit 0
           fi
+      - name: Inspect general TOP5 topic production independently
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          runs=$(gh api "repos/$GH_REPO/actions/workflows/top5-ai-topic-planner.yml/runs?per_page=10")
+          latest=$(jq -c '.workflow_runs[0] // empty' <<<"$runs")
+          if [[ -z "$latest" ]]; then
+            echo 'GENERAL TOP5: no topic-production run found; not verified.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          id=$(jq -r '.id' <<<"$latest")
+          status=$(jq -r '.status' <<<"$latest")
+          conclusion=$(jq -r '.conclusion // "pending"' <<<"$latest")
+          echo "GENERAL TOP5 run #$id: status=$status; conclusion=$conclusion" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$status" != completed || "$conclusion" != success ]]; then
+            echo 'GENERAL TOP5: source acquisition and MP4 output are NOT verified.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          jobs=$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100")
+          if jq -e '.jobs[].steps[] | select(.name == "Render unapproved review MP4 for independent visual assessment" and .conclusion == "success")' <<<"$jobs" >/dev/null; then
+            echo 'GENERAL TOP5: review-only MP4 render step succeeded; NOT a publishable final.' >> "$GITHUB_STEP_SUMMARY"
+          elif jq -e '.jobs[].steps[] | select(.name == "Render V06 human-reviewed video" and .conclusion == "success")' <<<"$jobs" >/dev/null; then
+            echo 'GENERAL TOP5: human-reviewed render step succeeded; editorial/rights approval still separate.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'GENERAL TOP5: no successful MP4 render step; inspect workflow logs.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          artifacts=$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100")
+          if jq -e '[.artifacts[] | select(.expired == false and (.name | startswith("top5-topic-plan-")))] | length > 0' <<<"$artifacts" >/dev/null; then
+            echo 'GENERAL TOP5: downloadable review artifact exists; contents not independently inspected by watchdog.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'GENERAL TOP5: review artifact missing or expired.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo 'GENERAL TOP5: editorial score and source rights NOT automatically certified. YouTube publishing remains disabled.' >> "$GITHUB_STEP_SUMMARY"
       - name: Dispatch next review build after completed cycle
         if: success()
         env:
