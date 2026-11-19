@@ -20,6 +20,8 @@ def obvious_topic_mismatch(tags, topic):
  """Conservative negative filter: reject obvious lexical false positives, not approve footage."""
  tags=str(tags or "").lower()
  topic=str(topic or "")
+ if "고양이" in topic and any(x in tags for x in ("sleep", "sleeping", "coziness", "cozyness", "wallpaper", "background", "cat eyes", "kitten eyes")):
+  return True
  if "비눗방울" in topic:
   if any(x in tags for x in ("bubble-headed fly", "bladder-headed fly", "fly art", "insect", "confetti", "wallpaper", "backdrop", "bokeh")):
    return True
