@@ -55,6 +55,7 @@ class ProductionReviewTests(unittest.TestCase):
         self.assertTrue(obvious_topic_mismatch("gear, industry, machine, abstract, doodle", topic))
         self.assertTrue(obvious_topic_mismatch("numbers, counter, mechanical, scoreboard", topic))
         self.assertTrue(obvious_topic_mismatch("cylinders, mechanical, engine, wallpaper", topic))
+        self.assertTrue(obvious_topic_mismatch("steampunk, clock, gears, time machine, fantasy", topic))
         self.assertFalse(obvious_topic_mismatch("field, machinery, combine, agriculture", topic))
 
     def test_original_topic_shortfall_preserved_after_fallback(self):
