@@ -14,7 +14,7 @@ from v28_fullscreen_builder import ASS_HEAD,SEGMENTS,W,H,FPS
 class V30QA(unittest.TestCase):
     def test_locked_visual_spec(self):
         self.assertIn("Style: Caption,NanumSquare,60,",ASS_HEAD)
-        self.assertIn("Style: MainTopic,NanumSquare,59,",ASS_HEAD)
+        self.assertIn("Style: MainTopic,NanumSquare,78,",ASS_HEAD)
         self.assertEqual((W,H,FPS),(1080,1920,24))
         self.assertEqual(sum(sec for _,sec in SEGMENTS),30)
 

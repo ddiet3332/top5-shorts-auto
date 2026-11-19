@@ -16,7 +16,7 @@ def extract(video, outdir, count=15):
         t=duration*(i+0.5)/count
         target=outdir/f"frame_{i+1:02d}.jpg"
         subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-ss",f"{t:.3f}","-i",str(video),"-frames:v","1","-vf","scale=360:-2","-y",str(target)],check=True)
-        frames.append({"time_seconds":round(t,3),"path":str(target)})
+        frames.append({"time_seconds":round(t,3),"path":str(target),"file":target.name})
     report={"video":video.name,"duration_seconds":duration,"frame_count":len(frames),
             "frames":frames,"visual_editorial_review_completed":False,
             "editorial_score_100":None,"publication_approved":False}

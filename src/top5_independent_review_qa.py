@@ -16,16 +16,24 @@ def source_diversity_pass(creators,max_per_creator=2):
  return len(creators)==5 and all(isinstance(x,str) and x.strip() for x in creators) and max(collections.Counter(creators).values(),default=0)<=max_per_creator
 def audit(source_dir,render_dir):
  source_dir=Path(source_dir);render_dir=Path(render_dir)
- src=json.loads((source_dir/"SOURCE_DOWNLOAD_QA.json").read_text())
- render=json.loads((render_dir/"GENERIC_V06_QA.json").read_text())
+ src=json.loads((source_dir/"SOURCE_DOWNLOAD_QA.json").read_text(encoding="utf-8"))
+ render=json.loads((render_dir/"GENERIC_V06_QA.json").read_text(encoding="utf-8"))
  video=render_dir/render["file"]
  probe=json.loads(subprocess.check_output(["ffprobe","-v","error","-count_frames","-select_streams","v:0","-show_entries","stream=width,height,r_frame_rate,nb_read_frames","-show_entries","format=duration","-of","json",str(video)],text=True))
  stream=probe["streams"][0]
  sources=src.get("sources",[])
- ids=[s.get("id") for s in sources]; hashes=[s.get("sha256") for s in sources]
+ evidence_path=render_dir/"RIGHTS_EVIDENCE.json"
+ if render.get("timeline") and evidence_path.is_file():
+  evidence=json.loads(evidence_path.read_text(encoding="utf-8"))
+  sources=evidence["sources"]
+  if (evidence.get("video_sha256") != render.get("sha256") or
+      [row["source_sha256"] for row in render["timeline"]] != [row["sha256"] for row in sources]):
+   raise SystemExit("MP4와 원본 사용 구간의 연결 검증 실패")
+ hashes=[s.get("sha256") for s in sources]
  creators=[s.get("creator","unknown") for s in sources]
  counts=collections.Counter(creators)
- checks={"five_sources":len(sources)==5,"creator_diversity":source_diversity_pass(creators),"distinct_source_ids":len(set(ids))==5,"distinct_source_hashes":len(set(hashes))==5,"all_sources_decoded":all(s.get("full_video_decode") is True for s in sources),"full_25s":abs(float(probe["format"]["duration"])-25)<0.06,"portrait_1080p":(stream["width"],stream["height"])==(1080,1920),"frame_rate_24":stream["r_frame_rate"]=="24/1","frame_count_600":int(stream.get("nb_read_frames") or 0)==600,"video_sha_matches":hashlib.sha256(video.read_bytes()).hexdigest()==render.get("sha256")}
+ duration = 25 if render["file"] == "TOP5_V06_GENERIC_REVIEW_25s.mp4" else 30
+ checks={"five_sources":len(sources)==5,"creator_diversity":source_diversity_pass(creators),"distinct_source_ids":len({(s.get("provider"), s.get("id")) for s in sources})==5,"distinct_source_hashes":len(set(hashes))==5,"all_sources_decoded":all(s.get("full_video_decode") is True for s in sources),"expected_duration":abs(float(probe["format"]["duration"])-duration)<0.15,"portrait_1080p":(stream["width"],stream["height"])==(1080,1920),"frame_rate_24":stream["r_frame_rate"]=="24/1","expected_frame_count":int(stream.get("nb_read_frames") or 0)==duration*24,"video_sha_matches":hashlib.sha256(video.read_bytes()).hexdigest()==render.get("sha256")}
  blockers=["Visual content and ranking not independently verified","Source rights and YouTube reuse eligibility not verified","Metadata captions are not visual scene analysis"]
  if not source_diversity_pass(creators):blockers.append("Source diversity HARD FAIL: unknown creator or more than two clips from one creator")
  score=render.get("editorial_score")

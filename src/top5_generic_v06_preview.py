@@ -2,10 +2,10 @@
 """Generic V06 TOP5 REVIEW preview from five real decoded source files.
 No fabricated editorial captions or publication approval.
 """
-import argparse,hashlib,json,subprocess,re
+import argparse,json,os,subprocess
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageFont
-FONT="/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf"
+FONT=os.environ.get("TOP5_KOREAN_FONT", "/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf")
 def run(cmd,timeout=180):
  subprocess.run(cmd,check=True,timeout=timeout,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
 TAG_KO={"butterfly":"나비","swallowtail":"호랑나비","macro":"접사","close up":"근접 촬영","flower":"꽃","wildflower":"들꽃","blossom":"꽃","bloom":"개화","nature":"자연","grass":"풀밭","field":"들판","summer":"여름","insect":"곤충","insects":"곤충","plant":"식물","plants":"식물","beautiful":"아름다운 순간"}
@@ -19,7 +19,7 @@ def source_label(source):
  return " · ".join(labels[:2]) or "나비 영상"
 def load_reviewed_captions(review_path,sources):
  if not review_path:return None
- review=json.loads(Path(review_path).read_text())
+ review=json.loads(Path(review_path).read_text(encoding="utf-8"))
  if review.get("verified_by_human") is not True:raise ValueError("Caption review must be explicitly human verified")
  entries=review.get("entries")
  if not isinstance(entries,list) or len(entries)!=5:raise ValueError("Exactly five reviewed entries required")
@@ -31,55 +31,42 @@ def load_reviewed_captions(review_path,sources):
   if not isinstance(caption,str) or not 3<=len(caption.strip())<=38:raise ValueError("Invalid caption")
   result.append((name.strip(),caption.strip()))
  return result
-def render(plan_path,source_dir,out_dir,review_path=None):
- plan=json.loads(Path(plan_path).read_text());audit=json.loads((Path(source_dir)/"SOURCE_DOWNLOAD_QA.json").read_text())
- sources=audit.get("sources",[])
- if len(sources)!=5 or audit.get("downloaded_valid_sources")!=5:raise ValueError("Five decoded sources required")
- if not Path(FONT).exists():raise ValueError("Missing Nanum font")
- out=Path(out_dir);out.mkdir(parents=True,exist_ok=True)
- font=lambda n:ImageFont.truetype(FONT,n)
- title=str(plan["selected"]["topic"]).replace(" TOP5","")[:20]
- reviewed=load_reviewed_captions(review_path,sources)
- labels=[x[0] for x in reviewed] if reviewed else ["장면 검수 필요"]*5
- captions=[x[1] for x in reviewed] if reviewed else ["장면 검수 필요"]*5
- # Provider tags are search metadata, not verified descriptions of the visible scene.
- parts=[]
- for i,source in enumerate(sources):
-  path=Path(source_dir)/source["file"]
-  if not path.is_file():raise ValueError("Missing source file")
-  part=out/("normalized_%d.mp4"%i)
-  vf="[0:v]split=2[bg][fg];[bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:2[blur];[fg]scale=1080:1600:force_original_aspect_ratio=decrease[subject];[blur][subject]overlay=(W-w)/2:(H-h)/2,setsar=1,fps=24,format=yuv420p[v]"
-  run(["ffmpeg","-hide_banner","-loglevel","error","-y","-i",str(path),"-t","5","-filter_complex",vf,"-map","[v]","-an","-c:v","libx264","-preset","veryfast","-crf","25","-pix_fmt","yuv420p",str(part)])
-  parts.append(part)
- concat=out/"concat.txt";concat.write_text("".join("file '"+p.name+"'\n" for p in parts))
- base=out/"base.mp4"
- run(["ffmpeg","-hide_banner","-loglevel","error","-y","-f","concat","-safe","0","-i",str(concat),"-f","lavfi","-i","anullsrc=r=48000:cl=stereo","-t","25","-map","0:v:0","-map","1:a:0","-c:v","copy","-c:a","aac","-b:a","96k",str(base)])
- for i in range(5):
-  im=Image.new("RGBA",(1080,1920),(0,0,0,0));d=ImageDraw.Draw(im)
-  d.rectangle((0,0,1080,320),fill=(255,255,255,245))
-  d.text((540,157),title,font=font(46),fill="#111111",anchor="mm")
-  d.text((540,238),"TOP5",font=font(70),fill="#E53333",anchor="mm")
-  d.rounded_rectangle((0,335,360,1230),radius=12,fill=(255,255,255,220))
-  for rank in range(5,5-i-1,-1):
-   y=425+(rank-1)*160;color="#E53333" if rank==5-i else "#111111"
-   d.text((20,y),f"{rank}위",font=font(48),fill=color,stroke_width=1,stroke_fill="white")
-   d.text((115,y+10),labels[5-rank],font=font(25),fill=color)
-  d.rounded_rectangle((95,1277,985,1411),radius=16,fill=(245,245,245,235))
-  d.text((540,1344),captions[i],font=font(43),fill="#111111",anchor="mm")
-  d.text((540,1850),"장면·순위·권리 검수 전",font=font(29),fill="white",anchor="mm",stroke_width=2,stroke_fill="black")
-  im.save(out/("overlay_%d.png"%i))
- inputs=["-i",str(base)]
- for i in range(5):inputs+=["-loop","1","-i",str(out/("overlay_%d.png"%i))]
- filt="[0:v]format=yuv420p[v0];"
- for i in range(5):filt+=f"[v{i}][{i+1}:v]overlay=0:0:enable='gte(t,{i*5})*lt(t,{(i+1)*5})':shortest=1[v{i+1}];"
- filt+="[v5]format=yuv420p[vout]"
- final=out/"TOP5_V06_GENERIC_REVIEW_25s.mp4"
- run(["ffmpeg","-hide_banner","-loglevel","error","-y",*inputs,"-filter_complex",filt,"-map","[vout]","-map","0:a:0","-t","25","-r","24","-c:v","libx264","-preset","veryfast","-crf","24","-pix_fmt","yuv420p","-c:a","aac","-b:a","96k",str(final)],timeout=360)
- run(["ffmpeg","-v","error","-xerror","-i",str(final),"-f","null","-"],timeout=150)
- result={"status":"GENERIC_V06_REVIEW_RENDERED_NOT_APPROVED","topic":plan["selected"]["topic"],"file":final.name,"sha256":hashlib.sha256(final.read_bytes()).hexdigest(),"editorial_score":None,"rights_verified":False,"publication_approved":False,"rankings_verified":False,"source_count":5,"caption_method":"human_reviewed_source_matched" if reviewed else "safe_review_placeholder_not_visual_analysis","captions":captions,"rank_names":labels,"human_caption_reviewed":bool(reviewed)}
- (out/"GENERIC_V06_QA.json").write_text(json.dumps(result,ensure_ascii=False,indent=2))
- return result
+
+
+class LayoutError(ValueError):
+    pass
+
+
+def fit_text(draw, text, center, bounds, size, color, stroke=0):
+    for font_size in range(size, 23, -2):
+        font = ImageFont.truetype(FONT, font_size)
+        box = draw.textbbox(center, text, font=font, anchor="mm", stroke_width=stroke)
+        if box[0] >= bounds[0] and box[1] >= bounds[1] and box[2] <= bounds[2] and box[3] <= bounds[3]:
+            draw.text(center, text, font=font, fill=color, anchor="mm",
+                      stroke_width=stroke, stroke_fill="black")
+            return
+    raise LayoutError("자막 안전 영역에 맞지 않습니다")
+
+
+def overlay(path, title, rank, caption):
+    image = Image.new("RGBA", (1080, 1920))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((0, 0, 1079, 339), fill="black")
+    fit_text(draw, title, (520, 155), (65, 70, 975, 215), 76, "#ffdb19")
+    fit_text(draw, "TOP5", (520, 267), (65, 216, 975, 327), 76, "white")
+    for number in range(1, 6):
+        fit_text(draw, f"{number}위", (108, 520 + (number - 1) * 128),
+                 (24, 408, 197, 1110), 62 if number == rank else 49,
+                 "#ffdb19" if number == rank else "white", stroke=5)
+    fit_text(draw, caption, (500, 1480), (72, 1370, 928, 1575), 74, "white", stroke=7)
+    image.save(path)
+
+
+def render(plan_path, source_dir, out_dir, review_path=None, qa_path=None, rights_path=None):
+    from top5_production_review import produce
+    return produce(Path(plan_path), Path(source_dir), Path(out_dir), review_path, qa_path, rights_path)
+
 def main():
- p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--sources",default="output/top5_source_qa");p.add_argument("--output",default="output/top5_v06_review");p.add_argument("--reviewed-captions",default=None);a=p.parse_args()
- print(json.dumps(render(a.plan,a.sources,a.output,a.reviewed_captions),ensure_ascii=False))
+ p=argparse.ArgumentParser();p.add_argument("--plan",default="output/topic_plan.json");p.add_argument("--sources",default="output/top5_source_qa");p.add_argument("--output",default="output/top5_v06_review");p.add_argument("--reviewed-captions");p.add_argument("--editorial-review");p.add_argument("--rights-review");a=p.parse_args()
+ print(json.dumps(render(a.plan,a.sources,a.output,a.reviewed_captions,a.editorial_review,a.rights_review),ensure_ascii=False))
 if __name__=="__main__":main()

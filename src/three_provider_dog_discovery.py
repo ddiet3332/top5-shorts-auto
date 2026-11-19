@@ -21,6 +21,7 @@ def pexels_collect(key,query,fetch=fetch_json):
     return {"status":"METADATA_ONLY","candidates":[{
         "provider":"pexels","id":v.get("id"),"page_url":v.get("url"),
         "duration":v.get("duration"),"creator":(v.get("user") or {}).get("name"),
+        "video_files":v.get("video_files", []),
         "tags":"","approved_for_publication":False
     } for v in data.get("videos",[])]}
 

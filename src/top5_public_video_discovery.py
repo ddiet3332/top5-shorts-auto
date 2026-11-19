@@ -45,7 +45,9 @@ def archive(query,fetch=request_json):
    if str(file.get("source","")).lower()=="derivative":continue
    url="https://archive.org/download/"+urllib.parse.quote(ident)+"/"+urllib.parse.quote(name,safe="/")
    flag="LICENSE_CANDIDATE_REVIEW_REQUIRED" if "creativecommons.org/licenses/by" in str(lic).lower() or "creativecommons.org/publicdomain/" in str(lic).lower() else "LICENSE_UNKNOWN_OR_RESTRICTED"
-   result.append({"provider":"internet_archive","id":ident+":"+name,"title":doc.get("title") or metadata.get("title"),"file_url":url,"page_url":"https://archive.org/details/"+ident,"license":str(lic),"license_gate":flag,"rights_verified":False,"editorial_verified":False})
+   artist=metadata.get("creator") or ""
+   if isinstance(artist,list):artist=", ".join(str(x) for x in artist)
+   result.append({"provider":"internet_archive","id":ident+":"+name,"title":doc.get("title") or metadata.get("title"),"file_url":url,"page_url":"https://archive.org/details/"+ident,"license":str(lic),"license_url":str(lic),"artist":artist,"license_gate":flag,"rights_verified":False,"editorial_verified":False})
    break
  return result
 def discover(queries,fetch=request_json):
