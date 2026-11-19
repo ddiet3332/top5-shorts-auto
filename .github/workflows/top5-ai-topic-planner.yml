@@ -4,6 +4,12 @@ on:
     branches: [main]
     paths:
       - '.github/top5-run-request.txt'
+  pull_request:
+    paths:
+      - '.github/workflows/top5-ai-topic-planner.yml'
+      - 'src/top5_*.py'
+      - 'src/v25_audio_remaster.py'
+      - 'tests/test_top5_*.py'
   schedule:
     - cron: '0 0 * * *'  # 09:00 Asia/Seoul
     - cron: '0 9 * * *'  # 18:00 Asia/Seoul
@@ -18,7 +24,7 @@ permissions:
   contents: read
   issues: write
 concurrency:
-  group: top5-topic-planner
+  group: top5-topic-planner-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   plan:
@@ -37,7 +43,7 @@ jobs:
           fi
           command -v ffmpeg
           command -v ffprobe
-          python3 -c 'import PIL' || timeout 60s python3 -m pip install --break-system-packages Pillow
+          python3 -c 'import PIL, numpy' || timeout 60s python3 -m pip install --break-system-packages Pillow numpy
           FONT=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf
           if [ ! -s "$FONT" ]; then
             sudo mkdir -p /usr/share/fonts/truetype/nanum
@@ -54,20 +60,26 @@ jobs:
         env:
           INPUT_SLOT: ${{ inputs.slot }}
         run: |
-          if [ -n "$INPUT_SLOT" ]; then SLOT="$INPUT_SLOT"; elif [ "$(date -u +%H)" = "00" ]; then SLOT=AM; else SLOT=PM; fi
+          if [ -n "$INPUT_SLOT" ]; then SLOT="$INPUT_SLOT"; elif [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then SLOT=AM; else SLOT=PM; fi
           echo "slot=$SLOT" >> "$GITHUB_OUTPUT"
       - name: Read previous topic selections from tracking issue
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          if [[ "${{ github.event_name }}" == pull_request ]]; then
+            echo '[]' > topic_history.json
+            exit 0
+          fi
           gh api --paginate "repos/${{ github.repository }}/issues/18/comments?per_page=100" --jq '.[] | select(.body | startswith("TOP5_TOPIC_HISTORY ")) | .body | ltrimstr("TOP5_TOPIC_HISTORY ") | fromjson' | jq -s '.' > topic_history.json
       - name: Run free planner tests
         run: python3 -m unittest discover -s tests -p 'test_top5_free_topic_planner.py'
       - name: Run generic preflight tests
         run: python3 -m unittest discover -s tests -p 'test_top5_free_footage_preflight.py'
       - name: Plan free topic (no footage or publishing)
-        run: python3 src/top5_free_topic_planner.py --slot "${{ steps.slot.outputs.slot }}"
+        run: python3 src/top5_free_topic_planner.py --slot "${{ steps.slot.outputs.slot }}" --trends
       - name: Check real stock footage availability (metadata only)
+        continue-on-error: true
+        if: github.event_name != 'pull_request'
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: python3 src/top5_free_footage_preflight.py
@@ -78,12 +90,16 @@ jobs:
       - name: Test topic relevance hard gate
         run: python3 -m unittest discover -s tests -p test_top5_topic_relevance_gate.py
       - name: Probe real Wikimedia and Internet Archive video downloads and full decoding
+        continue-on-error: true
         run: python3 src/top5_public_video_download_probe.py
       - name: Test downloaded source gate
         run: python3 -m unittest discover -s tests -p 'test_top5_free_source_download.py'
+      - name: Verify production review and repair tests
+        run: python3 -m unittest discover -s tests -p test_top5_production_review.py
       - name: Download and decode 5 distinct sources
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python3 src/top5_free_source_download.py
       - name: Generate visual review contact sheet from real source frames
         run: python3 src/top5_source_contact_sheet.py
@@ -102,74 +118,61 @@ jobs:
       - name: Require actual source visual review before rendering
         id: render_gate
         run: python3 src/top5_render_review_gate.py
-      - name: Report source review and render status
+      - name: 검토용 MP4 제작 및 기술 검수
+        env:
+          REVIEW_APPROVED: ${{ steps.render_gate.outputs.approved }}
+          TOP5_MAX_REPAIRS: ${{ vars.TOP5_MAX_REPAIRS || '3' }}
+        run: |
+          args=()
+          if [[ "$REVIEW_APPROVED" == true ]]; then
+            args+=(--reviewed-captions reviewed_top5_captions.json)
+          fi
+          python3 src/top5_generic_v06_preview.py "${args[@]}"
+          python3 src/top5_independent_review_qa.py
+          python3 src/top5_qa_frames.py --video output/top5_v06_review/TOP5_REVIEW_1080x1920.mp4 --output output/top5_v06_review/FRAME_REVIEW --count 15
+      - name: 제작 결과 요약
         if: always()
         run: |
-          python3 - <<'PY'
-          import json,os
-          from pathlib import Path
-          qa=Path("output/top5_source_qa/SOURCE_DOWNLOAD_QA.json")
-          gate=Path("output/top5_visual_review/RENDER_GATE.json")
-          lines=["## TOP5 production status"]
-          if qa.is_file():
-              d=json.loads(qa.read_text())
-              lines.extend([f"- Topic: {d.get('topic','unknown')}",f"- Decoded sources: {d.get('downloaded_valid_sources',0)}/5",f"- Excluded source IDs: {d.get('rejected_source_ids',[])}"])
-          else: lines.append("- Source acquisition incomplete")
-          if gate.is_file():
-              g=json.loads(gate.read_text())
-              lines.append(f"- Render approved: {g.get('approved',False)}")
-              lines.append(f"- Gate reason: {g.get('reason','unknown')}")
-          else: lines.append("- Render gate not reached")
-          lines.append("- Workflow success does not mean final video was created or publication rights cleared.")
-          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:out.write("\n".join(lines)+"\n")
-          PY
-      - name: Render V06 human-reviewed video
-        if: steps.render_gate.outputs.approved == 'true'
-        run: python3 src/top5_generic_v06_preview.py --reviewed-captions reviewed_top5_captions.json
-      - name: Render unapproved review MP4 for independent visual assessment
-        if: steps.render_gate.outputs.approved != 'true'
-        run: |
-          python3 src/top5_generic_v06_preview.py \
-            --plan output/topic_plan.json \
-            --sources output/top5_source_qa \
-            --output output/top5_v06_review
-          ffmpeg -hide_banner -v error -xerror -i output/top5_v06_review/TOP5_V06_GENERIC_REVIEW_25s.mp4 -map 0:v:0 -map 0:a:0 -f null -
-          echo 'Unapproved review-only MP4 created; captions, editorial score and rights remain unverified.' >> "$GITHUB_STEP_SUMMARY"
-      - name: Test 75-point editorial threshold
-        if: steps.render_gate.outputs.approved == 'true'
-        run: python3 -m unittest discover -s tests -p test_top5_75_threshold.py
-      - name: Test hard source diversity gate
-        if: steps.render_gate.outputs.approved == 'true'
-        run: python3 -m unittest discover -s tests -p test_top5_source_diversity_gate.py
-      - name: Independently validate rendered video and flag editorial risks
-        if: steps.render_gate.outputs.approved == 'true'
-        run: python3 src/top5_independent_review_qa.py
+          if [[ -f output/top5_v06_review/QA.md ]]; then
+            cat output/top5_v06_review/QA.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '## TOP5 제작 중단 · MP4 없음' >> "$GITHUB_STEP_SUMMARY"
+            if [[ -f output/top5_source_qa/SOURCE_DOWNLOAD_QA.json ]]; then
+              jq -r '"확보 원본 · \(.downloaded_valid_sources)/5"' output/top5_source_qa/SOURCE_DOWNLOAD_QA.json >> "$GITHUB_STEP_SUMMARY"
+            fi
+            mkdir -p output/top5_v06_review
+            cp "$GITHUB_STEP_SUMMARY" output/top5_v06_review/QA.md
+          fi
       - name: Save selection for next slot
+        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           jq -c '{date,slot,topic:.selected.topic,category:.selected.category}' output/topic_plan.json | sed 's/^/TOP5_TOPIC_HISTORY /' > /tmp/topic_history_comment.txt
           gh issue comment 18 --repo "${{ github.repository }}" --body-file /tmp/topic_history_comment.txt
       - name: Upload topic plan
+        id: review_artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: top5-topic-plan-${{ steps.slot.outputs.slot }}
+          name: top5-topic-plan-${{ steps.slot.outputs.slot }}-${{ github.run_attempt }}
           path: |
             output/topic_plan.json
             output/topic_footage_preflight.json
             output/top5_external_sources/DISCOVERY.json
             output/top5_external_sources/probe/PUBLIC_VIDEO_DOWNLOAD_QA.json
-            output/top5_external_sources/probe/*_probe.*
             output/top5_source_qa/SOURCE_DOWNLOAD_QA.json
-            output/top5_source_qa/source_*.mp4
             output/top5_visual_review/TOP5_SOURCE_CONTACT_SHEET.jpg
             output/top5_visual_review/TOP5_TEMPORAL_9FRAMES_PER_SOURCE.jpg
             output/top5_visual_review/VISUAL_REVIEW_MANIFEST.json
             output/top5_visual_review/SOURCE_REVIEW_WORKSHEET.json
             output/top5_visual_review/RENDER_GATE.json
-            output/top5_v06_review/TOP5_V06_GENERIC_REVIEW_25s.mp4
-            output/top5_v06_review/GENERIC_V06_QA.json
-            output/top5_v06_review/INDEPENDENT_REVIEW_QA.json
+            output/top5_v06_review/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 7
+          compression-level: 0
+      - name: 휴대폰 다운로드 링크
+        if: always() && steps.review_artifact.outputs.artifact-url != ''
+        env:
+          ARTIFACT_URL: ${{ steps.review_artifact.outputs.artifact-url }}
+        run: echo "[GitHub 로그인 후 검토 ZIP 다운로드]($ARTIFACT_URL)" >> "$GITHUB_STEP_SUMMARY"

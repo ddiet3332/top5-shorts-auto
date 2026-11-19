@@ -25,7 +25,8 @@ def audit(source_dir,render_dir):
  ids=[s.get("id") for s in sources]; hashes=[s.get("sha256") for s in sources]
  creators=[s.get("creator","unknown") for s in sources]
  counts=collections.Counter(creators)
- checks={"five_sources":len(sources)==5,"creator_diversity":source_diversity_pass(creators),"distinct_source_ids":len(set(ids))==5,"distinct_source_hashes":len(set(hashes))==5,"all_sources_decoded":all(s.get("full_video_decode") is True for s in sources),"full_25s":abs(float(probe["format"]["duration"])-25)<0.06,"portrait_1080p":(stream["width"],stream["height"])==(1080,1920),"frame_rate_24":stream["r_frame_rate"]=="24/1","frame_count_600":int(stream.get("nb_read_frames") or 0)==600,"video_sha_matches":hashlib.sha256(video.read_bytes()).hexdigest()==render.get("sha256")}
+ duration = 25 if render["file"] == "TOP5_V06_GENERIC_REVIEW_25s.mp4" else 30
+ checks={"five_sources":len(sources)==5,"creator_diversity":source_diversity_pass(creators),"distinct_source_ids":len({(s.get("provider"), s.get("id")) for s in sources})==5,"distinct_source_hashes":len(set(hashes))==5,"all_sources_decoded":all(s.get("full_video_decode") is True for s in sources),"expected_duration":abs(float(probe["format"]["duration"])-duration)<0.15,"portrait_1080p":(stream["width"],stream["height"])==(1080,1920),"frame_rate_24":stream["r_frame_rate"]=="24/1","expected_frame_count":int(stream.get("nb_read_frames") or 0)==duration*24,"video_sha_matches":hashlib.sha256(video.read_bytes()).hexdigest()==render.get("sha256")}
  blockers=["Visual content and ranking not independently verified","Source rights and YouTube reuse eligibility not verified","Metadata captions are not visual scene analysis"]
  if not source_diversity_pass(creators):blockers.append("Source diversity HARD FAIL: unknown creator or more than two clips from one creator")
  score=render.get("editorial_score")

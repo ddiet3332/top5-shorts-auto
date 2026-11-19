@@ -12,7 +12,7 @@ concurrency:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
       - name: Verify publication gates
@@ -23,121 +23,11 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_top5_remediation.py' -v
       - name: Verify watchdog decisions
         run: python -m unittest discover -s tests -p 'test_top5_watchdog_decision.py' -v
-      - name: Inspect dog TOP5 pipeline and retry failed runs
+      - name: 제작 실행 및 MP4·QA Artifact 검사
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        shell: bash
+          TOP5_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          set -euo pipefail
-          runs=$(gh api "repos/$GH_REPO/actions/workflows/top5-production-validation.yml/runs?per_page=15")
-          run_count=$(jq -r '.total_count // 0' <<<"$runs")
-          if [[ "$run_count" -eq 0 ]]; then
-            gh api -X POST "repos/$GH_REPO/actions/workflows/top5-production-validation.yml/dispatches" -f ref=main >/dev/null
-            echo 'No production validation run existed; dispatched one review-only build.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          # Hydrate run_attempt; the list endpoint may omit it.
-          hydrated=$(jq -c '[.workflow_runs[] | {id,status,conclusion,created_at}]' <<<"$runs")
-          while IFS= read -r run_id; do
-            detail=$(gh api "repos/$GH_REPO/actions/runs/$run_id")
-            hydrated=$(jq -c --argjson detail "$detail" 'map(if .id == $detail.id then . + {run_attempt:$detail.run_attempt} else . end)' <<<"$hydrated")
-          done < <(jq -r '.[].id' <<<"$hydrated")
-          decision=$(printf '%s' "$hydrated" | python src/top5_watchdog_decision.py)
-          action=$(jq -r '.action' <<<"$decision")
-          echo "Watchdog decision: $decision" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$action" == wait || "$action" == block ]]; then
-            exit 0
-          fi
-          id=$(jq -r '.run_id' <<<"$decision")
-          if [[ "$action" == rerun_failed_jobs ]]; then
-            gh api -X POST "repos/$GH_REPO/actions/runs/$id/rerun-failed-jobs" >/dev/null
-            echo 'Bounded retry requested; no publishing.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          if [[ "$action" != inspect_artifact ]]; then
-            echo 'Unknown watchdog decision; blocked.' >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-          if [[ "$action" == inspect_artifact ]]; then
-            echo 'Technical run succeeded. Checking review evidence (never infer scores).' >> "$GITHUB_STEP_SUMMARY"
-            artifacts=$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100")
-            artifact_id=$(jq -r '[.artifacts[] | select(.name | startswith("TOP5-dog-production-validation-"))] | sort_by(.created_at) | last | .id // empty' <<<"$artifacts")
-            if [[ -z "$artifact_id" ]]; then
-              echo 'No dog review artifact: quality unknown.' >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            mkdir -p /tmp/top5-watchdog
-            gh api "repos/$GH_REPO/actions/artifacts/$artifact_id/zip" > /tmp/top5-watchdog/review.zip
-            unzip -oq /tmp/top5-watchdog/review.zip -d /tmp/top5-watchdog/review
-            python -c 'import json,os,pathlib,sys; sys.path.insert(0,"src"); from top5_publication_gate import evaluate; root=pathlib.Path("/tmp/top5-watchdog/review"); qa=next(iter(root.rglob("editorial_qa.json")),None); rights=next(iter(root.rglob("independent_rights_review.json")),None); video=next(iter(root.rglob("TOP5_AUTO_V29_REVIEW_1080x1920.mp4")),None); read=lambda p: json.loads(p.read_text()) if p else {}; result=evaluate(read(qa),read(rights),video if video else root/"missing.mp4"); summary=pathlib.Path(os.environ["GITHUB_STEP_SUMMARY"]); summary.open("a").write("80+ verified against MP4: "+str(result["report_80"])+"; rights passed: "+str(result["rights_gate_passed"])+"; YouTube upload: DISABLED\\n")'
-            exit 0
-          fi
-      - name: Inspect general TOP5 topic production independently
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          runs=$(gh api "repos/$GH_REPO/actions/workflows/top5-ai-topic-planner.yml/runs?per_page=10")
-          latest=$(jq -c '.workflow_runs[0] // empty' <<<"$runs")
-          if [[ -z "$latest" ]]; then
-            echo 'GENERAL TOP5: no topic-production run found; not verified.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          id=$(jq -r '.id' <<<"$latest")
-          status=$(jq -r '.status' <<<"$latest")
-          conclusion=$(jq -r '.conclusion // "pending"' <<<"$latest")
-          echo "GENERAL TOP5 run #$id: status=$status; conclusion=$conclusion" >> "$GITHUB_STEP_SUMMARY"
-          if [[ "$status" != completed || "$conclusion" != success ]]; then
-            echo 'GENERAL TOP5: source acquisition and MP4 output are NOT verified.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          jobs=$(gh api "repos/$GH_REPO/actions/runs/$id/jobs?per_page=100")
-          if jq -e '.jobs[].steps[] | select(.name == "Render unapproved review MP4 for independent visual assessment" and .conclusion == "success")' <<<"$jobs" >/dev/null; then
-            echo 'GENERAL TOP5: review-only MP4 render step succeeded; NOT a publishable final.' >> "$GITHUB_STEP_SUMMARY"
-          elif jq -e '.jobs[].steps[] | select(.name == "Render V06 human-reviewed video" and .conclusion == "success")' <<<"$jobs" >/dev/null; then
-            echo 'GENERAL TOP5: human-reviewed render step succeeded; editorial/rights approval still separate.' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo 'GENERAL TOP5: no successful MP4 render step; inspect workflow logs.' >> "$GITHUB_STEP_SUMMARY"
-          fi
-          artifacts=$(gh api "repos/$GH_REPO/actions/runs/$id/artifacts?per_page=100")
-          if jq -e '[.artifacts[] | select(.expired == false and (.name | startswith("top5-topic-plan-")))] | length > 0' <<<"$artifacts" >/dev/null; then
-            echo 'GENERAL TOP5: downloadable review artifact exists; contents not independently inspected by watchdog.' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo 'GENERAL TOP5: review artifact missing or expired.' >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo 'GENERAL TOP5: editorial score and source rights NOT automatically certified. YouTube publishing remains disabled.' >> "$GITHUB_STEP_SUMMARY"
-      - name: Dispatch next review build after completed cycle
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          runs=$(gh api "repos/$GH_REPO/actions/workflows/top5-production-validation.yml/runs?per_page=10")
-          if jq -e '.workflow_runs[] | select(.status != "completed")' <<<"$runs" >/dev/null; then
-            echo 'A build is active; no duplicate dispatch.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          latest=$(jq -c '[.workflow_runs[]] | sort_by(.created_at) | last // empty' <<<"$runs")
-          if [[ -z "$latest" ]]; then
-            echo 'No completed run found; earlier watchdog step handles first dispatch.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          status=$(jq -r '.conclusion' <<<"$latest")
-          if [[ "$status" != success ]]; then
-            echo 'Latest build was not successful; bounded retry path owns recovery.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          created=$(jq -r '.created_at' <<<"$latest")
-          elapsed=$(( $(date -u +%s) - $(date -u -d "$created" +%s) ))
-          if (( elapsed < 1800 )); then
-            echo '30-minute cooldown active; no duplicate build.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          gh api -X POST "repos/$GH_REPO/actions/workflows/top5-production-validation.yml/dispatches" -f ref=main >/dev/null
-          echo 'Next review-only TOP5 build dispatched; no publishing.' >> "$GITHUB_STEP_SUMMARY"
+          command -v ffmpeg >/dev/null || sudo apt-get install -y -qq ffmpeg
+          python src/top5_watchdog_artifacts.py

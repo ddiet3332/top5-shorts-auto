@@ -19,7 +19,7 @@ DURATION=30.0
 CUE_TIMES=(0,2,6,11,15,21,27)
 
 
-def create_soundtrack(path, seed=20261115):
+def create_soundtrack(path, seed=20261115, *, cue_times=CUE_TIMES, action_accents=True):
     sr=SAMPLE_RATE
     rng=np.random.default_rng(seed)
     n=int(sr*DURATION)
@@ -81,18 +81,19 @@ def create_soundtrack(path, seed=20261115):
         tone=(.055*np.sin(2*np.pi*f*t)+.018*np.sin(4*np.pi*f*t))*np.exp(-13*t)
         stamp(k*beat+.12,tone,-.25 if (k//2)%2 else .25,.42)
 
-    for i,sec in enumerate(CUE_TIMES):
+    for i,sec in enumerate(cue_times):
         stamp(sec+.035,whoosh(.24),-.3 if i%2 else .3,.78)
         stamp(sec+.11,chime(930+i*30,.26),.18 if i%2 else -.18,.92)
 
     # Actual source actions are aligned against V21 MP4 frame QA.
-    stamp(2.43,chime(1050,.21),.2,.95)
-    stamp(7.1,whoosh(.29),-.35,1.02)
-    stamp(12.1,whoosh(.28),.22,.95)
-    stamp(17.56,whoosh(.37),.38,1.17)
-    stamp(17.73,chime(1200,.23),-.35,1.3)
-    stamp(23.35,whoosh(.45),-.3,1.26)
-    stamp(24.8,chime(740,.27),.28,.66)
+    if action_accents:
+        stamp(2.43,chime(1050,.21),.2,.95)
+        stamp(7.1,whoosh(.29),-.35,1.02)
+        stamp(12.1,whoosh(.28),.22,.95)
+        stamp(17.56,whoosh(.37),.38,1.17)
+        stamp(17.73,chime(1200,.23),-.35,1.3)
+        stamp(23.35,whoosh(.45),-.3,1.26)
+        stamp(24.8,chime(740,.27),.28,.66)
 
     peak=float(np.max(np.abs(out)))
     if peak>.85:

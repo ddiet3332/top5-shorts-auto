@@ -22,7 +22,7 @@ def decide(runs):
         return {"action":"block","reason":"invalid_run_attempt","run_id":r["id"]}
     if state=="success":
         return {"action":"inspect_artifact","run_id":r["id"]}
-    if state not in ("failure","timed_out"):
+    if state not in ("failure","timed_out","startup_failure"):
         return {"action":"block","reason":"non_retryable_state","run_id":r["id"]}
     if attempt>=4:
         return {"action":"block","reason":"three_retries_exhausted","run_id":r["id"]}

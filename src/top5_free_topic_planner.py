@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Zero paid API topic planner. Curated catalog and deterministic rotation, NOT AI."""
-import argparse,datetime,json,hashlib
+import argparse,datetime,json,urllib.request
+import xml.etree.ElementTree as ET
 from pathlib import Path
 CATALOG=[
 ("animals","강아지의 웃긴 행동 TOP5","funny dog playing","playful puppy"),
@@ -27,8 +28,33 @@ CATALOG=[
 ("objects","만족스러운 기계 움직임 TOP5","satisfying machinery","mechanical motion"),
 ("objects","놀라운 비눗방울 TOP5","soap bubbles slow motion","bubble art"),
 ("objects","신기한 물감 움직임 TOP5","paint mixing macro","color ink water")]
+
+TREND_FEED="https://trends.google.com/trending/rss?geo=KR"
+TREND_TERMS={
+ "강아지의 웃긴 행동 TOP5": ("강아지", "반려견"),
+ "고양이의 예상 밖 행동 TOP5": ("고양이", "반려묘"),
+ "놀라운 번개 장면 TOP5": ("번개", "낙뢰"),
+ "아름다운 눈 내리는 풍경 TOP5": ("첫눈", "폭설", "눈꽃"),
+ "강렬한 파도 장면 TOP5": ("파도", "너울"),
+ "폭포의 장관 TOP5": ("폭포",),
+ "일출과 일몰 TOP5": ("일출", "일몰", "해돋이"),
+ "나비의 아름다운 순간 TOP5": ("나비",),
+ "놀라운 비눗방울 TOP5": ("비눗방울",),
+}
+
+
+def recent_trends():
+ with urllib.request.urlopen(TREND_FEED,timeout=8) as response:
+  feed=ET.fromstring(response.read(512*1024))
+ return [item.text.strip() for item in feed.findall("./channel/item/title") if item.text][:30]
+
+
+def trend_matches(topic, titles):
+ return [title for title in titles if any(term in title for term in TREND_TERMS.get(topic,()))]
+
+
 def main():
- p=argparse.ArgumentParser();p.add_argument("--slot",choices=["AM","PM"],required=True);p.add_argument("--history",default="topic_history.json");p.add_argument("--output",default="output/topic_plan.json");p.add_argument("--date",default=None);a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument("--slot",choices=["AM","PM"],required=True);p.add_argument("--history",default="topic_history.json");p.add_argument("--output",default="output/topic_plan.json");p.add_argument("--date",default=None);p.add_argument("--trends",action="store_true");a=p.parse_args()
  day=a.date or datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date().isoformat()
  datetime.date.fromisoformat(day)
  history=json.loads(Path(a.history).read_text()) if Path(a.history).exists() else []
@@ -45,9 +71,22 @@ def main():
  # even if category repeats; do not fail solely because of category history.
  if not eligible:eligible=[x for x in rotated if x[1] not in used]
  if not eligible:eligible=rotated[:]
+ trend_status="DISABLED"
+ titles=[]
+ if a.trends:
+  try:
+   titles=recent_trends()
+   eligible.sort(key=lambda row:len(trend_matches(row[1],titles)),reverse=True)
+   trend_status="MATCHED" if trend_matches(eligible[0][1],titles) else "NO_CATALOG_MATCH"
+  except (OSError,ET.ParseError):
+   trend_status="FEED_UNAVAILABLE"
  category,topic,q1,q2=eligible[0]
  selected={"topic":topic,"category":category,"search_queries":[q1,q2],"selection_method":"free_curated_catalog_rotation","estimated_topic_score":None}
+ if trend_status=="MATCHED":
+  selected["selection_method"]="free_catalog_with_google_trends"
  report={"date":day,"slot":a.slot,"status":"TOPIC_PLANNED_NOT_PRODUCED","selected":selected,"alternatives":[{"topic":t,"category":c,"search_queries":[x,y]} for c,t,x,y in eligible[1:10]],"minimum_final_video_score":75,"source_footage_verified":False,"video_created":False,"editorial_score":None,"rights_verified":False,"publication_approved":False,"cost_note":"No paid model/API calls; external footage APIs may have limits"}
- out=Path(a.output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(report,ensure_ascii=False,indent=2))
+ report["trend_signal"]={"status":trend_status,"feed":TREND_FEED if a.trends else None,
+                         "matched_titles":trend_matches(topic,titles)}
+ out=Path(a.output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
  print(json.dumps({"status":report["status"],"topic":topic,"category":category,"slot":a.slot},ensure_ascii=False))
 if __name__=="__main__":main()
