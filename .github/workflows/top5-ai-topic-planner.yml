@@ -126,6 +126,15 @@ jobs:
       - name: Render V06 human-reviewed video
         if: steps.render_gate.outputs.approved == 'true'
         run: python3 src/top5_generic_v06_preview.py --reviewed-captions reviewed_top5_captions.json
+      - name: Render unapproved review MP4 for independent visual assessment
+        if: steps.render_gate.outputs.approved != 'true'
+        run: |
+          python3 src/top5_generic_v06_preview.py \
+            --plan output/topic_plan.json \
+            --sources output/top5_source_qa \
+            --output output/top5_v06_review
+          ffmpeg -hide_banner -v error -xerror -i output/top5_v06_review/TOP5_V06_GENERIC_REVIEW_25s.mp4 -map 0:v:0 -map 0:a:0 -f null -
+          echo 'Unapproved review-only MP4 created; captions, editorial score and rights remain unverified.' >> "$GITHUB_STEP_SUMMARY"
       - name: Test 75-point editorial threshold
         if: steps.render_gate.outputs.approved == 'true'
         run: python3 -m unittest discover -s tests -p test_top5_75_threshold.py
