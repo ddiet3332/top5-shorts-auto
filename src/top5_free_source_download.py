@@ -48,7 +48,7 @@ def inspect(key,plan,out,fetch=fetch_hits,rejected=None):
    if not creator_allowed(creator,creator_counts):
     skipped_same_creator+=1
     continue
-   if any(x in tags for x in ("cartoon","animation","animated","cgi","illustration","3d render","motion graphics","motion graphic")):continue
+   if any(x in tags for x in ("cartoon","animation","animated","cgi","illustration","3d render","motion graphics","motion graphic","ai generated","ai-generated","artificial intelligence","generative ai")):continue
    if float(hit.get("duration") or 0)<5.3:continue
    variants=hit.get("videos") or {}
    video=next((variants.get(k) for k in ("medium","small","large") if (variants.get(k) or {}).get("url")),None)
