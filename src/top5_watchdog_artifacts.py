@@ -1,4 +1,4 @@
-"""Inspect the three active TOP5 production entry points via GitHub Actions."""
+"""Inspect TOP5 production and rights-audit runs via GitHub Actions."""
 import hashlib
 import json
 import os
@@ -13,6 +13,11 @@ WORKFLOWS = {
     "top5-ai-topic-planner.yml": ("top5-topic-plan-", "TOP5_REVIEW_1080x1920.mp4", "GENERIC_V06_QA.json"),
     "top5-production-validation.yml": ("TOP5-dog-production-validation-", "TOP5_AUTO_V29_REVIEW_1080x1920.mp4", "PUBLICATION_GATE.json"),
     "v32-dog-end-to-end.yml": ("TOP5-DOG-LIGHT-REVIEW-", "TOP5_DOG_REVIEW_360x640.mp4", "SELF_CONTAINED_QA.json"),
+    "top5_auto_v29.yml": ("TOP5-V29-auto-review-", "TOP5_AUTO_V29_REVIEW_1080x1920.mp4", "V29_TECHNICAL_QA.json"),
+    "top5_auto_v30.yml": ("TOP5-V30-auto-review-", "TOP5_AUTO_V29_REVIEW_1080x1920.mp4", "V29_TECHNICAL_QA.json"),
+    "v25.yml": ("TOP5-v25-video-", "TOP5_V25_SITUATION_CAPTIONS_REVIEW_ONLY_1080x1920.mp4", "V25_FINAL_TECHNICAL_QA.json"),
+    "v26_free.yml": ("TOP5-v26-free-", "TOP5_V26_FREE_EDITORIAL_UPLOAD_CANDIDATE.mp4", "V26_FREE_TECHNICAL_QA.json"),
+    "v26.yml": ("TOP5-v26-rights-", None, "V26_RIGHTS_AND_HUMOR_TRIAGE.json"),
 }
 MAX_ARCHIVE_BYTES = 96 * 1024 * 1024
 
@@ -27,10 +32,12 @@ def find(root, filename):
 
 
 def inspect_artifact(root, video_name, qa_name):
-    video, qa = find(root, video_name), find(root, qa_name)
+    video, qa = find(root, video_name) if video_name else None, find(root, qa_name)
     if not qa:
         return "MP4 또는 QA 보고서 누락"
     data = json.loads(qa.read_text(encoding="utf-8"))
+    if video_name is None:
+        return "권리 검토 보고서 확인 · 영상 제작 대상 아님 · RIGHTS_UNVERIFIED"
     if data.get("status") == "TECHNICAL_FAILED":
         return "TECHNICAL_FAILED · 기술 검사 실패"
     if not video:
@@ -56,6 +63,34 @@ def inspect_artifact(root, video_name, qa_name):
     return result
 
 
+def failure_reason(run, root=None):
+    if run["conclusion"] == "success":
+        return "SUCCESS_REQUIRES_ARTIFACT_CHECK"
+    if root:
+        report = find(root, "SOURCE_ATTEMPTS.json")
+        if report:
+            history = json.loads(report.read_text(encoding="utf-8"))
+            if history and history[-1].get("reason_code"):
+                return history[-1]["reason_code"]
+    if run["conclusion"] not in {"failure", "timed_out", "startup_failure"}:
+        return str(run["conclusion"]).upper()
+    if run["conclusion"] != "failure":
+        return run["conclusion"].upper()
+    jobs = json.loads(api(f"runs/{run['id']}/attempts/{run['run_attempt']}/jobs?per_page=50"))["jobs"]
+    for job in jobs:
+        for step in job.get("steps", []):
+            if step["conclusion"] != "failure":
+                continue
+            name = step["name"].casefold()
+            if "pip" in name or "의존성 설치" in name or "setup tools" in name:
+                return "DEPENDENCY_SETUP_FAILED"
+            if "test" in name or "regression" in name:
+                return "REGRESSION_OR_IMPORT_FAILED"
+            if "decode" in name:
+                return "MEDIA_DECODE_FAILED"
+    return "BUILD_FAILURE_REQUIRES_REVIEW"
+
+
 def inspect(workflow, artifact_spec):
     runs = json.loads(api(f"workflows/{workflow}/runs",
                           "-f", f"branch={os.environ['TOP5_DEFAULT_BRANCH']}", "-F", "per_page=6",
@@ -79,7 +114,8 @@ def inspect(workflow, artifact_spec):
     if workflow == "top5-ai-topic-planner.yml":
         available = [item for item in available if item["name"].endswith(f"-{run['run_attempt']}")]
     if not available:
-        return f"{link} · {run['conclusion']} · 현재 실행의 Artifact 없음 · {decision.get('reason', 'inspect')}"
+        code = failure_reason(run) if workflow.startswith(("v25", "v26", "top5_auto_v29", "top5_auto_v30")) else decision.get("reason", "inspect")
+        return f"{link} · {run['conclusion']} · 현재 실행의 Artifact 없음 · {code}"
     artifact = max(available, key=lambda item: item["id"])
     if artifact.get("size_in_bytes", 0) > MAX_ARCHIVE_BYTES:
         return f"{link} · Artifact 용량 한도 초과 · 내용 미검증"
@@ -90,7 +126,7 @@ def inspect(workflow, artifact_spec):
             subprocess.run(["gh", "api",
                             f"repos/{os.environ['GH_REPO']}/actions/artifacts/{artifact['id']}/zip"],
                            stdout=target, check=True, timeout=90)
-        names = {video, qa, "QA.md", "RIGHTS_EVIDENCE.json", "SOURCE_DOWNLOAD_QA.json"}
+        names = {video, qa, "QA.md", "RIGHTS_EVIDENCE.json", "SOURCE_DOWNLOAD_QA.json", "SOURCE_ATTEMPTS.json"}
         with ZipFile(archive) as bundle:
             seen = set()
             for item in bundle.infolist():
@@ -103,12 +139,13 @@ def inspect(workflow, artifact_spec):
                 seen.add(name)
                 (root / name).write_bytes(bundle.read(item))
         source_qa = find(root, "SOURCE_DOWNLOAD_QA.json")
-        if source_qa and not find(root, video):
+        if source_qa and video and not find(root, video):
             data = json.loads(source_qa.read_text(encoding="utf-8"))
             if data["downloaded_valid_sources"] < 5:
                 return f"{link} · 원본 확보 부족 ({data['downloaded_valid_sources']}/5)"
         result = inspect_artifact(root, video, qa)
-        return f"{link} · {run['conclusion']} · {result}"
+        code = failure_reason(run, root) if run["conclusion"] != "success" else ""
+        return f"{link} · {run['conclusion']} · {result}" + (f" · {code}" if code else "")
 
 
 if __name__ == "__main__":
@@ -121,3 +158,4 @@ if __name__ == "__main__":
         lines.append(f"- {workflow} · {result}")
     with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
         summary.write("\n".join(lines) + "\n")
+    print("\n".join(lines))

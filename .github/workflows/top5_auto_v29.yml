@@ -2,6 +2,11 @@
 # template review draft. This workflow DOES NOT upload to YouTube or certify rights.
 name: TOP5 V29 - Auto topic to 30s review MP4
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/top5_auto_v29.yml'
+      - 'src/top5_hook_selection.py'
+      - 'src/top5_auto_v29.py'
   workflow_dispatch:
     inputs:
       topic:
@@ -63,6 +68,7 @@ jobs:
             output/v29_auto/V29_TECHNICAL_QA.json
             output/v29_auto/TOPIC_RECOMMENDATIONS.json
             output/v29_auto/SOURCE_SELECTION_REVIEW.json
+            output/v29_auto/SOURCE_ATTEMPTS.json
             output/v29_auto/SOURCE_CREDITS_REVIEW.md
           retention-days: 7
           if-no-files-found: warn

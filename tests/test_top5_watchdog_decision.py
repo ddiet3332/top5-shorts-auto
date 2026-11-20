@@ -5,10 +5,23 @@ from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
 from top5_watchdog_decision import decide
-from top5_watchdog_artifacts import WORKFLOWS, inspect
+from top5_watchdog_artifacts import WORKFLOWS, failure_reason, inspect
 def run(state="completed",conclusion="failure",attempt=1,id=123,created="2026-11-16T00:00:00Z"):
     return dict(status=state,conclusion=conclusion,run_attempt=attempt,id=id,created_at=created)
 class WatchdogTests(unittest.TestCase):
+    def test_dependency_regression_is_classified_without_rerun(self):
+        failing = {**run(),"html_url":"https://example.com/run"}
+        jobs = {"jobs":[{"steps":[{"conclusion":"failure","name":"Run source and editorial safety regression tests"}]}]}
+        with (patch.dict("os.environ", {"TOP5_DEFAULT_BRANCH":"main"}),
+              patch("top5_watchdog_artifacts.api",side_effect=[
+                  json.dumps({"workflow_runs":[failing]}),json.dumps(failing),
+                  json.dumps({"artifacts":[]}),json.dumps(jobs)]) as api):
+            self.assertIn("REGRESSION_OR_IMPORT_FAILED",inspect("v25.yml",WORKFLOWS["v25.yml"]))
+            self.assertFalse(any("rerun" in str(call) for call in api.call_args_list))
+
+    def test_timeout_and_success_have_distinct_codes(self):
+        self.assertEqual(failure_reason(run(conclusion="timed_out")),"TIMED_OUT")
+        self.assertEqual(failure_reason(run(conclusion="success")),"SUCCESS_REQUIRES_ARTIFACT_CHECK")
     def test_active_run_blocks_duplicate(self):
         self.assertEqual(decide([run("in_progress",None)])["action"],"wait")
     def test_three_retries_max(self):

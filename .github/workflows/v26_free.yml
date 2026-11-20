@@ -3,6 +3,10 @@
 # Strictly a private REVIEW MASTER. Never upload to YouTube automatically.
 name: TOP5 V26 FREE - caption-only publish-candidate and rights QA
 on:
+  pull_request:
+    paths:
+      - '.github/workflows/v26_free.yml'
+      - 'requirements-video.txt'
   push:
     branches: [main]
     paths:
@@ -33,6 +37,13 @@ jobs:
     timeout-minutes: 28
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-video.txt
+      - name: 회귀 테스트용 영상 의존성 설치
+        run: python3 -m pip install -r requirements-video.txt
       - name: Install FFmpeg and Korean caption fonts
         run: |
           sudo apt-get update -qq
@@ -59,9 +70,7 @@ jobs:
         run: python3 src/v25_qa.py --output output --selection sample/v22-mixed-selection.json --video output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
       - name: Retain self-produced nonverbal soundtrack with no TTS or original-source audio
         run: |
-          python3 -m venv /tmp/v25_audio_env
-          /tmp/v25_audio_env/bin/pip install --quiet numpy
-          /tmp/v25_audio_env/bin/python src/v25_audio_remaster.py \
+          python3 src/v25_audio_remaster.py \
             --input output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4 \
             --output output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4 \
             --scratch output/v25_audio_temp
@@ -73,9 +82,7 @@ jobs:
             --video output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4
       - name: Render V25 actual situation captions and 5-footage comparison endcard
         run: |
-          python3 -m venv /tmp/v25_editorial_env
-          /tmp/v25_editorial_env/bin/pip install --quiet pillow opencv-python-headless
-          /tmp/v25_editorial_env/bin/python src/v25_editorial_finish.py \
+          python3 src/v25_editorial_finish.py \
             --input output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4 \
             --output output/TOP5_V25_SITUATION_CAPTIONS_REVIEW_ONLY_1080x1920.mp4 \
             --scratch output/v25_editorial_work
@@ -129,7 +136,7 @@ jobs:
           retention-days: 7
   index:
     needs: render
-    if: always()
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -15,8 +15,9 @@ from collections import Counter
 from top5 import query_candidates, category_candidates, download_video, probe_duration, motion_highlight
 from top5_auto_v29 import (
     find_seed_candidates, title_score, story_label,
-    assemble_video, technical_qa, save_license_and_status
+    assemble_video, technical_qa, save_license_and_status, CUT_LENGTHS
 )
+from top5_hook_selection import SourceShortage, choose_hook, identity
 
 BASE=Path(__file__).resolve().parents[1]
 CHECKED=BASE/"review/v29_checked_actions.json"
@@ -124,16 +125,22 @@ def apply_curated_cut_shift(title,start,duration):
         raise ValueError("Unreasonable editorial cut adjustment")
     return round(max(0.0,min(float(start)+shift,float(duration)-6.08)),2)
 
-def select_sources(candidates,out):
+def select_sources(candidates,out,*,with_hook=False):
     library=Path(out)/"originals"
     library.mkdir(parents=True,exist_ok=True)
     evidence=checked_scenes()
     accepted=[]
     attempts=[]
+    seen=set()
     for idx,src in enumerate(candidates[:MAX_DOWNLOADS],1):
         suffix=Path(src["title"]).suffix.lower()
         if suffix not in (".webm",".mp4",".ogv"):
+            attempts.append({"title":src["title"],"status":"REJECTED","reason_code":"UNSUPPORTED_CONTAINER"})
             continue
+        if identity(src) in seen:
+            attempts.append({"title":src["title"],"status":"REJECTED","reason_code":"DUPLICATE_SOURCE"})
+            continue
+        seen.add(identity(src))
         target=library/f"clip_{idx:02}{suffix}"
         row={"title":src["title"],"source_page":src["source_page"],
              "status":"unchecked"}
@@ -181,7 +188,7 @@ def select_sources(candidates,out):
         out=Path(out)
         (out/"V30_CANDIDATES.json").write_text(
             json.dumps(attempts,ensure_ascii=False,indent=2),encoding="utf-8")
-        raise RuntimeError(f"Only {len(accepted)} videos passed technical source gate")
+        raise SourceShortage("SOURCE_SHORTAGE",f"기술 검사를 통과한 원본 {len(accepted)}/5",attempts)
     accepted.sort(key=lambda x:-x["editorial_quality_heuristic"])
     used=[]
     author_count=Counter()
@@ -201,6 +208,9 @@ def select_sources(candidates,out):
             if len(used)==5:
                 break
     used.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
+    if with_hook:
+        hook=choose_hook(used,accepted,list(CUT_LENGTHS.values()),attempts)
+        return used,attempts,hook
     return used,attempts
 
 def write_gates(output,topic,items,attempts,standings):
@@ -247,12 +257,16 @@ def main():
     print("TOPIC",topic["topic_id"],"CANDIDATES",len(candidates),flush=True)
     (out/"V30_TOPICS.json").write_text(json.dumps(standings,ensure_ascii=False,
                           indent=2)+"\n",encoding="utf-8")
-    if len(candidates)<5:
-        raise RuntimeError("Not enough license-metadata-screened candidates for this topic")
-    items,attempts=select_sources(candidates,out)
+    try:
+        items,attempts,hook_source=select_sources(candidates,out,with_hook=True)
+    except SourceShortage as exc:
+        (out/"SOURCE_ATTEMPTS.json").write_text(json.dumps(
+            [{"topic_id":topic["topic_id"],"reason_code":exc.code,"candidates":exc.attempts}],
+            ensure_ascii=False,indent=2),encoding="utf-8")
+        raise
     write_gates(out,topic,items,attempts,standings)
-    save_license_and_status(topic,items,standings,attempts,out)
-    video=assemble_video(topic,items,out)
+    save_license_and_status(topic,items,standings,attempts,out,hook_source)
+    video=assemble_video(topic,items,out,hook_source)
     qa=technical_qa(video,out,topic,items)
     print("V30 SUCCESS",video,"decode=",qa["full_decode"],"PUBLISH=NO",flush=True)
 

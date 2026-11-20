@@ -11,6 +11,7 @@ import argparse
 import json
 import re
 import subprocess
+from collections import Counter
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -19,6 +20,7 @@ from top5 import (fetch_json, extract_candidates, query_candidates, download_vid
 from v28_fullscreen_builder import (ASS_HEAD, SEGMENTS, W, H, FPS, run,
                                     cue, create_scene, get_frame)
 from v25_audio_remaster import create_soundtrack
+from top5_hook_selection import SourceShortage, choose_hook, identity, separated
 
 # The fixed design must match V28.3, including the user's 60pt caption change.
 assert "Style: Caption,NanumSquare,60," in ASS_HEAD
@@ -76,7 +78,7 @@ def find_seed_candidates(topic):
             "iiprop":"url|size|mime|extmetadata"})
     return list(extract_candidates(data))
 
-def find_for_topic(topic, do_search=True):
+def find_for_topic(topic, do_search=True, *, expanded=False):
     found={}
     errors=[]
     try:
@@ -85,9 +87,10 @@ def find_for_topic(topic, do_search=True):
     except Exception as e:
         errors.append("seed lookup: "+type(e).__name__)
     if do_search:
-        for phrase in topic["search"][:2]:
+        phrases=topic["search"] if expanded else topic["search"][:2]
+        for phrase in phrases:
             try:
-                for row in query_candidates(phrase,per_query=35):
+                for row in query_candidates(phrase,per_query=70 if expanded else 35):
                     found.setdefault(row["title"],row)
             except Exception as e:
                 errors.append(phrase+": "+type(e).__name__)
@@ -96,6 +99,8 @@ def find_for_topic(topic, do_search=True):
         score=title_score(row,topic)
         if score>0:
             scored.append({**row,"title_score":round(score,2)})
+        else:
+            errors.append({"title": row["title"], "reason_code": "TOPIC_OR_LICENSE_METADATA_REJECTED"})
     scored.sort(key=lambda r:(-r["title_score"],r["title"]))
     return scored,errors
 
@@ -118,7 +123,8 @@ def recommend_topics(topics, forced=None):
     recommendations.sort(key=lambda x:(-min(5,x["eligible_metadata_count"]),
                      -x["discovery_heuristic"],x["topic_id"]))
     chosen_id=forced if forced and forced!="auto" else next(
-        (x["topic_id"] for x in recommendations if x["eligible_metadata_count"]>=5),None)
+        (x["topic_id"] for x in recommendations if x["eligible_metadata_count"]>=5),
+        recommendations[0]["topic_id"] if recommendations else None)
     if not chosen_id:
         raise RuntimeError("No topic has at least 5 metadata-eligible originals")
     if forced not in (None,"auto") and chosen_id not in catalog:
@@ -134,12 +140,18 @@ def select_sources(candidates,output,limit=11):
     sources=output/"source_assets"
     sources.mkdir(parents=True,exist_ok=True)
     eligible=[]
+    seen=set()
     attempts=[]
     for number, cand in enumerate(candidates[:limit],1):
         title=cand["title"]
         suff=Path(title).suffix.lower()
         if suff not in (".webm",".ogv",".ogg",".mp4"):
+            attempts.append({"title":title,"reason_code":"UNSUPPORTED_CONTAINER"})
             continue
+        if identity(cand) in seen:
+            attempts.append({"title":title,"reason_code":"DUPLICATE_SOURCE"})
+            continue
+        seen.add(identity(cand))
         target=sources/f"original_{number:02}{suff}"
         failure=None
         try:
@@ -167,31 +179,30 @@ def select_sources(candidates,output,limit=11):
             failure=type(e).__name__+": "+str(e)[:110]
             target.unlink(missing_ok=True)
         attempts.append({"title":title,"downloaded":failure is None,
-                         "failure":failure,"actual_action_verified":False})
+                         "failure":failure,"reason_code":"SOURCE_CHECK_FAILED" if failure else None,
+                         "actual_action_verified":False})
         print("SOURCE",number,title,"PASS" if not failure else failure,flush=True)
-        if len(eligible)>=6:
+        if len(eligible)>=6 and sum(min(n,2) for n in Counter(r["label"] for r in eligible).values())>=5:
             break
-    if len(eligible)<6:
-        raise RuntimeError(f"Only {len(eligible)} eligible playable sources; require 5 ranked clips plus a distinct hook")
+    if len(eligible)<5:
+        raise SourceShortage("SOURCE_SHORTAGE",f"재생 가능한 순위 원본 {len(eligible)}/5",attempts)
     # Distinctness constraint: not more than two identical label categories.
     used=[]
     label_counts={}
     for row in sorted(eligible,key=lambda x:x["editorial_quality_heuristic"],reverse=True):
         if label_counts.get(row["label"],0)>=2:
+            attempts.append({"title":row["title"],"reason_code":"RANK_LABEL_LIMIT"})
             continue
         used.append(row)
         label_counts[row["label"]]=label_counts.get(row["label"],0)+1
         if len(used)==5:
             break
     if len(used)<5:
-        raise RuntimeError("Insufficient label-diverse sources; refuse fallback filler")
+        raise SourceShortage("SOURCE_DIVERSITY_SHORTAGE","순위 장면 다양성 기준을 충족한 원본 부족",attempts)
     # Ordered from 5th to 1st by technical/editing heuristic, not an
     # objective ranking of how funny real-world events are.
     used.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
-    remaining=[r for r in eligible if r["title"] not in {x["title"] for x in used}]
-    if not remaining:
-        raise RuntimeError("No sixth independent source available for opening hook")
-    return used,attempts,remaining[0]
+    return used,attempts,choose_hook(used,eligible,list(CUT_LENGTHS.values()),attempts)
 
 def cue_with_ass_override(start,end,style,plain_text,x,y,align,layer,override):
     """Insert trusted ASS styling after cue() escapes user-visible text.
@@ -293,7 +304,7 @@ def render_dynamic_endcard(items,path):
     draw.text((W//2,1800),"1위 장면 다시 보기",anchor="mt",font=ft(57),fill="#FFFFFF")
     image.save(path,quality=93)
 
-def save_license_and_status(topic,items,recommendations,attempts,output):
+def save_license_and_status(topic,items,recommendations,attempts,output,hook_source=None):
     credits=[f"# {topic['video_subject']} — 사용 출처 및 상태",
             "", "본 영상은 비공개 검수용 초안이며 게시 승인된 영상이 아닙니다.",
             "모든 소스 오디오는 제거하고 자체 합성 사운드만 사용했습니다.",""]
@@ -312,6 +323,14 @@ def save_license_and_status(topic,items,recommendations,attempts,output):
             ("title","source_page","author","license","license_url",
              "cut_start","duration_sec","motion_proxy","label","editorial_quality_heuristic",
              "review_basis")})
+    hook = None
+    if hook_source:
+        hook = {key: hook_source.get(key) for key in
+                ("title","source_page","author","license","license_url","hook_start","hook_mode")}
+        credits.extend(["## 시작 훅", f"- 원본 · {hook['source_page']}",
+                        f"- 제작자 · {hook['author']}",
+                        f"- 표시 라이선스 · {hook['license']} ({hook['license_url']})",
+                        f"- 발췌 시작 · {hook['hook_start']}초"])
     (output/"SOURCE_CREDITS_REVIEW.md").write_text("\n".join(credits),encoding="utf-8")
     (output/"TOPIC_RECOMMENDATIONS.json").write_text(json.dumps(
         {"chosen_topic":topic["topic_id"],"rankings":recommendations,
@@ -319,7 +338,7 @@ def save_license_and_status(topic,items,recommendations,attempts,output):
          "license_and_YPP_verified":False},ensure_ascii=False,indent=2),
         encoding="utf-8")
     (output/"SOURCE_SELECTION_REVIEW.json").write_text(json.dumps(
-        {"items_in_rank_5_to_1_order":evidence,"attempted":attempts,
+        {"items_in_rank_5_to_1_order":evidence,"attempted":attempts,"hook":hook,
          "creative_action_human_verified":False,"publication_approved":False},
          ensure_ascii=False,indent=2),encoding="utf-8")
 
@@ -327,13 +346,17 @@ def assemble_video(topic,items,output,hook_source):
     work=output/"work"
     work.mkdir(parents=True,exist_ok=True)
     segment_files=[]
-    # Hook must use a sixth, non-ranked source; no fail-open reuse.
+    if hook_source is None:
+        raise SourceShortage("NO_DISTINCT_HOOK","검수된 훅 소스가 필요합니다")
     first=hook_source
-    if first["title"] in {row["title"] for row in items}:
-        raise ValueError("Hook source duplicates a ranked source")
     hook=work/"part_00.mp4"
     hook_at=max(0.0,min(first["duration_sec"]-2.1,
                           float(first.get("hook_start",first["cut_start"]+1.3))))
+    for row, seconds in zip(items,CUT_LENGTHS.values(),strict=True):
+        if identity(first)==identity(row) and (
+                first.get("hook_mode")!="nonoverlapping_rank_source"
+                or not separated(hook_at,row["cut_start"],seconds)):
+            raise ValueError("훅 구간과 순위 구간이 겹칩니다")
     create_scene(first["local_path"],max(0,hook_at),2,hook)
     segment_files.append(hook)
     for number,(name,sec) in enumerate(SEGMENTS[1:-1],1):
@@ -420,8 +443,35 @@ def main():
     topics=json.loads(Path(args.topics).read_text(encoding="utf-8"))
     topic,candidates,recommended=recommend_topics(topics,args.topic)
     print("TOPIC RECOMMENDED",topic["topic_id"],"candidate count",len(candidates),flush=True)
-    items,attempts,hook_source=select_sources(candidates,output)
-    save_license_and_status(topic,items,recommended,attempts,output)
+    choices=[topic]
+    if args.topic=="auto":
+        by_id={t["topic_id"]:t for t in topics}
+        choices += [by_id[r["topic_id"]] for r in recommended if r["topic_id"]!=topic["topic_id"]][:2]
+    history=[]
+    for index, choice in enumerate(choices):
+        inventory=candidates if index==0 else []
+        modes=(False,True) if index==0 else (True,)
+        for expanded in modes:
+            errors=[]
+            if expanded:
+                inventory,errors=find_for_topic(choice,expanded=True)
+            try:
+                items,attempts,hook_source=select_sources(inventory,output,limit=20 if expanded else 11)
+            except SourceShortage as exc:
+                history.append({"topic_id":choice["topic_id"],"expanded":expanded,"reason_code":exc.code,
+                                "discovery_notes":errors,"candidates":exc.attempts})
+            else:
+                history.append({"topic_id":choice["topic_id"],"expanded":expanded,"reason_code":None,
+                                "discovery_notes":errors,"candidates":attempts})
+                topic=choice
+                break
+        else:
+            continue
+        break
+    (output/"SOURCE_ATTEMPTS.json").write_text(json.dumps(history,ensure_ascii=False,indent=2),encoding="utf-8")
+    if history[-1]["reason_code"]:
+        raise SourceShortage(history[-1]["reason_code"],"확장 검색과 허용된 주제에서 원본 선정 실패")
+    save_license_and_status(topic,items,recommended,attempts,output,hook_source)
     video=assemble_video(topic,items,output,hook_source)
     qa=technical_qa(video,output,topic,items)
     print("SUCCESS REVIEW ONLY",video,qa["full_decode"],flush=True)
