@@ -70,9 +70,10 @@ def contact_sheet(video, path):
 
 
 def finalize(output, review, run_id, attempt, commit, install, render):
-    inventory = read_json(output/INVENTORY) if (output/INVENTORY).is_file() else None
     video = output/VIDEO
     archive = review/"runs"/str(run_id)/f"attempt-{attempt}"
+    if (archive/MANIFEST).is_file():
+        return archive,read_json(archive/MANIFEST)
     archive.mkdir(parents=True, exist_ok=True)
     report = {
         "run_id":run_id,"run_attempt":attempt,"source_commit":commit,
@@ -81,8 +82,18 @@ def finalize(output, review, run_id, attempt, commit, install, render):
         "video_sha256":None,"source_hashes_verified":False,"distinct_rank_sources":0,
         "publication_approved":False,"rights":"UNVERIFIED","audio_listening":"UNVERIFIED",
     }
+    inventory = None
+    if (output/INVENTORY).is_file():
+        try:
+            inventory = read_json(output/INVENTORY)
+            if not isinstance(inventory,dict):
+                raise ValueError("Invalid inventory structure")
+        except (ValueError,OSError):
+            inventory = None
+            report["inventory_error"] = "INVALID_SOURCE_INVENTORY"
     if inventory:
         write_json(archive/INVENTORY,inventory)
+        report["source_inventory_sha256"] = digest(archive/INVENTORY)
     if not video.is_file() or not video.stat().st_size:
         if install == "cancelled":
             report["reason"] = "INSTALL_CANCELLED"
@@ -118,6 +129,7 @@ def finalize(output, review, run_id, attempt, commit, install, render):
                                 and re.fullmatch("[A-Z_]+",str(exc)) else type(exc).__name__)
         else:
             report.update(status="SUCCESS",video_sha256=video_hash,contact_sheet="PASS",
+                          contact_sheet_sha256=digest(archive/SHEET),
                           resolution="1080x1920",fps=24,frames=720,duration_sec=30,
                           video_codec="h264",audio_codec="aac")
             for name in (HOOK,"SOURCE_CREDITS_REVIEW.md","V32_ENDING_SOURCE.json"):

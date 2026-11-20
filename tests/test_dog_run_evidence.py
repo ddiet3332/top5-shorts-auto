@@ -69,7 +69,8 @@ class DogRunEvidenceTests(unittest.TestCase):
     def test_success_pointer_survives_later_failure_and_old_rerun(self):
         video = self.prepare()
         with patch.object(evidence.shutil,"which",return_value="/bin/ffmpeg"), \
-             patch.object(evidence,"verify_streams") as verify, patch.object(evidence,"contact_sheet") as sheet:
+             patch.object(evidence,"verify_streams") as verify, \
+             patch.object(evidence,"contact_sheet",side_effect=lambda _, path: path.write_bytes(b"sheet")) as sheet:
             success = self.finalize()
             verify.assert_called_once_with(video)
             sheet.assert_called_once()
@@ -80,6 +81,16 @@ class DogRunEvidenceTests(unittest.TestCase):
         self.assertEqual(self.pointer("latest_attempt")["run_id"],101)
         self.assertTrue((self.review/"runs/100/attempt-1"/evidence.MANIFEST).is_file())
         self.assertTrue((self.review/"runs/101/attempt-1"/evidence.MANIFEST).is_file())
+
+    def test_malformed_inventory_and_repeat_preserve_attempt(self):
+        (self.output/evidence.INVENTORY).write_text("{")
+        first = self.finalize(install="cancelled",render="skipped")
+        self.assertEqual(first["inventory_error"],"INVALID_SOURCE_INVENTORY")
+        self.assertEqual(self.finalize(),first)
+        archive = self.review/"runs/100/attempt-1"
+        published = self.review.parent/"published"
+        evidence.record(archive,published)
+        self.assertEqual(evidence.read_json(published/"runs/100/attempt-1"/evidence.MANIFEST),first)
 
 
 if __name__ == "__main__":
