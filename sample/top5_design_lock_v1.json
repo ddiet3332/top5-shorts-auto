@@ -1,0 +1,34 @@
+{
+  "version": "TOP5_DESIGN_LOCK_V1",
+  "status": "APPROVED_REFERENCE",
+  "reference_filename": "1631.mp4",
+  "reference_sha256": "e66596ce108df65c34a6cb6687f65b55462c100918086febb5d415c350a7d9d3",
+  "canvas": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 24,
+    "duration_sec": 30
+  },
+  "rules": {
+    "video": "full-bleed source footage; no white canvas, no letterboxed photo window",
+    "rank_rail": "left semi-transparent black vertical panel with ranks 1위 through 5위 always visible",
+    "rank_active": "active rank in yellow, other ranks in white; no arrow prefix",
+    "caption": "bold white Korean text with thick black outline over the original video, around y=1000 in 1080x1920 reference frame; readable mobile size",
+    "layout": "no separate TOP5 header or large topic header; source video fills screen",
+    "editable": [
+      "source clips",
+      "ranking order",
+      "captions text",
+      "clip timing",
+      "sound"
+    ],
+    "immutable": [
+      "canvas and full-bleed layout",
+      "left rank rail",
+      "rank highlight palette",
+      "caption style and placement"
+    ]
+  },
+  "gate": "If implementation differs from reference, fail production rather than silently output V28.3 white-canvas style.",
+  "approval": "User explicitly locked design on 2026-11-21 KST; changes require explicit user approval."
+}
