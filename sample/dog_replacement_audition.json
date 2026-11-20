@@ -1,0 +1,128 @@
+{
+  "search_method": "Pexels public pages and official free downloads, then FFmpeg frame review",
+  "candidates": [
+    {
+      "id": "PX-10914657",
+      "page_url": "https://www.pexels.com/video/dog-doing-tricks-on-floor-10914657/",
+      "sha256": "f9efc0c08c5d070561529e2bfd90a24600869df10dbc24a1dfe9098574ac0ab2",
+      "duration_sec": 7.081667,
+      "width": 1080,
+      "height": 1920,
+      "disposition": "PASSED_OVER",
+      "frame_observation": "푸들이 이미 서 있는 상태로 시작하고 큰 행동 전환이 적음"
+    },
+    {
+      "id": "PX-20218496",
+      "page_url": "https://www.pexels.com/video/a-dog-sitting-in-a-tub-with-bubbles-20218496/",
+      "sha256": "8c81ae872e5ebe9f93d3e25ca08298dd2c7a9351e1873054ad18c3a4a261ee07",
+      "duration_sec": 45.92,
+      "width": 2160,
+      "height": 3840,
+      "disposition": "PASSED_OVER",
+      "frame_observation": "고개 움직임은 보이나 거품을 터뜨리는 순간은 확인되지 않음"
+    },
+    {
+      "id": "PX-32536736",
+      "page_url": "https://www.pexels.com/video/playful-dog-rolling-in-sunny-park-32536736/",
+      "sha256": "6d72d8d2f900b3fcdb7eac084f13a357b14dde414d3939083ab0964851adec8e",
+      "duration_sec": 16.633333,
+      "width": 2160,
+      "height": 3840,
+      "disposition": "PASSED_OVER",
+      "frame_observation": "등을 대고 구른 뒤 일어나며, 반복 구간이 길어 보류"
+    },
+    {
+      "id": "PX-33268466",
+      "page_url": "https://www.pexels.com/video/playful-dog-shaking-off-water-in-lake-33268466/",
+      "sha256": "ef00c6f0e2cf780ac683cc2f7d0fbd670cd7c87a607cfbeec60778dc08d594ff",
+      "duration_sec": 22.5,
+      "width": 1920,
+      "height": 1080,
+      "disposition": "SELECTED",
+      "frame_observation": "서 있던 보더콜리가 몸을 크게 틀어 물방울이 퍼짐",
+      "rank": 4,
+      "creator": "Brixiv",
+      "license_claim": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "source_samples_sec": [
+        3.5,
+        6.5,
+        8.46
+      ],
+      "edit_source_window_sec": [
+        3.5,
+        8.5
+      ]
+    },
+    {
+      "id": "PX-4107672",
+      "page_url": "https://www.pexels.com/video/brown-dog-jumping-on-water-4107672/",
+      "sha256": "02a3d35523fea24a7f193d5b5f02e8b3f2893b50f68ab3bc72b6a4367c037340",
+      "duration_sec": 14.441667,
+      "width": 1920,
+      "height": 1080,
+      "disposition": "PASSED_OVER",
+      "frame_observation": "물 튀기는 효과는 강하나 도약 주제가 기존 순위와 겹치고 얼굴이 잘림"
+    },
+    {
+      "id": "PX-7683157",
+      "page_url": "https://www.pexels.com/video/a-dog-looking-at-a-spinning-disco-ball-7683157/",
+      "sha256": "c67d4320f1b4501fa4d41e3f74a8cb71335c584fece27e69265264f111794436",
+      "duration_sec": 10.68,
+      "width": 2560,
+      "height": 1440,
+      "disposition": "PASSED_OVER",
+      "frame_observation": "디스코볼의 움직임이 주이며 강아지는 대체로 엎드려 있음"
+    },
+    {
+      "id": "PX-8465792",
+      "page_url": "https://www.pexels.com/video/a-dog-jumping-into-a-body-of-water-8465792/",
+      "sha256": "2052a90ee1660d046bb771e0702e365dadfab0bb4b66a628d5b634e2f68947d3",
+      "duration_sec": 12.991667,
+      "width": 2560,
+      "height": 1440,
+      "disposition": "PASSED_OVER",
+      "frame_observation": "모습이 갈대에 가려지고 물가에서 주 피사체가 작음"
+    },
+    {
+      "id": "PX-8646067",
+      "page_url": "https://www.pexels.com/video/a-young-woman-skateboarding-with-her-dog-8646067/",
+      "sha256": "81e912c5ed4795f5d9a25e319983e4550cc15514b94f3f7f23286385ea03364b",
+      "duration_sec": 12.470792,
+      "width": 1080,
+      "height": 1920,
+      "disposition": "SELECTED",
+      "frame_observation": "멀리서 보드가 다가오며 발 사이에 탄 퍼그가 드러나고 바닥으로 내려옴",
+      "rank": 3,
+      "creator": "Los Muertos Crew",
+      "license_claim": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "source_samples_sec": [
+        7.2,
+        9.25,
+        9.66
+      ],
+      "edit_source_window_sec": [
+        7.2,
+        9.7
+      ]
+    },
+    {
+      "id": "PX-9606805",
+      "page_url": "https://www.pexels.com/video/a-poodle-standing-and-dancing-on-its-hind-legs-9606805/",
+      "sha256": "0f5427620581e2cb391d4d09b2dde5ba6c41002ead167f90034a4b4f267ead05",
+      "duration_sec": 15.786667,
+      "width": 1080,
+      "height": 1920,
+      "disposition": "PASSED_OVER",
+      "frame_observation": "뒷발로 서 있으나 2위의 직립 장면과 구별성이 낮음"
+    },
+    {
+      "id": "PX-5669753",
+      "page_url": "https://www.pexels.com/video/man-sitting-on-a-skateboard-with-a-dog-5669753/",
+      "disposition": "DOWNLOAD_UNAVAILABLE"
+    }
+  ],
+  "rights": "UNVERIFIED",
+  "publication_approved": false
+}

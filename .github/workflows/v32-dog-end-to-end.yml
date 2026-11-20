@@ -9,6 +9,8 @@ on:
       - 'src/dog_run_evidence.py'
       - 'src/dog_editorial_evidence.py'
       - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
+      - 'scripts/persist_dog_evidence.sh'
       - 'src/top5_reviewed_*.py'
       - 'src/top5_auto_v32.py'
       - 'src/top5_auto_v29.py'
@@ -22,6 +24,8 @@ on:
       - 'src/dog_run_evidence.py'
       - 'src/dog_editorial_evidence.py'
       - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
+      - 'scripts/persist_dog_evidence.sh'
       - 'src/top5_reviewed_*.py'
       - 'sample/top5_dog_source_catalog.json'
       - 'tests/test_dog_run_evidence.py'
@@ -92,6 +96,12 @@ jobs:
             args+=(--baseline "$fixture")
           fi
           python src/top5_reviewed_render.py --topic dog_surprises --output output/dog "${args[@]}"
+      - name: Measure the rendered audio stream
+        timeout-minutes: 2
+        run: |
+          ffmpeg -nostdin -hide_banner -i output/dog/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
+            -map 0:a:0 -af 'atrim=end_sample=1440000,ebur128=peak=true,astats,silencedetect=n=-50dB:d=0.2' \
+            -f null - 2> output/dog/DOG_AUDIO_METRICS.txt
       - name: Record attempt and validate any completed MP4
         if: always()
         id: evidence
@@ -140,6 +150,56 @@ jobs:
           VERIFIED: ${{ steps.evidence.outputs.verified }}
         run: test "$VERIFIED" = true
 
+      - name: Rehearse production evidence persistence against isolated Git
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          workspace="$PWD"
+          archive="$workspace/output/evidence/review/runs/$GITHUB_RUN_ID/attempt-$GITHUB_RUN_ATTEMPT"
+          sandbox="$(mktemp -d)"
+          git init --bare "$sandbox/origin.git"
+          git init "$sandbox/checkout"
+          git -C "$sandbox/checkout" -c user.name=rehearsal -c user.email=rehearsal@example.invalid \
+            commit --allow-empty -m rehearsal
+          git -C "$sandbox/checkout" remote add origin "$sandbox/origin.git"
+          cd "$sandbox/checkout"
+          writer="$workspace/scripts/persist_dog_evidence.sh"
+          recorder="$workspace/src/dog_run_evidence.py"
+          bash "$writer" "$archive" "$sandbox/first" "$recorder"
+          # Use a later attempt of this run to prove that it only moves latest_attempt.
+          later=$((GITHUB_RUN_ATTEMPT+1))
+          python3 "$recorder" finalize "$sandbox/no-output" "$sandbox/failed" \
+            "$GITHUB_RUN_ID" "$later" "$GITHUB_SHA" success failure
+          git worktree remove "$sandbox/first"
+          bash "$writer" "$sandbox/failed/runs/$GITHUB_RUN_ID/attempt-$later" "$sandbox/second" "$recorder"
+          cd "$workspace"
+          mkdir -p output/persistence-rehearsal
+          for pointer in latest_attempt latest_success; do
+            git --git-dir="$sandbox/origin.git" show "top5-review-evidence:review/$pointer/PRODUCTION_RUN.json" \
+              > "output/persistence-rehearsal/$pointer.json"
+          done
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("output/persistence-rehearsal")
+          attempt = json.loads((root/"latest_attempt.json").read_text())
+          success = json.loads((root/"latest_success.json").read_text())
+          assert attempt["status"] == "MP4_NOT_CREATED"
+          assert success["status"] == "SUCCESS"
+          assert attempt["run_attempt"] == success["run_attempt"] + 1
+          assert success["video_sha256"] and attempt["video_sha256"] is None
+          PY
+      - name: Upload isolated persistence evidence
+        if: github.event_name == 'pull_request' && success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-persistence-rehearsal-${{ github.run_id }}-${{ github.run_attempt }}
+          path: output/persistence-rehearsal/
+          if-no-files-found: error
+          retention-days: 30
+
   persist-evidence:
     needs: build
     if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -167,22 +227,5 @@ jobs:
               "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$BUILD_OUTCOME" skipped
             source_archive="$work/runs/$GITHUB_RUN_ID/attempt-$GITHUB_RUN_ATTEMPT"
           fi
-          branch=top5-review-evidence
-          target="$RUNNER_TEMP/dog-evidence-branch"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
-            git fetch --no-tags origin "refs/heads/$branch"
-            git worktree add --detach "$target" FETCH_HEAD
-          else
-            status=$?
-            [[ "$status" == 2 ]]
-            git worktree add --detach "$target" HEAD
-            git -C "$target" switch --orphan "$branch"
-          fi
-          python3 src/dog_run_evidence.py record "$source_archive" "$target/review"
-          git -C "$target" add -- review
-          if ! git -C "$target" diff --cached --quiet; then
-            git -C "$target" commit -m "Record dog production attempt $GITHUB_RUN_ID/$GITHUB_RUN_ATTEMPT"
-            git -C "$target" push origin "HEAD:refs/heads/$branch"
-          fi
+          bash scripts/persist_dog_evidence.sh "$source_archive" \
+            "$RUNNER_TEMP/dog-evidence-branch" "$PWD/src/dog_run_evidence.py"

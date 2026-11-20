@@ -94,7 +94,7 @@ def finalize(output, review, run_id, attempt, commit, install, render):
     if inventory:
         write_json(archive/INVENTORY,inventory)
         report["source_inventory_sha256"] = digest(archive/INVENTORY)
-    for pattern in ("DOG_*.json","DOG_*.jpg"):
+    for pattern in ("DOG_*.json","DOG_*.jpg","DOG_AUDIO_METRICS.txt"):
         for evidence in output.glob(pattern):
             shutil.copyfile(evidence,archive/evidence.name)
     if not video.is_file() or not video.stat().st_size:
@@ -102,8 +102,8 @@ def finalize(output, review, run_id, attempt, commit, install, render):
             report["reason"] = "INSTALL_CANCELLED"
         elif install != "success":
             report["reason"] = "INSTALL_INCOMPLETE"
-        elif inventory and inventory.get("status") == "SOURCE_SHORTAGE":
-            report.update(status="SOURCE_SHORTAGE",reason="INSUFFICIENT_REVIEWED_ORIGINALS")
+        elif inventory and inventory.get("status") in {"SOURCE_SHORTAGE","EDITORIAL_SOURCE_SHORTAGE"}:
+            report.update(status=inventory["status"],reason="INSUFFICIENT_REVIEWED_ORIGINALS")
         else:
             report["reason"] = "RENDER_DID_NOT_CREATE_MP4"
     elif install != "success" or render != "success":

@@ -14,6 +14,7 @@ def render_reviewed_topic(topic, output, *, profile=None, baseline=None):
     output.mkdir(parents=True, exist_ok=True)
     lengths = list(CUT_LENGTHS.values())
     segments = None
+    selection_options = {}
     if profile is not None:
         segments = profile["segments"]
         if (tuple(label for label,_ in segments) != LABELS or sum(n for _,n in segments) != 30
@@ -21,8 +22,13 @@ def render_reviewed_topic(topic, output, *, profile=None, baseline=None):
             or (baseline is not None and source_digest(baseline) != BASELINE_SHA)):
             raise ValueError("INVALID_EDITORIAL_PROFILE_OR_BASELINE")
         lengths = [n for _,n in segments[1:-1]]
-    ranked, attempts, hook_pool = select_reviewed_sources(
-        topic, output, lengths, edits=profile["edits"] if profile else None)
+        selection_options = {"edits":profile["edits"],
+                             "additional_sources":profile.get("additional_sources", ()),
+                             "required_ids":{spec["source_id"] for spec in profile["shots"].values()}}
+        if "replacement_audition" in profile:
+            inventory = Path(profile["replacement_audition"]).read_text(encoding="utf-8")
+            (output/"DOG_REPLACEMENT_AUDITION.json").write_text(inventory, encoding="utf-8")
+    ranked, attempts, hook_pool = select_reviewed_sources(topic, output, lengths, **selection_options)
     digests = [source_digest(Path(row["local_path"])) for row in ranked]
     hook, audit, hook_path = select_v32_hook(ranked, hook_pool, digests, output)
     if not audit["independent_hook"]:

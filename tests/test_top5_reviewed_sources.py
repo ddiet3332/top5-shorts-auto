@@ -21,7 +21,7 @@ class ReviewedDogSourcesTests(unittest.TestCase):
         self.topic = next(row for row in topics if row["topic_id"] == "dog_surprises")
         self.catalog = json.loads((ROOT/self.topic["source_catalog"]).read_text(encoding="utf-8"))
 
-    def select(self, directory, *, unavailable=False):
+    def select(self, directory, *, unavailable=False, **options):
         output = Path(directory)
         catalog_path = output/"catalog.json"
         for source in self.catalog["sources"]:
@@ -43,7 +43,7 @@ class ReviewedDogSourcesTests(unittest.TestCase):
              patch("top5_reviewed_sources.subprocess.check_output", return_value="1080,1920\n"), \
              patch("top5_reviewed_sources.sampled_frames", side_effect=frames):
             return select_reviewed_sources({**self.topic,"source_catalog":str(catalog_path)},
-                                           output,list(CUT_LENGTHS.values()))
+                                           output,list(CUT_LENGTHS.values()), **options)
 
     def test_unique_rank_windows_and_readable_dog_captions(self):
         with TemporaryDirectory() as td:
@@ -67,3 +67,21 @@ class ReviewedDogSourcesTests(unittest.TestCase):
             self.assertEqual(audit["selected"],[])
             self.assertEqual(len(audit["rejections"]),len(self.catalog["sources"]))
             self.assertFalse(audit["publication_approved"])
+
+    def test_missing_required_replacement_cannot_use_previous_rank_source(self):
+        required = {"PX-9006741","PX-6869468","PX-new","PX-7515923","PX-7628753","PX-8473589"}
+        with TemporaryDirectory() as td:
+            with self.assertRaisesRegex(SourceShortage,"EDITORIAL_SOURCE_SHORTAGE"):
+                self.select(td, required_ids=required)
+            report = json.loads((Path(td)/"REVIEWED_SOURCE_SELECTION.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["missing_required_source_ids"],["PX-new"])
+            self.assertNotIn("carry",report["eligible_families"])
+
+    def test_rank_window_uses_source_time_after_slowdown(self):
+        with TemporaryDirectory() as td:
+            with self.assertRaisesRegex(SourceShortage,"EDITORIAL_SOURCE_SHORTAGE"):
+                self.select(td, edits={"PX-7515923":{"playback_rate":.5}},
+                            required_ids={"PX-31147382","PX-6869468","PX-34711078",
+                                          "PX-7515923","PX-7628753","PX-8473589"})
+            report = json.loads((Path(td)/"REVIEWED_SOURCE_SELECTION.json").read_text(encoding="utf-8"))
+            self.assertIn("INVALID_SOURCE_WINDOW",[row["reason"] for row in report["rejections"]])
