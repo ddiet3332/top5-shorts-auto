@@ -12,6 +12,13 @@ from dog_editorial_evidence import BASELINE_SHA, LABELS, collect, shot
 
 def render_reviewed_topic(topic, output, *, profile=None, baseline=None):
     output.mkdir(parents=True, exist_ok=True)
+    # User-approved reference 1631.mp4 is the only allowed dog TOP5 visual layout.
+    # Fail closed: never publish/review a white-canvas V28.3 render as design-locked.
+    if topic.get("topic_id") == "dog_surprises":
+        lock = json.loads(Path("sample/top5_design_lock_v1.json").read_text(encoding="utf-8"))
+        if lock["version"] != "TOP5_DESIGN_LOCK_V1":
+            raise RuntimeError("DESIGN_LOCK_MISSING_OR_CHANGED")
+        raise RuntimeError("DESIGN_LOCK_NOT_IMPLEMENTED: 1631.mp4 full-bleed rank-rail renderer required; legacy white-canvas output prohibited")
     lengths = list(CUT_LENGTHS.values())
     segments = None
     selection_options = {}
