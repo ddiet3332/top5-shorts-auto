@@ -12,7 +12,8 @@ from v12_sources import allowed_page
 from top5 import fetch_json, extract_candidates, download_video
 from v12_pexels_audition import download_single_pexels
 from top5_auto_v30 import (choose_topic,select_sources,write_gates)
-from top5_auto_v29 import (save_license_and_status,assemble_video,technical_qa)
+from top5_auto_v29 import (save_license_and_status,assemble_video,technical_qa,CUT_LENGTHS,get_frame)
+from top5_hook_selection import HOOK_SECONDS, SourceShortage, choose_hook, identity
 
 CHALLENGER={
  "id":"PX-40826295",
@@ -552,6 +553,71 @@ def select_dog_audition_sources(topic,candidates,output):
     },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     return selected,failures,combined
 
+def source_digest(path):
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def select_v32_hook(ranked, pool, ranked_hashes, output):
+    """Screen unused originals first and retain a byte-bound audit for either mode."""
+    attempts = []
+    audit = {"status": "NO_DISTINCT_HOOK", "independent_hook": False,
+             "editorial_action_verified": False, "rights_verified": False,
+             "publication_approved": False, "attempts": attempts}
+    ranked_ids = {identity(row) for row in ranked}
+    ranked_titles = {row["title"] for row in ranked}
+    digests = {identity(row): digest for row, digest in zip(ranked, ranked_hashes, strict=True)}
+    used_hashes = set(ranked_hashes)
+    durations = list(CUT_LENGTHS.values())
+    candidates = []
+    for row in sorted(pool, key=lambda item: -float(item.get("motion_proxy", 0))):
+        if identity(row) in ranked_ids or row["title"] in ranked_titles:
+            continue
+        path = Path(row["local_path"])
+        if not path.is_file() or not path.stat().st_size:
+            attempts.append({"title": row["title"], "reason_code": "HOOK_SOURCE_MISSING"})
+            continue
+        digest = source_digest(path)
+        if digest in used_hashes or identity(row) in digests:
+            attempts.append({"title": row["title"], "reason_code": "HOOK_SOURCE_DUPLICATE"})
+            continue
+        digests[identity(row)] = digest
+        used_hashes.add(digest)
+        candidates.append(row)
+    path = output / "INDEPENDENT_HOOK_AUDIT.json"
+    try:
+        hook = choose_hook(ranked, [*candidates, *ranked], durations, attempts)
+    except SourceShortage as exc:
+        audit["reason_code"] = exc.code
+        path.write_text(json.dumps(audit, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
+        raise
+    index = next((i for i, row in enumerate(ranked) if identity(row) == identity(hook)), None)
+    audit.update(status="HOOK_SELECTED", independent_hook=index is None,
+                 hook_mode=hook["hook_mode"], sha256=digests[identity(hook)],
+                 title=hook["title"], source_page=hook.get("source_page"),
+                 source_start_sec=hook["hook_start"], source_end_sec=round(hook["hook_start"]+HOOK_SECONDS, 3),
+                 reused_rank=None if index is None else 5-index,
+                 ranked_cut_sec=None if index is None else
+                 [ranked[index]["cut_start"], round(ranked[index]["cut_start"]+durations[index], 3)])
+    path.write_text(json.dumps(audit, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
+    return hook, audit, path
+
+
+def write_rendered_hook_evidence(video, audit, path):
+    # Capture the opening of the delivered MP4, including its actual overlays.
+    from PIL import Image
+    timestamps = (0.25, 1.0, 1.75)
+    sheet = Image.new("RGB", (216 * len(timestamps), 384))
+    for i, timestamp in enumerate(timestamps):
+        sheet.paste(get_frame(video, timestamp).resize((216, 384)), (i*216, 0))
+    contact_sheet = path.with_name("V32_RENDERED_HOOK_QA.jpg")
+    sheet.save(contact_sheet, quality=90)
+    audit.update(status="HOOK_RENDER_VERIFIED", rendered_video_sha256=source_digest(video),
+                 rendered_hook_range_sec=[0, HOOK_SECONDS], rendered_sample_times_sec=timestamps,
+                 rendered_sample_sheet=contact_sheet.name)
+    path.write_text(json.dumps(audit, ensure_ascii=False, indent=2)+"\n", encoding="utf-8")
+
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--topics",default="sample/top5_auto_topics_v30.json")
@@ -571,7 +637,7 @@ def main():
         selected,attempts,hook_pool=select_dog_audition_sources(topic,candidates,output)
     else:
         if len(candidates)<5: raise RuntimeError("insufficient rights-metadata sources")
-        selected,attempts=select_sources(candidates,output)
+        selected,attempts=select_sources(candidates,output,reserve_pool=hook_pool)
     final,audit=add_challenger(topic,selected,output)
     final,sofa_audit=add_sofa_challenger(topic,final,output)
     (output/"V35_SOFA_CHALLENGER_QA.json").write_text(json.dumps(
@@ -590,7 +656,6 @@ def main():
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     write_gates(output,topic,final,attempts,recommendations)
-    save_license_and_status(topic,final,recommendations,attempts,output)
     # Persist a deterministic, non-publishing replacement manifest for later QA.
     # These are provisional candidates, not verified clip reviews.
     replacement_manifest={
@@ -612,13 +677,11 @@ def main():
         original=Path(item["local_path"])
         if not original.is_file() or original.stat().st_size==0:
             raise RuntimeError("SELECTED_SOURCE_MISSING: "+str(original))
-        digest=hashlib.sha256()
-        with original.open("rb") as stream:
-            for chunk in iter(lambda:stream.read(1024*1024),b""):
-                digest.update(chunk)
         selected_evidence.append({
             "rank":5-i,"source_page":item.get("source_page"),
-            "source_path":str(original),"sha256":digest.hexdigest(),
+            "source_path":str(original),"sha256":source_digest(original),
+            "source_start_sec":item["cut_start"],
+            "source_end_sec":round(item["cut_start"]+list(CUT_LENGTHS.values())[i],3),
             "size_bytes":original.stat().st_size,
             "rights_verified":False,"publication_approved":False})
     if len(selected_evidence)!=5 or len({r["sha256"] for r in selected_evidence})!=5:
@@ -627,37 +690,13 @@ def main():
         "selected":selected_evidence,"rights_verified":False,
         "editorial_score_verified":False,"publication_approved":False
     },ensure_ascii=False,indent=2)+chr(10),encoding="utf-8")
-    # An independent sixth source is required for the hook, never a ranked clip.
-    ranked_titles={row["title"] for row in final}
-    ranked_hashes={row["sha256"] for row in selected_evidence}
-    hook_source=None
-    hook_audit={"independent_hook":False,"rights_verified":False,
-                "publication_approved":False}
-    for candidate in sorted(hook_pool,key=lambda row:-float(row.get("motion_proxy",0))):
-        if candidate["title"] in ranked_titles:
-            continue
-        path=Path(candidate["local_path"])
-        if not path.is_file() or path.stat().st_size==0:
-            continue
-        duration=float(candidate.get("duration_sec",0))
-        if duration<2.1:
-            continue
-        digest=hashlib.sha256(path.read_bytes()).hexdigest()
-        if digest in ranked_hashes:
-            continue
-        hook_source=dict(candidate)
-        hook_source["hook_start"]=max(0.0,min(duration-2.1,
-            float(candidate.get("cut_start",0))+1.3))
-        hook_audit.update({"independent_hook":True,"sha256":digest,
-                           "title":candidate["title"],"source_page":candidate.get("source_page"),
-                           "editorial_action_verified":False})
-        break
-    (output/"INDEPENDENT_HOOK_AUDIT.json").write_text(
-        json.dumps(hook_audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    if hook_source is None:
-        raise RuntimeError("INSUFFICIENT_INDEPENDENT_HOOK: sixth unique playable source required")
+    hook_source,hook_audit,hook_path=select_v32_hook(
+        final,[*hook_pool,*selected],[row["sha256"] for row in selected_evidence],output)
+    save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
     video=assemble_video(topic,final,output,hook_source)
     qa=technical_qa(video,output,topic,final)
+    write_rendered_hook_evidence(video,hook_audit,hook_path)
+    qa["hook_mode"]=hook_audit["hook_mode"]
     qa["version"]="V37"
     qa["curated_new_video_used"]=bool(audit["download_ok"]) if topic["topic_id"]!="dog_surprises" else len([item for item in final if item.get("provider")=="pexels"])>0
     qa["dog_pexels_originals_in_edit"]=sum(item.get("provider")=="pexels" for item in final) if topic["topic_id"]=="dog_surprises" else None

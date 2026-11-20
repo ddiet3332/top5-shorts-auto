@@ -1,5 +1,6 @@
 """V32 tests: fixed layout and source replacement are editorial, never rights approval."""
 import json,sys,unittest
+import numpy as np
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -8,6 +9,58 @@ sys.path.insert(0,str(ROOT/"src"))
 from top5_auto_v32 import CHALLENGER,add_challenger,challenger_row,apply_rank_one_story_timing,add_sofa_challenger,SOFA_CHALLENGER
 from v12_sources import allowed_page
 from v28_fullscreen_builder import ASS_HEAD,W,H,FPS,SEGMENTS
+from top5_auto_v32 import select_v32_hook, source_digest
+from top5_hook_selection import SourceShortage
+
+
+class V32HookTests(unittest.TestCase):
+    def select(self, folder, count=5, behavior="distinct", duration=14):
+        candidates = []
+        for i in range(count):
+            path = folder / f"{i}.mp4"
+            path.write_bytes(bytes([i]))
+            candidates.append({"title":path.name, "local_path":str(path), "cut_start":4.0,
+                               "duration_sec":duration, "source_page":f"https://example.com/{i}"})
+        ranked = candidates[:5]
+        def samples(row, start, seconds):
+            level = 145 if seconds == 2 and behavior == "distinct" else 65
+            size = int(seconds * 3)
+            return np.broadcast_to(level + np.arange(size)[:,None,None]*2, (size,36,64))
+        with patch("top5_hook_selection.sampled_frames", side_effect=samples):
+            return select_v32_hook(ranked, candidates, [source_digest(Path(row["local_path"]))
+                                                       for row in ranked], folder)
+
+    def test_five_sources_choose_nonoverlapping_opening(self):
+        with TemporaryDirectory() as folder:
+            hook, audit, _ = self.select(Path(folder))
+            self.assertEqual(hook["hook_mode"], "nonoverlapping_rank_source")
+            self.assertEqual(audit["reused_rank"], 5)
+            self.assertLessEqual(audit["source_end_sec"]+0.25, audit["ranked_cut_sec"][0])
+
+    def test_sixth_source_is_preferred_and_hashed(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            hook, audit, _ = self.select(root, count=6)
+            self.assertTrue(audit["independent_hook"])
+            self.assertEqual(hook["hook_mode"], "independent_source")
+            self.assertEqual(audit["sha256"], source_digest(root / "5.mp4"))
+
+    def test_repeated_frames_are_rejected_even_with_time_separation(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            with self.assertRaises(SourceShortage):
+                self.select(root, behavior="repeat")
+            report = json.loads((root / "INDEPENDENT_HOOK_AUDIT.json").read_text(encoding="utf-8"))
+            self.assertIn("HOOK_REPEATED_VISUALS", {row["reason_code"] for row in report["attempts"]})
+
+    def test_no_distinct_hook_stops_with_report(self):
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            with self.assertRaisesRegex(SourceShortage, "NO_DISTINCT_HOOK"):
+                self.select(root, duration=2.0)
+            report = json.loads((root / "INDEPENDENT_HOOK_AUDIT.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["reason_code"], "NO_DISTINCT_HOOK")
+            self.assertFalse(report["publication_approved"])
 
 class V32Tests(unittest.TestCase):
     def test_locked_visual_contract(self):

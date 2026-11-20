@@ -42,6 +42,7 @@ def choose_hook(ranked, candidates, durations, attempts):
         if end < 0:
             continue
         starts = dict.fromkeys(round(x, 3) for x in (
+            max(0, min(end, float(row.get("hook_start", row["cut_start"]+1.3)))),
             min(end, row["cut_start"] + 1.3), 0, end / 2, end,
             *range(1, int(end) + 1, max(1, int(end / 12)))))
         for start in starts:
