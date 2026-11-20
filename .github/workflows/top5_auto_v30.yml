@@ -2,6 +2,12 @@
 # Never use this workflow to publish or auto-certify ownership, licenses or YPP.
 name: TOP5 V30 - Auto discovery quality-gated MP4
 on:
+  pull_request:
+    paths:
+      - '.github/actions/setup-video-tools/**'
+      - '.github/workflows/top5_auto_v30.yml'
+      - 'src/top5_hook_selection.py'
+      - 'src/top5_auto_v30.py'
   workflow_dispatch:
     inputs:
       topic:
@@ -34,10 +40,9 @@ jobs:
     timeout-minutes: 36
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-video-tools
       - name: Prepare free editing stack
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
           python3 -m venv /tmp/v30
           /tmp/v30/bin/pip install -q numpy pillow
       - name: Regression check for design and rights gates
@@ -65,5 +70,6 @@ jobs:
             output/v30_auto/V30_CANDIDATES.json
             output/v30_auto/SOURCE_CREDITS_REVIEW.md
             output/v30_auto/SOURCE_SELECTION_REVIEW.json
+            output/v30_auto/SOURCE_ATTEMPTS.json
           retention-days: 7
           if-no-files-found: warn

@@ -2,6 +2,11 @@
 # Strictly a private REVIEW MASTER. Never upload to YouTube automatically.
 name: TOP5 V25 - no narration situational subtitle actual 30-second review
 on:
+  pull_request:
+    paths:
+      - '.github/actions/setup-video-tools/**'
+      - '.github/workflows/v25.yml'
+      - 'requirements-video.txt'
   push:
     branches: [main]
     paths:
@@ -28,10 +33,14 @@ jobs:
     timeout-minutes: 28
     steps:
       - uses: actions/checkout@v4
-      - name: Install FFmpeg and Korean caption fonts
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-video.txt
+      - name: 회귀 테스트용 영상 의존성 설치
+        run: python3 -m pip install -r requirements-video.txt
+      - uses: ./.github/actions/setup-video-tools
       - name: Run source and editorial safety regression tests
         run: python3 -m unittest discover -s tests -v
       - name: Download five exact curated originals and render full 30s H264 AAC
@@ -54,9 +63,7 @@ jobs:
         run: python3 src/v25_qa.py --output output --selection sample/v22-mixed-selection.json --video output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4
       - name: Retain self-produced nonverbal soundtrack with no TTS or original-source audio
         run: |
-          python3 -m venv /tmp/v25_audio_env
-          /tmp/v25_audio_env/bin/pip install --quiet numpy
-          /tmp/v25_audio_env/bin/python src/v25_audio_remaster.py \
+          python3 src/v25_audio_remaster.py \
             --input output/TOP5_DRAFT_REVIEW_ONLY_1080x1920.mp4 \
             --output output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4 \
             --scratch output/v25_audio_temp
@@ -68,9 +75,7 @@ jobs:
             --video output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4
       - name: Render V25 actual situation captions and 5-footage comparison endcard
         run: |
-          python3 -m venv /tmp/v25_editorial_env
-          /tmp/v25_editorial_env/bin/pip install --quiet pillow opencv-python-headless
-          /tmp/v25_editorial_env/bin/python src/v25_editorial_finish.py \
+          python3 src/v25_editorial_finish.py \
             --input output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4 \
             --output output/TOP5_V25_SITUATION_CAPTIONS_REVIEW_ONLY_1080x1920.mp4 \
             --scratch output/v25_editorial_work
@@ -83,6 +88,8 @@ jobs:
       - name: Export fixed 100-point QA rubric (actual grade requires review)
         if: always()
         run: python3 src/qa_scorecard.py --output output --run "$GITHUB_RUN_NUMBER" --stage final_review_pending
+      - name: 최종 MP4 검수 보고서 구분
+        run: cp output/v25_editorial_work/V25_TECHNICAL_QA.json output/V25_FINAL_TECHNICAL_QA.json
       - name: Upload actual 30s NO NARRATION review video, sound audit, rights and frame evidence
         uses: actions/upload-artifact@v4
         if: always()
@@ -93,6 +100,7 @@ jobs:
             output/TOP5_V25_AUDIO_ONLY_REVIEW_1080x1920.mp4
             output/TOP5_V25_SITUATION_CAPTIONS_REVIEW_ONLY_1080x1920.mp4
             output/v25_editorial_work/V25_TECHNICAL_QA.json
+            output/V25_FINAL_TECHNICAL_QA.json
             output/V25_SOURCE_AUDIO_AUDIT.json
             output/V25_TECHNICAL_QA.json
             output/V25_TECHNICAL_QA.md
@@ -111,7 +119,7 @@ jobs:
           retention-days: 7
   index:
     needs: render
-    if: always()
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write

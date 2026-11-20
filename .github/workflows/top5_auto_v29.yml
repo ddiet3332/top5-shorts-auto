@@ -2,6 +2,12 @@
 # template review draft. This workflow DOES NOT upload to YouTube or certify rights.
 name: TOP5 V29 - Auto topic to 30s review MP4
 on:
+  pull_request:
+    paths:
+      - '.github/actions/setup-video-tools/**'
+      - '.github/workflows/top5_auto_v29.yml'
+      - 'src/top5_hook_selection.py'
+      - 'src/top5_auto_v29.py'
   workflow_dispatch:
     inputs:
       topic:
@@ -34,10 +40,9 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-video-tools
       - name: Setup tools and no-cost image libraries
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
           python3 -m venv /tmp/v29env
           /tmp/v29env/bin/pip install --quiet numpy pillow
       - name: Run topic rights and layout safeguards
@@ -63,6 +68,7 @@ jobs:
             output/v29_auto/V29_TECHNICAL_QA.json
             output/v29_auto/TOPIC_RECOMMENDATIONS.json
             output/v29_auto/SOURCE_SELECTION_REVIEW.json
+            output/v29_auto/SOURCE_ATTEMPTS.json
             output/v29_auto/SOURCE_CREDITS_REVIEW.md
           retention-days: 7
           if-no-files-found: warn
