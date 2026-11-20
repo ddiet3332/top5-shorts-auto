@@ -28,6 +28,15 @@ def locked_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
     # The reference has a dark translucent panel on the left, 1위 at top.
     # ASS drawing primitives guarantee consistent alpha and geometry.
     lines=[]
+    # Reference 1631.mp4 shows a large gold, black-outlined title
+    # during the opening hook only (0–2s), not throughout the ranking.
+    opening_end=float(segments[0][1])
+    headline=str(topic.get("headline") or "강아지 돌발 행동 TOP5")
+    if "TOP5" not in headline.upper():
+        headline=headline+" TOP5"
+    lines.append(cue_with_ass_override(
+        0,opening_end,"MainTopic",headline,540,160,8,7,
+        r"{\\fs82\\bord5\\shad0\\1c&H00D7FF&\\3c&H000000&}"))
     t=0.0
     for label,length in segments:
         end=t+length
