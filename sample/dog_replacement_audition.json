@@ -120,9 +120,11 @@
     {
       "id": "PX-5669753",
       "page_url": "https://www.pexels.com/video/man-sitting-on-a-skateboard-with-a-dog-5669753/",
-      "disposition": "DOWNLOAD_UNAVAILABLE"
+      "disposition": "DOWNLOAD_BYTE_LIMIT",
+      "download_limit_mib": 125
     }
   ],
   "rights": "UNVERIFIED",
   "publication_approved": false
 }
+
