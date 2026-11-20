@@ -60,6 +60,29 @@ class DiscoveryGateTests(unittest.TestCase):
         })
         self.assertIn("share-alike",report["candidates"][0]["license_obligation"])
 
+    def test_six_new_action_families_feed_shared_renderer(self):
+        rows = [source(str(index),f"File:Dog {action}.webm") for index,action in enumerate(
+            ("jumping","digging","fetching","swimming","rolling","shaking")
+        )]
+
+        def inspect(path, record):
+            record.update(decoded=True,duration_sec=15)
+            level = int(record["id"])*40
+            return 3.,40.,0.,1.,np.full((18,36,64),level,dtype=np.int16)
+
+        with TemporaryDirectory() as directory, \
+             patch.object(discovery,"inspect_media",side_effect=inspect), \
+             patch.object(discovery,"choose_hook",side_effect=lambda ranks,pool,*rest: pool[0]), \
+             patch.object(discovery,"assemble_video",return_value=Path("review.mp4")) as render, \
+             patch.object(discovery,"technical_qa",return_value={"full_decode":"PASS"}):
+            report = discovery.run("dog_surprises",Path(directory),[Provider(rows)])
+            render.assert_called_once()
+        self.assertEqual(report["status"],"EDITORIAL_REVIEW_REQUIRED")
+        self.assertEqual(report["video"],"review.mp4")
+        self.assertEqual(len({r["sha256"] for r in report["selected"]}),5)
+        self.assertNotIn(report["hook"]["sha256"],{r["sha256"] for r in report["selected"]})
+        self.assertFalse(report["publication_approved"])
+
 
 if __name__ == "__main__":
     unittest.main()

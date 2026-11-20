@@ -34,7 +34,7 @@ TOPICS = {
         ("catch", "catching", r"catch\w*|caught", "받아내기"),
         ("run", "running", r"runn\w*|sprint\w*", "달리기"),
     )),
-    "bird_actions": ("새의 행동", "bird", r"birds?|parrots?|pigeons?|ducks?|crows?|sparrows?|robins?|eagles?|gulls?|herons?|finches?|mallards?", (
+    "bird_actions": ("새의 행동", "bird", r"birds?|parrots?|pigeons?|ducks?|crows?|sparrows?|robins?|eagles?|gulls?|herons?|finches?|mallards?|starlings?|geese|goose|swans?|chickadees?|blackbirds?|storks?|woodpeckers?|hummingbirds?|anas|passer", (
         ("fly", "flight", r"fl(?:y|ying|ies|ew|ight)", "날기"),
         ("feed", "feeding", r"feed\w*|eat\w*", "먹이 먹기"),
         ("bathe", "bathing", r"bath\w*", "목욕"),
@@ -172,6 +172,33 @@ def inspect_media(path, record):
     return max(usable, key=lambda w:(w[0],w[1]))
 
 
+def source_intent(row, subject, actions):
+    title = re.sub(r"^File:|\.[a-z0-9]{2,5}$", "", row.get("title") or "", flags=re.I)
+    unsafe = re.search(
+        r"\b(?:animation|cartoon|compilation|trailer|robot|documentary|military|attack\w*|bodycam|police|shooting|tetris)\b",
+        title, re.I,
+    )
+    if unsafe:
+        raise ValueError("UNSUITABLE_TITLE")
+    if not re.search(r"\b(?:"+subject+r")\b", title, re.I):
+        raise ValueError("TOPIC_NOT_CORROBORATED_BY_TITLE")
+    return [(family,label) for family,_,pattern,label in actions
+            if re.search(r"\b(?:"+pattern+r")\b",title,re.I)]
+
+
+def metadata_priority(row, subject, actions):
+    try:
+        license_obligation(row)
+        intent = source_intent(row, subject, actions)
+    except ValueError:
+        return 0
+    if not (row.get("mime") or "").startswith("video/") or not row.get("artist") or not row.get("page_url"):
+        return 0
+    if (row.get("bytes") or 0) > MAX_BYTES:
+        return 0
+    return 2 if len(intent) == 1 else 1
+
+
 def run(topic_id, output, providers=None):
     headline, noun, subject, actions = TOPICS[topic_id]
     providers = [CommonsProvider()] if providers is None else providers
@@ -203,10 +230,10 @@ def run(topic_id, output, providers=None):
                 continue
             provider, row, _ = item
             key = (provider.name, row["id"])
-            if key not in seen and len(pooled) < MAX_RESULTS:
+            if key not in seen:
                 seen.add(key)
                 pooled.append(item)
-    records = pooled
+    records = sorted(pooled,key=lambda item:-metadata_priority(item[1],subject,actions))[:MAX_RESULTS]
     hashes, images, downloads = set(), [], 0
     for provider,row,query in records:
         record = {k:row.get(k) for k in ("id","title","page_url","file_url","artist","license","license_url")}
@@ -216,18 +243,12 @@ def run(topic_id, output, providers=None):
         try:
             if downloads >= MAX_DOWNLOADS:
                 raise ValueError("DOWNLOAD_COUNT_LIMIT")
-            if not row.get("mime","").startswith("video/") or not row.get("artist") or not row.get("page_url"):
+            if not (row.get("mime") or "").startswith("video/") or not row.get("artist") or not row.get("page_url"):
                 raise ValueError("MISSING_SOURCE_METADATA")
             record["license_obligation"] = license_obligation(row)
             if row.get("bytes") and row["bytes"] > MAX_BYTES:
                 raise ValueError("DOWNLOAD_BYTE_LIMIT")
-            title = re.sub(r"^File:|\.[a-z0-9]{2,5}$","",row["title"],flags=re.I)
-            if re.search(r"\b(?:animation|cartoon|compilation|trailer|robot|documentary|military|attack\w*|bodycam|police|shooting|tetris)\b",title,re.I):
-                raise ValueError("UNSUITABLE_TITLE")
-            if not re.search(r"\b(?:"+subject+r")\b",title,re.I):
-                raise ValueError("TOPIC_NOT_CORROBORATED_BY_TITLE")
-            matches = [(family,label) for family,_,pattern,label in actions
-                       if re.search(r"\b(?:"+pattern+r")\b",title,re.I)]
+            matches = source_intent(row, subject, actions)
             downloads += 1
             record["downloaded_bytes"] = provider.download(row,path)
             with path.open("rb") as stream:
@@ -284,7 +305,7 @@ def run(topic_id, output, providers=None):
                 report.update(status="EDITORIAL_REVIEW_REQUIRED",reason=exc.code)
     report["funnel"] = {
         "searched":len(report["searches"]), "returned":sum(s["returned"] for s in report["searches"]),
-        "unique_metadata":len(records), "download_attempts":downloads,
+        "unique_metadata":len(pooled), "inspected_metadata":len(records), "download_attempts":downloads,
         "downloaded":sum("downloaded_bytes" in r for r in report["candidates"]),
         "decoded":sum(bool(r.get("decoded")) for r in report["candidates"]),
         "unique_media":sum(bool(r.get("unique")) for r in report["candidates"]),
@@ -312,6 +333,7 @@ def run(topic_id, output, providers=None):
                                    hook_caption=hook["caption"],hook_caption_y=1712,mobile_captions=True)
             qa = technical_qa(video,output,topic,ranked)
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
+            (output/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4").unlink(missing_ok=True)
             report.update(reason="RENDER_OR_DECODE_FAILED", render_error=error_code(exc))
             save()
             raise
