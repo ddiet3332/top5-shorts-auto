@@ -560,7 +560,7 @@ REVIEWED_HOOK_STARTS = {
 
 REVIEWED_EDITS = {
     RANK_FIVE_BOX_SHA256: {
-        "caption_sequence":[[0.08,"상자 밖엔 꼬리만 보이는데"],[1.18,"구멍에서 불쑥 나온 앞발!"]],
+        "caption_sequence":[[0.08,"상자 밖에서 꼬리가 살랑"],[0.95,"구멍에서 불쑥 나온 앞발!"]],
         "source_crop":SourceCrop(width=1160,height=1080,y=0,start_x=400,end_x=400,
                                  pan_start=0,pan_end=1),
         "clear_rank_rail":True,
