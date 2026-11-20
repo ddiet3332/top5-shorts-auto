@@ -21,8 +21,8 @@
       "exit_code": 0,
       "pass": true,
       "findings": [
-        "[Parsed_volumedetect_0 @ 0x76f3b0002000] mean_volume: -22.8 dB",
-        "[Parsed_volumedetect_0 @ 0x76f3b0002000] max_volume: -2.5 dB"
+        "[Parsed_volumedetect_0 @ 0x721710002000] mean_volume: -22.8 dB",
+        "[Parsed_volumedetect_0 @ 0x721710002000] max_volume: -2.5 dB"
       ]
     }
   },
