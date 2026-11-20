@@ -31,7 +31,7 @@ def locked_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
     t=0.0
     for label,length in segments:
         end=t+length
-        lines.append(cue_with_ass_override(t,end,"Rank","m 0 0 l 205 0 205 690 0 690",0,455,7,1,r"{\\an7\\pos(0,455)\\p1\\1c&H101010&\\alpha&H77&}"))
+        lines.append(cue_with_ass_override(t,end,"Rank","m 0 0 l 175 0 175 690 0 690",0,455,7,1,r"{\\an7\\pos(0,455)\\p1\\1c&H101010&\\alpha&H77&}"))
         active=1 if label in ("rank1","outro") else int(label[-1]) if label.startswith("rank") else None
         for rank in range(1,6):
             y=475+(rank-1)*145
@@ -51,7 +51,7 @@ def locked_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
             if stop<=t+float(offset): continue
             safe=str(message).replace("{","(").replace("}",")")
             lines.append(cue_with_ass_override(t+float(offset),stop,"Caption",safe,
-                             540,1180,5,5,r"{\\fs55\\bord5\\shad0\\1c&HFFFFFF&\\3c&H000000&}"))
+                             540,1160,5,5,r"{\\fs55\\bord5\\shad0\\1c&HFFFFFF&\\3c&H000000&}"))
         t=end
     path.write_text(ASS_HEAD+"\n".join(lines)+"\n",encoding="utf-8")
     return lines
