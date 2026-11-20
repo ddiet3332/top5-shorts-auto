@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
+      - '.github/actions/setup-video-tools/**'
       - '.github/workflows/top5-30min-watchdog.yml'
       - 'src/top5_watchdog_*.py'
 permissions:
@@ -24,12 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python -m unittest discover -s tests -p 'test_top5_watchdog*.py' -v
-      - name: 실제 Artifact 디코딩 도구 준비
-        run: |
-          if ! command -v ffmpeg >/dev/null; then
-            timeout 65s sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 || echo 'APT 인덱스 갱신 지연 · 기존 인덱스로 설치 시도'
-            timeout 150s sudo apt-get install -y -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 --no-install-recommends ffmpeg
-          fi
+      - uses: ./.github/actions/setup-video-tools
+        with:
+          fonts: 'false'
       - name: PR 브랜치에서 운영 실행 조회 연동 확인
         env:
           GH_TOKEN: ${{ github.token }}
@@ -51,11 +49,13 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_top5_remediation.py' -v
       - name: Verify watchdog decisions
         run: python -m unittest discover -s tests -p 'test_top5_watchdog_decision.py' -v
+      - uses: ./.github/actions/setup-video-tools
+        with:
+          fonts: 'false'
       - name: 제작 실행 및 MP4·QA Artifact 검사
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           TOP5_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          command -v ffmpeg >/dev/null || timeout 150s sudo apt-get install -y -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 ffmpeg
           python src/top5_watchdog_artifacts.py

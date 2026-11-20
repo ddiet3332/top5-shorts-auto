@@ -4,6 +4,7 @@ name: TOP5 V30 - Auto discovery quality-gated MP4
 on:
   pull_request:
     paths:
+      - '.github/actions/setup-video-tools/**'
       - '.github/workflows/top5_auto_v30.yml'
       - 'src/top5_hook_selection.py'
       - 'src/top5_auto_v30.py'
@@ -39,10 +40,9 @@ jobs:
     timeout-minutes: 36
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-video-tools
       - name: Prepare free editing stack
         run: |
-          timeout 65s sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 || echo 'APT 인덱스 갱신 지연 · 기존 인덱스로 설치 시도'
-          timeout 150s sudo apt-get install -y -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 ffmpeg fonts-nanum fonts-noto-cjk
           python3 -m venv /tmp/v30
           /tmp/v30/bin/pip install -q numpy pillow
       - name: Regression check for design and rights gates

@@ -1,0 +1,13 @@
+name: Install pinned TOP5 video tools
+description: Prepare FFmpeg and Korean fonts on GitHub's Ubuntu runners
+inputs:
+  fonts:
+    description: Install fonts used by the existing renderers
+    default: 'true'
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        TOP5_INSTALL_FONTS: ${{ inputs.fonts }}
+      run: bash "$GITHUB_ACTION_PATH/setup.sh"

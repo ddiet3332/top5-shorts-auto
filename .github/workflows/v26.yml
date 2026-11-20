@@ -3,6 +3,7 @@ name: TOP5 V26 - signed rights and actual comedy source triage
 on:
   pull_request:
     paths:
+      - '.github/actions/setup-video-tools/**'
       - '.github/workflows/v26.yml'
       - 'requirements-video.txt'
   push:
@@ -32,10 +33,9 @@ jobs:
           cache-dependency-path: requirements-video.txt
       - name: 회귀 테스트용 영상 의존성 설치
         run: python3 -m pip install -r requirements-video.txt
-      - name: Install FFmpeg for legacy video unit tests
-        run: |
-          timeout 65s sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 || echo 'APT 인덱스 갱신 지연 · 기존 인덱스로 설치 시도'
-          timeout 150s sudo apt-get install -y -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 ffmpeg
+      - uses: ./.github/actions/setup-video-tools
+        with:
+          fonts: 'false'
       - name: Run complete preexisting unit tests and new rights regressions
         run: python3 -m unittest discover -s tests -v
       - name: Audit six official provider source pages without downloading copyrighted videos
