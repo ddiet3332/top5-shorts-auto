@@ -43,7 +43,7 @@ class V37Tests(unittest.TestCase):
             build_dynamic_subtitles(file,{"headline":"고양이들의 예상 밖 행동 TOP5"},got)
             data=file.read_text(encoding="utf-8")
             self.assertIn("진짜 열렸다!",data)
-            self.assertIn("카메라로 갑자기 돌진!",data)
+            self.assertIn("몸을 일으켜 렌즈 쪽으로",data)
             self.assertIn("Style: Caption,NanumSquare,60",data)
             self.assertIn("504,1190",data)
             build_dynamic_subtitles(file,{"headline":"고양이 돌발 행동"},got,
@@ -55,7 +55,7 @@ class V37Tests(unittest.TestCase):
             self.assertTrue(all(left[2]<=right[1] for left,right in zip(captions,captions[1:])))
             by_text={line[4].split("}",1)[-1]:line[1:3] for line in captions}
             self.assertEqual(by_text["가만있다가 갑자기 돌진!"],["0:00:00.00","0:00:02.00"])
-            self.assertEqual(by_text["카메라로 갑자기 돌진!"][0],"0:00:04.92")
+            self.assertEqual(by_text["몸을 일으켜 렌즈 쪽으로"][0],"0:00:04.92")
             self.assertIn("분홍 공에 앞발 한 방!",by_text)
             self.assertNotIn("장난감 낚아채기 성공!",by_text)
             self.assertEqual(by_text["지붕 사이 거리 재는 중"][1],"0:00:21.92")

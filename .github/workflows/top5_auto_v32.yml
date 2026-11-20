@@ -7,6 +7,8 @@ on:
       - '.github/workflows/top5_auto_v32.yml'
       - 'src/top5_auto_v32.py'
       - 'src/top5_auto_v29.py'
+      - 'src/v12_sources.py'
+      - 'src/v12_pexels_audition.py'
       - 'src/v28_fullscreen_builder.py'
       - 'src/top5_hook_selection.py'
       - 'tests/test_top5_auto_v32.py'
@@ -120,8 +122,11 @@ jobs:
             -vf "select='between(n,504,719)*not(mod(n,12))+eq(n,719)',scale=270:480,tile=5x4" \
             -frames:v 1 -update 1 -q:v 2 V32_RANK1_REPLAY_QA.jpg
           ffmpeg -hide_banner -v error -i "$video" \
-            -vf "select='between(n,108,148)*not(mod(n,4))',scale=270:480,tile=6x2" \
-            -frames:v 1 -update 1 -q:v 2 V32_RANK5_RUSH_QA.jpg
+            -vf "select='between(n,48,144)*not(mod(n,8))',scale=270:480,tile=5x3" \
+            -frames:v 1 -update 1 -q:v 2 V32_RANK5_BOX_QA.jpg
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='eq(n,266)+eq(n,284)+eq(n,306)+eq(n,324)+eq(n,336)+eq(n,358)',scale=360:640,tile=3x2" \
+            -frames:v 1 -update 1 -q:v 2 V32_RANK3_PAYOFF_QA.jpg
       - name: Keep both video and not-approved rights evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -146,7 +151,8 @@ jobs:
             output/v32_auto/V32_HOOK_PHONE_QA.jpg
             output/v32_auto/V32_CAPTIONS_PHONE_QA.jpg
             output/v32_auto/V32_RANK1_REPLAY_QA.jpg
-            output/v32_auto/V32_RANK5_RUSH_QA.jpg
+            output/v32_auto/V32_RANK5_BOX_QA.jpg
+            output/v32_auto/V32_RANK3_PAYOFF_QA.jpg
             output/v32_auto/V32_CHALLENGER_SELECTION.json
             output/v32_auto/V35_SOFA_CHALLENGER_QA.json
             output/v32_auto/V36_CANDIDATE_REPLACEMENTS_QA.json

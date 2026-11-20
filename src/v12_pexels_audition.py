@@ -23,7 +23,7 @@ def official_video_id(item):
     if not allowed_page(item) or item['provider'] != 'pexels':
         raise ValueError('Only curated Pexels video pages are accepted')
     path=urllib.parse.urlsplit(item['page_url']).path
-    match=re.fullmatch(r'/video/[^/]+-([0-9]+)/?',path)
+    match=re.fullmatch(r'/video/[^/]+-([0-9]+)/?',path.removeprefix('/es-es'))
     if not match:
         raise ValueError('Invalid official video link')
     return int(match.group(1))

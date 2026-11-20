@@ -9,8 +9,7 @@ from __future__ import annotations
 import argparse,hashlib,json,shutil,os
 from pathlib import Path
 from v12_sources import allowed_page
-from top5 import fetch_json, extract_candidates, download_video
-from v12_pexels_audition import download_single_pexels
+from v12_pexels_audition import download_single_pexels, safe_failure_code
 from top5_auto_v30 import (choose_topic,select_sources,write_gates)
 from top5_auto_v29 import (save_license_and_status,assemble_video,technical_qa,CUT_LENGTHS,get_frame)
 from top5_hook_selection import HOOK_SECONDS, SourceShortage, choose_hook, identity
@@ -145,7 +144,13 @@ def add_sofa_challenger(topic,items,output):
 
 # V36 manually inspected source windows. Editorial evidence is limited to
 # real source contact sheets; no source-rights or YouTube approval is implied.
-V36_JUMPSCARE_TITLE="File:Cat Jumpscare.webm"
+RANK_FIVE_BOX={
+    "id":"PX-15135238","provider":"pexels",
+    "page_url":"https://www.pexels.com/es-es/video/animal-mascota-jugando-gato-15135238/",
+    "creator":"Timo Volz","license_label":"Pexels License",
+    "license_url":"https://www.pexels.com/license/",
+}
+RANK_FIVE_BOX_SHA256="61cd98f25dabe5259dde508fb2677e8c23afab1d9a74a58a3fd680ee0c2e6e07"
 V36_PAIR_SOURCE={
     "id":"PX-17536779", "provider":"pexels",
     "title":"Playful Kitten Interacts with Cat in Cardboard Box",
@@ -155,7 +160,7 @@ V36_PAIR_SOURCE={
 }
 
 def add_v36_action_clips(topic,items,output):
-    """Try a real CC0 rush and an original vertical paw-play interaction.
+    """Try the box reveal and an original vertical paw-play interaction.
 
     Exact names and source windows are fixed from original 0.5s contact sheets.
     Never claim the action is funny, legally cleared, or revenue-safe solely
@@ -164,56 +169,38 @@ def add_v36_action_clips(topic,items,output):
     audit={"version":"V36","publication_approved":False,
            "rights_independently_verified":False,
            "youtube_reused_content_approved":False,
-           "jumpscare_added":False,"pair_added":False,
+           "box_added":False,"pair_added":False,
            "attempts":[]}
     if topic["topic_id"]!="cat_surprises":
         audit["reason"]="New clips were not auditioned for this topic"
         return items,audit
     rows=[dict(t) for t in items]
     if any(r["title"]=="File:Cat in a Bag.webm" for r in rows):
-        path=Path(output)/"v36_cat_jumpscare.webm"
+        path=Path(output)/"cat_box_paw.mp4"
         try:
-            data=fetch_json({
-                "action":"query","format":"json","formatversion":"2",
-                "titles":V36_JUMPSCARE_TITLE,
-                "prop":"imageinfo","iiprop":"url|size|mime|extmetadata"})
-            matches=[c for c in extract_candidates(data)
-                     if c["title"]==V36_JUMPSCARE_TITLE]
-            if len(matches)!=1 or matches[0]["license"]!="CC0":
-                raise ValueError("CC0 provider metadata missing or ambiguous")
-            original=matches[0]
-            download_video(original,path)
-            from top5 import probe_duration
-            duration=float(probe_duration(path))
-            if duration<8.2:
-                raise ValueError("Audited rush event 4.0-8.0 unavailable")
-            replacement={
-                "title":V36_JUMPSCARE_TITLE,
-                "source_page":original["source_page"],
-                "author":original["author"],
-                "license":original["license"],
-                "license_url":original["license_url"],
-                "source_claim":original["source_claim"],
-                "local_path":str(path),"duration_sec":duration,
-                "cut_start":4.0, "motion_proxy":0,
+            info=download_single_pexels(RANK_FIVE_BOX,path)
+            if source_digest(path)!=RANK_FIVE_BOX_SHA256 or float(info["duration_sec"])<6.625:
+                raise ValueError("Rank-five source does not match reviewed bytes and window")
+            replacement=challenger_row(RANK_FIVE_BOX,path,info)
+            replacement.update({
+                "cut_start":2.625,
                 "editorial_quality_heuristic":58.0,
-                "review_basis":"V36 original 0-10s 0.5s source frames; 4-8s action",
-                "label":"기습 카메라 돌진",
-                "caption":"굴러가다 갑자기 돌진!ㅋㅋ",
-                "rights_verified":False,"publication_approved":False,
-                "provenance_independently_verified":False,
-                "source_audio_approved":False}
+                "review_basis":"Issue #126: tail visible before a paw reaches from the box",
+                "label":"상자 구멍의 앞발",
+                "caption":"구멍에서 불쑥 나온 앞발!",
+            })
             rows=[replacement if z["title"]=="File:Cat in a Bag.webm" else z
                   for z in rows]
-            audit["jumpscare_added"]=True
+            audit["box_added"]=True
             audit["attempts"].append({
-                "replaced":"File:Cat in a Bag.webm","added":V36_JUMPSCARE_TITLE,
-                "start":4.0,"duration":4.0,"candidate_evidence":"V36 contact sheet",
-                "license_metadata":"CC0; independent ownership not proven"})
+                "replaced":"File:Cat in a Bag.webm","added":RANK_FIVE_BOX["page_url"],
+                "start":2.625,"duration":4.0,"sha256":RANK_FIVE_BOX_SHA256,
+                "license_metadata":"Pexels License; independent ownership not proven"})
         except Exception as ex:
             path.unlink(missing_ok=True)
             audit["attempts"].append({
-                "added":V36_JUMPSCARE_TITLE,"failed_type":type(ex).__name__,
+                "added":RANK_FIVE_BOX["page_url"],"failed_type":type(ex).__name__,
+                "reason":safe_failure_code(ex),
                 "selected":False})
     if any(r["title"]=="File:Katzensprung in Zeitlupe.webm" for r in rows):
         path=Path(output)/"v36_pexels_two_cats.mp4"
@@ -302,7 +289,7 @@ def apply_v37_story_and_door(topic,items,output):
             audit["door_issue"]=type(ex).__name__
     scripts={
         # Issue #126 frame review: the rush is visible at 4.92s in the edit.
-        "File:Cat Jumpscare.webm":[[0.1,"태평하게 누워 있더니"],[2.92,"카메라로 갑자기 돌진!"]],
+        "File:Cat Jumpscare.webm":[[0.1,"등을 대고 누웠다가"],[2.92,"몸을 일으켜 렌즈 쪽으로"]],
         "Pexels PX-40826295":[[0.1,"길가에서 멈춰 서더니"],[2.1,"아예 바닥을 뒹군다ㅋㅋ"]],
         "Pexels PX-34689563":[[0.1,"소파 아래가 수상한데?"],[1.8,"분홍 공에 앞발 한 방!"]],
         "File:Cat opening door.webm":[[0.12,"손잡이에 도전 중!"],[2.35,"앞발로 밀고 기다리니"],[4.62,"진짜 열렸다!"]],
@@ -572,10 +559,24 @@ REVIEWED_HOOK_STARTS = {
 }
 
 REVIEWED_EDITS = {
+    RANK_FIVE_BOX_SHA256: {
+        "caption_sequence":[[0.08,"상자 밖엔 꼬리만 보이는데"],[1.18,"구멍에서 불쑥 나온 앞발!"]],
+        "source_crop":SourceCrop(width=1160,height=1080,y=0,start_x=400,end_x=400,
+                                 pan_start=0,pan_end=1),
+        "clear_rank_rail":True,
+        "mobile_caption_y":1430,
+    },
+    "43d607195e3b9583726135ef031c1f3ddea76f26034ef4b85feb00fc34dd84e9": {
+        "cut_start":7.0,
+        "label":"종이가방 속 고양이",
+        "caption_sequence":[[0.1,"종이가방 안을 보니"],[1.9,"고양이가 얼굴을 내밀어요"]],
+        "mobile_caption_y":1455,
+    },
     "a26b3af399817a63048b51b8f3da8e420b29ee3592e2836fc1a5b5f14143a627": {
         "cut_start":2.875,
         "caption_sequence":None,
         "caption":"태평하게 누워 있더니…",
+        "label":"누웠다 일어나는 고양이",
         "source_crop":SourceCrop(width=1160,height=1080,y=0,start_x=360,end_x=620,
                                  pan_start=7.0,pan_end=7.8),
         "clear_rank_rail":True,
@@ -591,6 +592,9 @@ REVIEWED_EDITS = {
         "mobile_caption_y":1590,
     },
     "e5824e2c9ba6cb04cc84e4a624509c1fd43941617b34fd88e69751f199208f81": {
+        "cut_start":10.625,
+        "caption_sequence":[[0.08,"소파 밑에서 공을 보더니"],[0.78,"앞발로 공을 툭!"],
+                            [2.45,"바닥의 공에 또 앞발!"]],
         "source_crop":SourceCrop(width=2040,height=3060,y=300,start_x=120,end_x=0,
                                  pan_start=12.35,pan_end=13.1),
         "clear_rank_rail":True,
@@ -751,7 +755,7 @@ def main():
         final,[*hook_pool,*selected],[row["sha256"] for row in selected_evidence],output)
     save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
     reviewed_hook=REVIEWED_HOOK_STARTS.get(hook_audit["sha256"])==hook_source["hook_start"]
-    hook_caption="가만있다가 갑자기 돌진!" if reviewed_hook else "다음 행동을 맞혀 보세요"
+    hook_caption="흰 고양이가 덮치자 둘이 데굴!" if reviewed_hook else "다음 행동을 맞혀 보세요"
     video=assemble_video(topic,final,output,hook_source,
                          moving_ending=True,hook_caption=hook_caption,
                          hook_caption_y=(1455 if reviewed_hook else 1712) if mobile_captions else 1190,
@@ -765,7 +769,7 @@ def main():
     qa["dog_editorial_action_verified"]=False if topic["topic_id"]=="dog_surprises" else None
     qa["source_permissions_fully_cleared"]=False
     qa["publication_approved"]=False
-    qa["v36_actions_added"]=int(v36_audit["jumpscare_added"])+int(v36_audit["pair_added"])
+    qa["v36_actions_added"]=int(v36_audit["box_added"])+int(v36_audit["pair_added"])
     qa["v37_actual_door_selected"]=bool(v37_audit["door_added"])
     qa["v37_original_micro_story_written"]=bool(v37_audit["original_story_captions"])
     qa["original_style_preserved"]="V28.3 title and rank rail with mobile captions" if mobile_captions else "V28.3 locked, caption 60pt"
