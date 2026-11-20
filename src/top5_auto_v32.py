@@ -591,8 +591,8 @@ REVIEWED_EDITS = {
         "mobile_caption_y":1590,
     },
     "e5824e2c9ba6cb04cc84e4a624509c1fd43941617b34fd88e69751f199208f81": {
-        "source_crop":SourceCrop(width=1840,height=2760,y=300,start_x=320,end_x=0,
-                                 pan_start=11.3,pan_end=12.5),
+        "source_crop":SourceCrop(width=2040,height=3060,y=300,start_x=120,end_x=0,
+                                 pan_start=12.35,pan_end=13.1),
         "clear_rank_rail":True,
         "mobile_caption_y":1660,
     },
