@@ -7,6 +7,8 @@ on:
       - '.github/actions/setup-video-tools/**'
       - 'requirements-dog-review.txt'
       - 'src/dog_run_evidence.py'
+      - 'src/dog_editorial_evidence.py'
+      - 'sample/dog_editorial_profile_v1.json'
       - 'src/top5_reviewed_*.py'
       - 'src/top5_auto_v32.py'
       - 'src/top5_auto_v29.py'
@@ -18,9 +20,12 @@ on:
       - '.github/actions/setup-video-tools/**'
       - 'requirements-dog-review.txt'
       - 'src/dog_run_evidence.py'
+      - 'src/dog_editorial_evidence.py'
+      - 'sample/dog_editorial_profile_v1.json'
       - 'src/top5_reviewed_*.py'
       - 'sample/top5_dog_source_catalog.json'
       - 'tests/test_dog_run_evidence.py'
+      - 'tests/test_dog_editorial_evidence.py'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -32,6 +37,9 @@ concurrency:
 
 jobs:
   build:
+    permissions:
+      actions: read
+      contents: read
     runs-on: ubuntu-24.04
     timeout-minutes: 32
     steps:
@@ -65,10 +73,25 @@ jobs:
         run: |
           command -v python ffmpeg ffprobe fc-match
           python -m unittest discover -s tests -q
+      - name: Download the exact Issue 130 regression fixture
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '14672834682'
+          run-id: '44825600263'
+          github-token: ${{ github.token }}
+          path: output/fixture
       - name: Render five original dog sources with an independent hook
         id: render
         timeout-minutes: 12
-        run: python src/top5_reviewed_render.py --topic dog_surprises --output output/dog
+        run: |
+          args=(--editorial-profile sample/dog_editorial_profile_v1.json)
+          if [[ "$GITHUB_EVENT_NAME" = pull_request ]]; then
+            fixture="$(find output/fixture -name TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -type f -print -quit)"
+            test -n "$fixture"
+            args+=(--baseline "$fixture")
+          fi
+          python src/top5_reviewed_render.py --topic dog_surprises --output output/dog "${args[@]}"
       - name: Record attempt and validate any completed MP4
         if: always()
         id: evidence

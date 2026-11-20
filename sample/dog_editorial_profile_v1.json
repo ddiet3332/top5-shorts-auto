@@ -1,0 +1,23 @@
+{
+  "baseline_sha256": "23f626c8855f26953d8dab7a8688fbe00e89d040b51da19fee1525ee9cfdc9db",
+  "segments": [["hook",2],["rank5",5],["rank4",5],["rank3",5],["rank2",5],["rank1",5],["outro",3]],
+  "ending_start_sec": 9.25,
+  "ending_caption": "착지 뒤엔 장난감 줄다리기",
+  "edits": {
+    "PX-8473589": {"start_sec":4.17,"payoff_sec":4.6,"caption":"가방 위로 고개, 곧바로 폴짝!"},
+    "PX-9006741": {"start_sec":1,"payoff_sec":4,"payoff_priority":62,"caption_sequence":[[0.1,"풀밭에서 몸을 낮추더니"],[2.65,"뒷발로 차고 위로 펄쩍"]]},
+    "PX-6869468": {"start_sec":2.25,"payoff_sec":4.8,"caption_sequence":[[0.1,"코를 모래에 바짝 대더니"],[2.1,"앞발을 번갈아 모래를 파요"]]},
+    "PX-34711078": {"start_sec":5.4,"payoff_sec":7.125,"caption_sequence":[[0.1,"풀밭을 가로질러 달려와요"],[1.45,"입에 문 가지가 가로로 쏙"]]},
+    "PX-7515923": {"start_sec":17,"payoff_sec":20.5,"caption_sequence":[[0.1,"가만히 앉아 위를 보더니"],[3.35,"두 발로 서서 초록 공을 덥석"]]},
+    "PX-7628753": {"start_sec":0.35,"payoff_sec":1.5,"caption_sequence":[[0.08,"사람이 몸을 낮추자"],[0.78,"등 위에 올라 균형을 잡아요"],[3.02,"등에서 뛰어내려 착지"]]}
+  },
+  "shots": {
+    "hook":{"source_id":"PX-8473589","crop":[1380,970,55,230,540,4.28,5.02],"rate":0.5,"box":[0.44,0.20,0.72,0.66],"action":"bag_exit","observation":"가방 안에서 고개를 내밀고 오른쪽으로 뛰어내림"},
+    "rank5":{"source_id":"PX-9006741","crop":[872,720,0,350,350,0,1],"box":[0.56,0.09,0.82,0.77],"action":"yard_leap","observation":"낮게 웅크린 뒤 잔디에서 뒷발로 도약"},
+    "rank4":{"source_id":"PX-6869468","crop":[2160,3440,280,0,0,0,1],"box":[0.37,0.27,0.95,0.71],"action":"dig","observation":"코를 모래에 대고 앞발을 번갈아 파냄"},
+    "rank3":{"source_id":"PX-34711078","crop":[738,1300,330,174,174,0,1],"box":[0.41,0.33,0.68,0.66],"action":"carry","observation":"앞으로 달려오면서 가로로 문 나뭇가지를 드러냄"},
+    "rank2":{"source_id":"PX-7515923","box":[0.20,0.03,0.82,0.83],"action":"catch","observation":"앉았다가 몸을 일으켜 초록 공을 입으로 받음"},
+    "rank1":{"source_id":"PX-7628753","crop":[1080,1530,260,0,0,0,1],"box":[0.36,0.17,0.84,0.47],"action":"back_trick","observation":"몸을 낮춘 사람 등 위로 뛰어올라 잠시 균형을 잡고 착지"},
+    "outro":{"source_id":"PX-7628753","crop":[1080,1530,260,0,0,0,1],"box":[0.48,0.45,0.95,0.92],"action":"tug","observation":"착지 이후 원형 장난감을 사람과 당김","payoff_sec":10.5}
+  }
+}

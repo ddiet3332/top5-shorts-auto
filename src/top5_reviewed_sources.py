@@ -10,7 +10,7 @@ from top5_hook_selection import SourceShortage, sampled_frames
 from v12_pexels_audition import download_single_pexels, safe_failure_code
 
 
-def select_reviewed_sources(topic, output, rank_lengths):
+def select_reviewed_sources(topic, output, rank_lengths, *, edits=None):
     catalog = json.loads(Path(topic["source_catalog"]).read_text(encoding="utf-8"))
     if catalog["topic_id"] != topic["topic_id"]:
         raise ValueError("Source catalog topic mismatch")
@@ -18,7 +18,8 @@ def select_reviewed_sources(topic, output, rank_lengths):
     originals.mkdir(exist_ok=True, parents=True)
     eligible, hooks, failures = [], [], []
     hashes, samples = set(), []
-    for source in catalog["sources"]:
+    for original in catalog["sources"]:
+        source = {**original, **(edits or {}).get(original["id"], {})}
         path = originals / (source["id"] + ".mp4")
         try:
             info = download_single_pexels(source, path, max_bytes=125*1024*1024)
@@ -43,7 +44,8 @@ def select_reviewed_sources(topic, output, rank_lengths):
             if span < 48:
                 raise ValueError("SUBJECT_TOO_SMALL_AT_PAYOFF")
             row = {
-                "title":source["title"], "source_page":source["page_url"],
+                "title":source["title"], "source_page":source["page_url"], "source_id":source["id"],
+                "source_width":width, "source_height":height,
                 "author":source["creator"], "provider":"pexels",
                 "license":source["license_label"], "license_url":source["license_url"],
                 "local_path":str(path), "duration_sec":info["duration_sec"],

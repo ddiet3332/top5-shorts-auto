@@ -94,6 +94,9 @@ def finalize(output, review, run_id, attempt, commit, install, render):
     if inventory:
         write_json(archive/INVENTORY,inventory)
         report["source_inventory_sha256"] = digest(archive/INVENTORY)
+    for pattern in ("DOG_*.json","DOG_*.jpg"):
+        for evidence in output.glob(pattern):
+            shutil.copyfile(evidence,archive/evidence.name)
     if not video.is_file() or not video.stat().st_size:
         if install == "cancelled":
             report["reason"] = "INSTALL_CANCELLED"
