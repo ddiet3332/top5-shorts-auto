@@ -6,8 +6,10 @@ on:
     paths:
       - '.github/workflows/top5_auto_v32.yml'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_auto_v29.py'
       - 'src/top5_hook_selection.py'
       - 'tests/test_top5_auto_v32.py'
+      - 'tests/test_v37_story.py'
   workflow_dispatch:
     inputs:
       topic:
@@ -54,11 +56,47 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Choose topic, add valid video challenger and render original 30s TOP5
         env:
-          TOPIC: ${{ github.event.inputs.topic || 'auto' }}
+          TOPIC: ${{ github.event.inputs.topic || (github.event_name == 'pull_request' && 'cat_surprises') || 'auto' }}
         run: python src/top5_auto_v32.py --topic "$TOPIC" --output output/v32_auto
-      - name: Validate entire MP4 with video and audio decoding
+      - name: Validate MP4 and extract frame and audio evidence
         run: |
-          ffmpeg -hide_banner -v error -xerror -i output/v32_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+          cd output/v32_auto
+          video=TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+          ffmpeg -hide_banner -v error -xerror -i "$video" -map 0:v:0 -map 0:a:0 -f null -
+          ffprobe -v error -show_streams -of json "$video" > V32_MP4_STREAMS.json
+          ffmpeg -hide_banner -v error -i "$video" -map 0:a:0 -c:a pcm_f32le V32_AUDIO.wav
+          ffmpeg -hide_banner -i V32_AUDIO.wav \
+            -af 'ebur128=peak=true,astats,silencedetect=noise=-50dB:d=0.2' \
+            -f null - 2> V32_AUDIO_METRICS.txt
+          ffprobe -v error -select_streams a:0 -show_entries frame=best_effort_timestamp,nb_samples \
+            -of csv=p=0 "$video" > V32_AUDIO_FRAMES.csv
+          python - <<'PY'
+          import csv
+          import json
+          from pathlib import Path
+
+          video, audio = json.loads(Path("V32_MP4_STREAMS.json").read_text())["streams"]
+          assert (video["width"], video["height"], video["nb_frames"]) == (1080, 1920, "720")
+          assert video["avg_frame_rate"] == "24/1"
+          assert audio["sample_rate"] == "48000"
+          assert all(float(s["start_time"]) == 0 and float(s["duration"]) == 30 for s in (video, audio))
+          with open("V32_AUDIO_FRAMES.csv", newline="") as frames:
+              end = 0
+              for start, samples in csv.reader(frames):
+                  assert int(start) == end, f"Audio timestamp discontinuity at {start}, expected {end}"
+                  end += int(samples)
+          assert end == 30 * 48000
+          Path("V32_AUDIO_QA.json").write_text(json.dumps({
+              "start_offset_sec": 0, "decoded_samples_per_channel": end,
+              "audio_timestamp_continuity": "PASS", "listening": "UNVERIFIED",
+          }, indent=2) + "\n")
+          print(f"1080x1920, 720 frames, 30s, contiguous audio ({end} samples/channel)")
+          PY
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf 'fps=4,scale=216:384,tile=8x3' -q:v 3 'V32_TIMELINE_%02d.jpg'
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='eq(n,0)+eq(n,47)+eq(n,48)+eq(n,143)+eq(n,144)+eq(n,263)+eq(n,264)+eq(n,359)+eq(n,360)+eq(n,503)+eq(n,504)+eq(n,647)+eq(n,648)+eq(n,719)',scale=270:480,tile=7x2" \
+            -frames:v 1 -update 1 -q:v 3 V32_CUT_BOUNDARIES.jpg
       - name: Keep both video and not-approved rights evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -71,6 +109,14 @@ jobs:
             output/v32_auto/SELECTED_SOURCE_PROVENANCE.json
             output/v32_auto/INDEPENDENT_HOOK_AUDIT.json
             output/v32_auto/V32_RENDERED_HOOK_QA.jpg
+            output/v32_auto/V32_ENDING_SOURCE.json
+            output/v32_auto/work/captions.ass
+            output/v32_auto/V32_MP4_STREAMS.json
+            output/v32_auto/V32_AUDIO.wav
+            output/v32_auto/V32_AUDIO_METRICS.txt
+            output/v32_auto/V32_AUDIO_QA.json
+            output/v32_auto/V32_TIMELINE_*.jpg
+            output/v32_auto/V32_CUT_BOUNDARIES.jpg
             output/v32_auto/V32_CHALLENGER_SELECTION.json
             output/v32_auto/V35_SOFA_CHALLENGER_QA.json
             output/v32_auto/V36_CANDIDATE_REPLACEMENTS_QA.json

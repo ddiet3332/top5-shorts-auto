@@ -300,12 +300,14 @@ def apply_v37_story_and_door(topic,items,output):
         except Exception as ex:
             audit["door_issue"]=type(ex).__name__
     scripts={
-        "File:Cat Jumpscare.webm":[[0.1,"태평하게 누워 있더니"],[1.7,"카메라로 갑자기 돌진!"]],
+        # Issue #126 frame review: the rush is visible at 4.92s in the edit.
+        "File:Cat Jumpscare.webm":[[0.1,"태평하게 누워 있더니"],[2.92,"카메라로 갑자기 돌진!"]],
         "Pexels PX-40826295":[[0.1,"길가에서 멈춰 서더니"],[2.1,"아예 바닥을 뒹군다ㅋㅋ"]],
-        "Pexels PX-34689563":[[0.1,"소파 아래가 수상한데?"],[1.8,"장난감 낚아채기 성공!"]],
+        "Pexels PX-34689563":[[0.1,"소파 아래가 수상한데?"],[1.8,"분홍 공에 앞발 한 방!"]],
         "File:Cat opening door.webm":[[0.12,"손잡이에 도전 중!"],[2.35,"앞발로 밀고 기다리니"],[4.62,"진짜 열렸다!"]],
         "Pexels PX-17536779":[[0.1,"상자 안을 지키는 고양이"],[3.1,"밖에서 앞발 대결ㅋㅋ"]],
-        "File:Salto - Cat Jump.webm":[[0.12,"지붕 사이 거리 재는 중"],[2.4,"망설임 없이 도약!"]],
+        # End the setup before the cat emerges into the gap around 22s.
+        "File:Salto - Cat Jump.webm":[[0.12,"지붕 사이 거리 재는 중"],[0.92,"망설임 없이 도약!"]],
     }
     for row in rows:
         script=scripts.get(row["title"])
@@ -329,7 +331,7 @@ def v37_rights_and_description(items,output,audit):
             f"- Credited author: {row['author']}",
             f"- Source licence: {row['license']}",
             f"- Licence URL: {row['license_url']}",
-            f"- Adaptation: 4-6s crop, aspect-preserving composition, author-written micro story captions, custom audio, comparison ranking and endcard",
+            "- Adaptation: 4-6s crop, aspect-preserving composition, original captions, synthesized audio and comparison ranking",
             "- Rights, third-party release, reused-content YPP: not independently cleared.",""])
     notes.extend([
        "## ShareAlike when the door opening scene is used",
@@ -693,7 +695,13 @@ def main():
     hook_source,hook_audit,hook_path=select_v32_hook(
         final,[*hook_pool,*selected],[row["sha256"] for row in selected_evidence],output)
     save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
-    video=assemble_video(topic,final,output,hook_source)
+    hook_caption=(
+        "두 고양이, 다음 행동은?"
+        if hook_source["title"]=="File:Larry the cat and Chloé playing (100111224612).webm"
+        else "다음 행동을 맞혀 보세요"
+    )
+    video=assemble_video(topic,final,output,hook_source,
+                         moving_ending=True,hook_caption=hook_caption)
     qa=technical_qa(video,output,topic,final)
     write_rendered_hook_evidence(video,hook_audit,hook_path)
     qa["hook_mode"]=hook_audit["hook_mode"]
@@ -707,6 +715,7 @@ def main():
     qa["v37_actual_door_selected"]=bool(v37_audit["door_added"])
     qa["v37_original_micro_story_written"]=bool(v37_audit["original_story_captions"])
     qa["original_style_preserved"]="V28.3 locked, caption 60pt"
+    qa["audio_listening"]="UNVERIFIED"
     (output/"V32_TECHNICAL_QA.json").write_text(json.dumps(qa,
         ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("V32 VIDEO COMPLETE",video,"new source =",qa["curated_new_video_used"],

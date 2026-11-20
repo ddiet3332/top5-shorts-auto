@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
 from top5_auto_v32 import apply_v37_story_and_door,v37_rights_and_description
-from top5_auto_v29 import build_dynamic_subtitles
+from top5_auto_v29 import build_dynamic_subtitles, moving_ending_window
 
 def rows():
     return [
@@ -45,6 +45,18 @@ class V37Tests(unittest.TestCase):
             self.assertIn("카메라로 갑자기 돌진!",data)
             self.assertIn("Style: Caption,NanumSquare,60",data)
             self.assertIn("504,1190",data)
+            build_dynamic_subtitles(file,{"headline":"고양이 돌발 행동"},got,
+                                    moving_ending=True,hook_caption="두 고양이, 다음 행동은?")
+            captions=[line.split(",",4) for line in file.read_text(encoding="utf-8").splitlines()
+                      if line.startswith("Dialogue: ") and ",Caption," in line]
+            self.assertTrue(all(left[2]<=right[1] for left,right in zip(captions,captions[1:])))
+            by_text={line[4].split("}",1)[-1]:line[1:3] for line in captions}
+            self.assertEqual(by_text["두 고양이, 다음 행동은?"],["0:00:00.00","0:00:02.00"])
+            self.assertEqual(by_text["카메라로 갑자기 돌진!"][0],"0:00:04.92")
+            self.assertIn("분홍 공에 앞발 한 방!",by_text)
+            self.assertNotIn("장난감 낚아채기 성공!",by_text)
+            self.assertEqual(by_text["지붕 사이 거리 재는 중"][1],"0:00:21.92")
+            self.assertEqual(by_text["당신의 1위는?"],["0:00:27.00","0:00:30.00"])
             for r in got:
                 r.update({"author":"Uploader",
                           "source_page":"https://commons.wikimedia.org/wiki/"+r["title"].replace(" ","_"),
@@ -64,5 +76,12 @@ class V37Tests(unittest.TestCase):
         got,audit=apply_v37_story_and_door({"topic_id":"dog_surprises"},rows(),"/tmp")
         self.assertEqual(got,rows())
         self.assertFalse(audit["publication_approved"])
+
+    def test_motion_ending_prefers_pre_roll_and_avoids_rank_footage_in_it(self):
+        ranked=[dict(row,cut_start=4.0) for row in rows()]
+        independent={"title":"other"}
+        self.assertEqual(moving_ending_window(independent,20.3,ranked,3),(independent,17.3))
+        self.assertEqual(moving_ending_window(ranked[0],9,ranked,3),(ranked[-1],5.5))
+        self.assertEqual(moving_ending_window(independent,1,ranked,3),(ranked[-1],5.5))
 if __name__=="__main__":
     unittest.main()

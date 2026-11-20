@@ -217,12 +217,13 @@ def cue_with_ass_override(start,end,style,plain_text,x,y,align,layer,override):
         raise ValueError("ASS cue structure changed; refuse malformed subtitle")
     return base[:-len(plain_text)]+override+plain_text
 
-def build_dynamic_subtitles(path,topic,items):
+def build_dynamic_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None):
     subtitle_lines=[]
     # At 360px review size the original topic header was unreadably small.
     # ASS inline overrides preserve the existing 60pt reaction-caption template.
-    subtitle_lines.append(cue_with_ass_override(0,27,"MainTopic",topic["headline"],540,112,8,5,r"{\fs82\bord3}"))
-    subtitle_lines.append(cue_with_ass_override(0,27,"TopFive","TOP5",540,220,8,5,r"{\fs100\bord2}"))
+    title_end=sum(sec for label,sec in SEGMENTS if moving_ending or label!="outro")
+    subtitle_lines.append(cue_with_ass_override(0,title_end,"MainTopic",topic["headline"],540,112,8,5,r"{\fs82\bord3}"))
+    subtitle_lines.append(cue_with_ass_override(0,title_end,"TopFive","TOP5",540,220,8,5,r"{\fs100\bord2}"))
     # Never render raw provider/source titles as rank labels: Pexels metadata is
     # often long English text and collided with the action in mobile samples.
     # Show short Korean action labels derived from the already-authored
@@ -241,8 +242,8 @@ def build_dynamic_subtitles(path,topic,items):
     start=0
     for label,sec in SEGMENTS:
         end=start+sec
-        if label!="outro":
-            active=positions[label]
+        if label!="outro" or moving_ending:
+            active=positions.get(label)
             for rank in range(1,6):
                 y=485+(rank-1)*143
                 style="Active" if rank==active else "Rank"
@@ -260,9 +261,14 @@ def build_dynamic_subtitles(path,topic,items):
                     muted_label=f"{rank}위"
                     subtitle_lines.append(cue_with_ass_override(start,end,style,muted_label,35,y,7,5,r"{\alpha&H85&\fs65}"))
             rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
-            row=items[rank_index[label]] if label!="hook" else {}
-            reaction=(row.get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
-            if label!="hook" and row.get("caption_sequence"):
+            row=items[rank_index[label]] if label in rank_index else {}
+            if label=="outro":
+                reaction="당신의 1위는?"
+            elif label=="hook":
+                reaction=hook_caption or REACTIONS[label]
+            else:
+                reaction=row.get("caption") or REACTIONS[label]
+            if row.get("caption_sequence"):
                 # V37 original scene commentary: setup -> observed payoff.
                 # One line at a time in the LOCKED 60pt x/y design.
                 stages=row["caption_sequence"]
@@ -276,7 +282,7 @@ def build_dynamic_subtitles(path,topic,items):
                     subtitle_lines.append(cue(start+float(offset),stop,"Caption",
                                               str(words),504,1190,5))
             else:
-                time=start + (0.0 if label=="hook" else min(1.1,sec*.22))
+                time=start + (min(1.1,sec*.22) if label in rank_index else 0.0)
                 subtitle_lines.append(cue(time,end,"Caption",reaction,504,1190,5))
         start=end
     path.write_text(ASS_HEAD+"\n".join(subtitle_lines)+"\n",encoding="utf-8")
@@ -342,7 +348,21 @@ def save_license_and_status(topic,items,recommendations,attempts,output,hook_sou
          "creative_action_human_verified":False,"publication_approved":False},
          ensure_ascii=False,indent=2),encoding="utf-8")
 
-def assemble_video(topic,items,output,hook_source):
+def moving_ending_window(hook_source, hook_at, items, seconds):
+    """Prefer the original pre-roll so the next opening advances one frame."""
+    start=hook_at-seconds
+    if start>=0 and all(
+        identity(row)!=identity(hook_source)
+        or hook_at<=row["cut_start"]
+        or start>=row["cut_start"]+duration
+        for row,duration in zip(items,CUT_LENGTHS.values(),strict=True)
+    ):
+        return hook_source,start
+    top=items[-1]
+    return top,top["cut_start"]+(CUT_LENGTHS["rank1"]-seconds)/2
+
+
+def assemble_video(topic,items,output,hook_source,*,moving_ending=False,hook_caption=None):
     work=output/"work"
     work.mkdir(parents=True,exist_ok=True)
     segment_files=[]
@@ -367,13 +387,25 @@ def assemble_video(topic,items,output,hook_source):
             raise ValueError("Source action ends before selected rank cut")
         create_scene(clip["local_path"],start,sec,part)
         segment_files.append(part)
-    card=work/"original_5_clip_endcard.jpg"
-    render_dynamic_endcard(items,card)
     ending=work/"part_06.mp4"
-    run(["ffmpeg","-hide_banner","-v","error","-y","-loop","1",
-         "-framerate","24","-i",str(card),"-t","3","-vf","format=yuv420p",
-         "-c:v","libx264","-preset","veryfast","-crf","23",
-         "-r","24","-an",str(ending)],timeout=50)
+    outro_seconds=SEGMENTS[-1][1]
+    if moving_ending:
+        source,start=moving_ending_window(first,hook_at,items,outro_seconds)
+        create_scene(source["local_path"],start,outro_seconds,ending)
+        (output/"V32_ENDING_SOURCE.json").write_text(json.dumps({
+            "source_page":source.get("source_page"),
+            "source_start_sec":round(start,3),
+            "source_end_sec":round(start+outro_seconds,3),
+            "mode":"hook_preroll" if source is first else "rank1_replay",
+            "publication_approved":False,
+        },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    else:
+        card=work/"original_5_clip_endcard.jpg"
+        render_dynamic_endcard(items,card)
+        run(["ffmpeg","-hide_banner","-v","error","-y","-loop","1",
+             "-framerate","24","-i",str(card),"-t",str(outro_seconds),"-vf","format=yuv420p",
+             "-c:v","libx264","-preset","veryfast","-crf","23",
+             "-r","24","-an",str(ending)],timeout=50)
     segment_files.append(ending)
     listing=work/"files.txt"
     listing.write_text("".join("file '"+str(x.resolve()).replace("'","'\\''")+
@@ -382,9 +414,14 @@ def assemble_video(topic,items,output,hook_source):
     run(["ffmpeg","-hide_banner","-v","error","-y","-f","concat",
          "-safe","0","-i",str(listing),"-c","copy",str(combined)],timeout=90)
     subtitles=work/"captions.ass"
-    build_dynamic_subtitles(subtitles,topic,items)
+    build_dynamic_subtitles(subtitles,topic,items,moving_ending=moving_ending,hook_caption=hook_caption)
     audio=work/"synth_music.wav"
-    create_soundtrack(audio)
+    if moving_ending:
+        # The legacy action accents were timed against a different edit.
+        cuts=[sum(sec for _,sec in SEGMENTS[:i]) for i in range(len(SEGMENTS))]
+        create_soundtrack(audio,cue_times=cuts,action_accents=False)
+    else:
+        create_soundtrack(audio)
     final=output/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4"
     run(["ffmpeg","-hide_banner","-v","error","-y","-i",str(combined),
          "-i",str(audio),"-vf",f"ass={subtitles}",
