@@ -14,6 +14,7 @@ from v12_pexels_audition import download_single_pexels
 from top5_auto_v30 import (choose_topic,select_sources,write_gates)
 from top5_auto_v29 import (save_license_and_status,assemble_video,technical_qa,CUT_LENGTHS,get_frame)
 from top5_hook_selection import HOOK_SECONDS, SourceShortage, choose_hook, identity
+from v28_fullscreen_builder import SourceCrop
 
 CHALLENGER={
  "id":"PX-40826295",
@@ -570,6 +571,21 @@ REVIEWED_HOOK_STARTS = {
     "78103e4630f8c096f1836dd83b1a0e04e5dbb46f781e8692e2eee5823275c1cf": 95.875,
 }
 
+REVIEWED_FRAMING = {
+    "a26b3af399817a63048b51b8f3da8e420b29ee3592e2836fc1a5b5f14143a627": {
+        "source_crop":SourceCrop(width=1160,height=1080,y=0,start_x=360,end_x=620,
+                                 pan_start=7.0,pan_end=7.8),
+        "clear_rank_rail":True,
+        "mobile_caption_y":1430,
+    },
+    "a3c3a070ed28764ae2306b123e2e6c5a36cc680ae4a596f94dc0a54e89571bc8": {
+        "source_crop":SourceCrop(width=420,height=560,y=100,start_x=0,end_x=300,
+                                 pan_start=4.15,pan_end=6.65),
+        "clear_rank_rail":True,
+        "mobile_caption_y":1590,
+    },
+}
+
 
 def select_v32_hook(ranked, pool, ranked_hashes, output):
     """Screen unused originals first and retain a byte-bound audit for either mode."""
@@ -711,9 +727,14 @@ def main():
     save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
     reviewed_hook=REVIEWED_HOOK_STARTS.get(hook_audit["sha256"])==hook_source["hook_start"]
     hook_caption="가만있다가 갑자기 돌진!" if reviewed_hook else "다음 행동을 맞혀 보세요"
+    mobile_captions=topic["topic_id"]=="cat_surprises"
+    if mobile_captions:
+        for item,evidence in zip(final,selected_evidence,strict=True):
+            item.update(REVIEWED_FRAMING.get(evidence["sha256"],{}))
     video=assemble_video(topic,final,output,hook_source,
                          moving_ending=True,hook_caption=hook_caption,
-                         hook_caption_y=1620 if reviewed_hook else 1190)
+                         hook_caption_y=(1455 if reviewed_hook else 1712) if mobile_captions else 1190,
+                         mobile_captions=mobile_captions)
     qa=technical_qa(video,output,topic,final)
     write_rendered_hook_evidence(video,hook_audit,hook_path)
     qa["hook_mode"]=hook_audit["hook_mode"]
@@ -726,7 +747,8 @@ def main():
     qa["v36_actions_added"]=int(v36_audit["jumpscare_added"])+int(v36_audit["pair_added"])
     qa["v37_actual_door_selected"]=bool(v37_audit["door_added"])
     qa["v37_original_micro_story_written"]=bool(v37_audit["original_story_captions"])
-    qa["original_style_preserved"]="V28.3 locked, caption 60pt"
+    qa["original_style_preserved"]="V28.3 title and rank rail with mobile captions" if mobile_captions else "V28.3 locked, caption 60pt"
+    qa["rendered_design"]=qa["original_style_preserved"]
     qa["audio_listening"]="UNVERIFIED"
     (output/"V32_TECHNICAL_QA.json").write_text(json.dumps(qa,
         ensure_ascii=False,indent=2)+"\n",encoding="utf-8")

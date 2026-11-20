@@ -84,5 +84,20 @@ class V37Tests(unittest.TestCase):
         self.assertAlmostEqual(rank_one_replay_start({"cut_start":2.65,"replay_offset_sec":0.9},3),3.55)
         self.assertEqual(rank_one_replay_start({"cut_start":4.0},3),5.5)
         self.assertEqual(rank_one_replay_start({"cut_start":4.0,"replay_offset_sec":9},3),7.0)
+
+    def test_mobile_caption_lane_and_replay_share_the_rendered_style(self):
+        selected=rows()
+        selected[-1].update(mobile_caption_y=1590)
+        with tempfile.TemporaryDirectory() as td:
+            file=Path(td)/"captions.ass"
+            lines=build_dynamic_subtitles(file,{"headline":"고양이 돌발 행동"},selected,
+                                          moving_ending=True,mobile_captions=True,
+                                          hook_caption="훅 {장면}",hook_caption_y=1455)
+        captions=[line for line in lines if ",Caption," in line]
+        self.assertTrue(all(r"\fs86\bord4" in line for line in captions))
+        self.assertIn(r"\pos(540,1455)",captions[0])
+        self.assertIn(r"훅 \{장면\}",captions[0])
+        self.assertIn(r"\pos(540,1590)",captions[-1])
+        self.assertTrue(captions[-1].endswith("1위 장면 다시 보기"))
 if __name__=="__main__":
     unittest.main()
