@@ -45,6 +45,8 @@ def choose_hook(ranked, candidates, durations, attempts):
             max(0, min(end, float(row.get("hook_start", row["cut_start"]+1.3)))),
             min(end, row["cut_start"] + 1.3), 0, end / 2, end,
             *range(1, int(end) + 1, max(1, int(end / 12)))))
+        if row.get("reviewed_hook_only"):
+            starts = (row["hook_start"],) if 0 <= row["hook_start"] <= end else ()
         for start in starts:
             if index is not None and not separated(start, row["cut_start"], durations[index]):
                 continue

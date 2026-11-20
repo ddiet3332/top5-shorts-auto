@@ -6,6 +6,10 @@ on:
     paths:
       - '.github/workflows/top5_auto_v32.yml'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_reviewed_sources.py'
+      - 'sample/top5_*source_catalog.json'
+      - 'src/top5_reviewed_render.py'
+      - 'sample/top5_auto_topics_v30.json'
       - 'src/top5_auto_v29.py'
       - 'src/v12_sources.py'
       - 'src/v12_pexels_audition.py'
@@ -46,6 +50,10 @@ jobs:
   make-30-second-review:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        topic: ${{ fromJSON(github.event_name == 'pull_request' && '["cat_surprises","dog_surprises"]' || format('["{0}"]', inputs.topic || 'auto')) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -59,8 +67,13 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Choose topic, add valid video challenger and render original 30s TOP5
         env:
-          TOPIC: ${{ github.event.inputs.topic || (github.event_name == 'pull_request' && 'cat_surprises') || 'auto' }}
-        run: python src/top5_auto_v32.py --topic "$TOPIC" --output output/v32_auto
+          TOPIC: ${{ matrix.topic }}
+        run: |
+          if [ "$TOPIC" = "dog_surprises" ]; then
+            python src/top5_reviewed_render.py --topic "$TOPIC" --output output/v32_auto
+          else
+            python src/top5_auto_v32.py --topic "$TOPIC" --output output/v32_auto
+          fi
       - name: Validate MP4 and extract frame and audio evidence
         run: |
           cd output/v32_auto
@@ -101,6 +114,27 @@ jobs:
           }, indent=2) + "\n")
           print(f"1080x1920, 720 frames, 30s audio ({presented_samples} samples/channel, {padding} decoder padding)")
           PY
+          if [ -f REVIEWED_SOURCE_SELECTION.json ]; then
+            python - <<'PY'
+          import io
+          import json
+          import subprocess
+          from pathlib import Path
+          from PIL import Image
+
+          rows = json.loads(Path("REVIEWED_SOURCE_SELECTION.json").read_text())["selected"]
+          sheet = Image.new("RGB", (360*len(rows), 640))
+          for index, (row, start) in enumerate(zip(rows, (2, 6, 11, 15, 21), strict=True)):
+              timestamp = start + row["payoff_sec"] - row["cut_start"]
+              data = subprocess.check_output([
+                  "ffmpeg", "-v", "error", "-ss", str(timestamp),
+                  "-i", "TOP5_AUTO_V29_REVIEW_1080x1920.mp4",
+                  "-vf", "scale=360:640", "-frames:v", "1", "-c:v", "png", "-f", "image2pipe", "-",
+              ])
+              sheet.paste(Image.open(io.BytesIO(data)), (360*index, 0))
+          sheet.save("V32_PAYOFF_PHONE_QA.jpg", quality=92)
+          PY
+          fi
           ffmpeg -hide_banner -v error -i "$video" \
             -vf 'fps=4,scale=216:384,tile=8x3' -q:v 3 'V32_TIMELINE_%02d.jpg'
           ffmpeg -hide_banner -v error -i "$video" \
@@ -131,12 +165,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TOP5-V32-auto-review-${{ github.run_number }}
+          name: TOP5-V32-${{ matrix.topic }}-review-${{ github.run_number }}
           path: |
             output/v32_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
             output/v32_auto/V29_ACTUAL_12FRAME_QA.jpg
             output/v32_auto/V32_TECHNICAL_QA.json
             output/v32_auto/SELECTED_SOURCE_PROVENANCE.json
+            output/v32_auto/REVIEWED_SOURCE_SELECTION.json
+            output/v32_auto/V32_PAYOFF_PHONE_QA.jpg
             output/v32_auto/INDEPENDENT_HOOK_AUDIT.json
             output/v32_auto/V32_RENDERED_HOOK_QA.jpg
             output/v32_auto/V32_ENDING_SOURCE.json
