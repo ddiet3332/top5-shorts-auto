@@ -560,6 +560,14 @@ def source_digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+# Issue #126: in the reviewed Larry/Chloé original, both cats stay in view
+# as the orange cat rolls back and raises its paws. Bind this cue to the
+# original bytes so a replacement upload cannot inherit the edit.
+REVIEWED_HOOK_STARTS = {
+    "78103e4630f8c096f1836dd83b1a0e04e5dbb46f781e8692e2eee5823275c1cf": 99.5,
+}
+
+
 def select_v32_hook(ranked, pool, ranked_hashes, output):
     """Screen unused originals first and retain a byte-bound audit for either mode."""
     attempts = []
@@ -585,7 +593,10 @@ def select_v32_hook(ranked, pool, ranked_hashes, output):
             continue
         digests[identity(row)] = digest
         used_hashes.add(digest)
-        candidates.append(row)
+        if digest in REVIEWED_HOOK_STARTS:
+            candidates.insert(0, {**row, "hook_start": REVIEWED_HOOK_STARTS[digest]})
+        else:
+            candidates.append(row)
     path = output / "INDEPENDENT_HOOK_AUDIT.json"
     try:
         hook = choose_hook(ranked, [*candidates, *ranked], durations, attempts)
