@@ -125,7 +125,7 @@ def apply_curated_cut_shift(title,start,duration):
         raise ValueError("Unreasonable editorial cut adjustment")
     return round(max(0.0,min(float(start)+shift,float(duration)-6.08)),2)
 
-def select_sources(candidates,out,*,with_hook=False):
+def select_sources(candidates,out,*,with_hook=False,reserve_pool=None):
     library=Path(out)/"originals"
     library.mkdir(parents=True,exist_ok=True)
     evidence=checked_scenes()
@@ -208,6 +208,8 @@ def select_sources(candidates,out,*,with_hook=False):
             if len(used)==5:
                 break
     used.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
+    if reserve_pool is not None:
+        reserve_pool.extend(accepted)
     if with_hook:
         hook=choose_hook(used,accepted,list(CUT_LENGTHS.values()),attempts)
         return used,attempts,hook
