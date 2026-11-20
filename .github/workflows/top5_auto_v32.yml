@@ -114,8 +114,14 @@ jobs:
             -frames:v 1 -update 1 -q:v 2 V32_HOOK_PHONE_QA.jpg
           # One 360px-wide rendered caption sample per segment.
           ffmpeg -hide_banner -v error -i "$video" \
-            -vf "select='eq(n,12)+eq(n,120)+eq(n,208)+eq(n,322)+eq(n,480)+eq(n,570)+eq(n,696)',scale=360:640,tile=4x2" \
+            -vf "select='eq(n,12)+eq(n,140)+eq(n,208)+eq(n,322)+eq(n,480)+eq(n,570)+eq(n,696)',scale=360:640,tile=4x2" \
             -frames:v 1 -update 1 -q:v 2 V32_CAPTIONS_PHONE_QA.jpg
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='between(n,504,719)*not(mod(n,12))+eq(n,719)',scale=270:480,tile=5x4" \
+            -frames:v 1 -update 1 -q:v 2 V32_RANK1_REPLAY_QA.jpg
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='between(n,108,148)*not(mod(n,4))',scale=270:480,tile=6x2" \
+            -frames:v 1 -update 1 -q:v 2 V32_RANK5_RUSH_QA.jpg
       - name: Keep both video and not-approved rights evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -139,6 +145,8 @@ jobs:
             output/v32_auto/V32_ENDING_BOUNDARIES.jpg
             output/v32_auto/V32_HOOK_PHONE_QA.jpg
             output/v32_auto/V32_CAPTIONS_PHONE_QA.jpg
+            output/v32_auto/V32_RANK1_REPLAY_QA.jpg
+            output/v32_auto/V32_RANK5_RUSH_QA.jpg
             output/v32_auto/V32_CHALLENGER_SELECTION.json
             output/v32_auto/V35_SOFA_CHALLENGER_QA.json
             output/v32_auto/V36_CANDIDATE_REPLACEMENTS_QA.json

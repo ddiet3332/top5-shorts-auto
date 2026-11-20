@@ -284,7 +284,7 @@ def build_dynamic_subtitles(path,topic,items,*,moving_ending=False,hook_caption=
                 # Only one reaction line should appear at any point.
                 stages=row["caption_sequence"]
                 points=[float(v[0]) for v in stages]
-                if (not 2<=len(stages)<=3 or points[0]<0 or
+                if (not 1<=len(stages)<=3 or points[0]<0 or
                     any(points[i+1]-points[i]<0.65 for i in range(len(points)-1)) or
                     sec-points[-1]<0.65):
                     raise ValueError("Original commentary timing invalid")
@@ -360,7 +360,9 @@ def save_license_and_status(topic,items,recommendations,attempts,output,hook_sou
 
 def rank_one_replay_start(top, seconds):
     """Keep the replay within the same original window used for rank one."""
-    latest=CUT_LENGTHS["rank1"]-seconds
+    latest=CUT_LENGTHS["rank1"]*top.get("playback_rate",1.0)-seconds
+    if latest<0:
+        raise ValueError("Rank one original window is too short for replay")
     offset=max(0,min(top.get("replay_offset_sec",latest/2),latest))
     return top["cut_start"]+offset
 
@@ -379,7 +381,7 @@ def assemble_video(topic,items,output,hook_source,*,moving_ending=False,hook_cap
     for row, seconds in zip(items,CUT_LENGTHS.values(),strict=True):
         if identity(first)==identity(row) and (
                 first.get("hook_mode")!="nonoverlapping_rank_source"
-                or not separated(hook_at,row["cut_start"],seconds)):
+                or not separated(hook_at,row["cut_start"],seconds*row.get("playback_rate",1.0))):
             raise ValueError("훅 구간과 순위 구간이 겹칩니다")
     picture_height=1320 if mobile_captions else 1614
     create_scene(first["local_path"],max(0,hook_at),2,hook,picture_height=picture_height)
@@ -388,10 +390,12 @@ def assemble_video(topic,items,output,hook_source,*,moving_ending=False,hook_cap
         clip=items[number-1]
         part=work/f"part_{number:02}.mp4"
         start=clip["cut_start"]
-        if start+sec>clip["duration_sec"]+.03:
+        rate=clip.get("playback_rate",1.0)
+        if start+sec*rate>clip["duration_sec"]+.03:
             raise ValueError("Source action ends before selected rank cut")
         create_scene(clip["local_path"],start,sec,part,clear_rank_rail=clip.get("clear_rank_rail",False),
-                     picture_height=picture_height,source_crop=clip.get("source_crop"))
+                     picture_height=picture_height,source_crop=clip.get("source_crop"),
+                     playback_rate=rate)
         segment_files.append(part)
     ending=work/"part_06.mp4"
     outro_seconds=SEGMENTS[-1][1]

@@ -84,10 +84,13 @@ class V37Tests(unittest.TestCase):
         self.assertAlmostEqual(rank_one_replay_start({"cut_start":2.65,"replay_offset_sec":0.9},3),3.55)
         self.assertEqual(rank_one_replay_start({"cut_start":4.0},3),5.5)
         self.assertEqual(rank_one_replay_start({"cut_start":4.0,"replay_offset_sec":9},3),7.0)
+        slowed={"cut_start":2.65,"replay_offset_sec":0.9,"playback_rate":2/3}
+        self.assertAlmostEqual(rank_one_replay_start(slowed,3),3.55)
+        self.assertAlmostEqual(rank_one_replay_start({**slowed,"replay_offset_sec":9},3),3.65)
 
     def test_mobile_caption_lane_and_replay_share_the_rendered_style(self):
         selected=rows()
-        selected[-1].update(mobile_caption_y=1590)
+        selected[-1].update(mobile_caption_y=1590,caption_sequence=[[0.12,"지붕 사이로 도약 · ⅔속도"]])
         with tempfile.TemporaryDirectory() as td:
             file=Path(td)/"captions.ass"
             lines=build_dynamic_subtitles(file,{"headline":"고양이 돌발 행동"},selected,
@@ -98,6 +101,7 @@ class V37Tests(unittest.TestCase):
         self.assertIn(r"\pos(540,1455)",captions[0])
         self.assertIn(r"훅 \{장면\}",captions[0])
         self.assertIn(r"\pos(540,1590)",captions[-1])
+        self.assertTrue(captions[-2].endswith("지붕 사이로 도약 · ⅔속도"))
         self.assertTrue(captions[-1].endswith("1위 장면 다시 보기"))
 if __name__=="__main__":
     unittest.main()

@@ -571,18 +571,36 @@ REVIEWED_HOOK_STARTS = {
     "78103e4630f8c096f1836dd83b1a0e04e5dbb46f781e8692e2eee5823275c1cf": 95.875,
 }
 
-REVIEWED_FRAMING = {
+REVIEWED_EDITS = {
     "a26b3af399817a63048b51b8f3da8e420b29ee3592e2836fc1a5b5f14143a627": {
+        "cut_start":2.875,
+        "caption_sequence":None,
+        "caption":"태평하게 누워 있더니…",
         "source_crop":SourceCrop(width=1160,height=1080,y=0,start_x=360,end_x=620,
                                  pan_start=7.0,pan_end=7.8),
         "clear_rank_rail":True,
         "mobile_caption_y":1430,
     },
     "a3c3a070ed28764ae2306b123e2e6c5a36cc680ae4a596f94dc0a54e89571bc8": {
+        "playback_rate":2/3,
+        "caption_sequence":[[0.12,"지붕 사이로 도약 · ⅔속도"]],
+        "caption":"지붕 사이로 도약 · ⅔속도",
         "source_crop":SourceCrop(width=420,height=560,y=100,start_x=0,end_x=300,
                                  pan_start=4.15,pan_end=6.65),
         "clear_rank_rail":True,
         "mobile_caption_y":1590,
+    },
+    "e5824e2c9ba6cb04cc84e4a624509c1fd43941617b34fd88e69751f199208f81": {
+        "source_crop":SourceCrop(width=1840,height=2760,y=300,start_x=320,end_x=0,
+                                 pan_start=11.3,pan_end=12.5),
+        "clear_rank_rail":True,
+        "mobile_caption_y":1660,
+    },
+    "a7fec4a995d907f7e2d18a5010887034d323059474599046ab91d19f13f41968": {
+        "source_crop":SourceCrop(width=970,height=1460,y=280,start_x=0,end_x=0,
+                                 pan_start=0,pan_end=1),
+        "clear_rank_rail":True,
+        "mobile_caption_y":1659,
     },
 }
 
@@ -597,7 +615,8 @@ def select_v32_hook(ranked, pool, ranked_hashes, output):
     ranked_titles = {row["title"] for row in ranked}
     digests = {identity(row): digest for row, digest in zip(ranked, ranked_hashes, strict=True)}
     used_hashes = set(ranked_hashes)
-    durations = list(CUT_LENGTHS.values())
+    durations = [sec*row.get("playback_rate",1.0)
+                 for row,sec in zip(ranked,CUT_LENGTHS.values(),strict=True)]
     candidates = []
     for row in sorted(pool, key=lambda item: -float(item.get("motion_proxy", 0))):
         if identity(row) in ranked_ids or row["title"] in ranked_titles:
@@ -684,7 +703,6 @@ def main():
     from top5_feedback_repair import load_and_apply
     final,feedback_report=load_and_apply(
         final,"review/feedback/dog_latest.json",output/"FEEDBACK_REPAIR_APPLIED.json")
-    v37_rights_and_description(final,output,v37_audit)
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     write_gates(output,topic,final,attempts,recommendations)
@@ -705,19 +723,26 @@ def main():
         encoding="utf-8")
     # Audit selected input bytes; this is not a copyright clearance.
     selected_evidence=[]
+    mobile_captions=topic["topic_id"]=="cat_surprises"
     for i,item in enumerate(final):
         original=Path(item["local_path"])
         if not original.is_file() or original.stat().st_size==0:
             raise RuntimeError("SELECTED_SOURCE_MISSING: "+str(original))
+        digest=source_digest(original)
+        if mobile_captions:
+            item.update(REVIEWED_EDITS.get(digest,{}))
+        rate=item.get("playback_rate",1.0)
         selected_evidence.append({
             "rank":5-i,"source_page":item.get("source_page"),
-            "source_path":str(original),"sha256":source_digest(original),
+            "source_path":str(original),"sha256":digest,
             "source_start_sec":item["cut_start"],
-            "source_end_sec":round(item["cut_start"]+list(CUT_LENGTHS.values())[i],3),
+            "source_end_sec":round(item["cut_start"]+list(CUT_LENGTHS.values())[i]*rate,3),
+            "playback_rate":rate,
             "size_bytes":original.stat().st_size,
             "rights_verified":False,"publication_approved":False})
     if len(selected_evidence)!=5 or len({r["sha256"] for r in selected_evidence})!=5:
         raise RuntimeError("SELECTED_SOURCE_DUPLICATE_OR_MISSING")
+    v37_rights_and_description(final,output,v37_audit)
     (output/"SELECTED_SOURCE_PROVENANCE.json").write_text(json.dumps({
         "selected":selected_evidence,"rights_verified":False,
         "editorial_score_verified":False,"publication_approved":False
@@ -727,10 +752,6 @@ def main():
     save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
     reviewed_hook=REVIEWED_HOOK_STARTS.get(hook_audit["sha256"])==hook_source["hook_start"]
     hook_caption="가만있다가 갑자기 돌진!" if reviewed_hook else "다음 행동을 맞혀 보세요"
-    mobile_captions=topic["topic_id"]=="cat_surprises"
-    if mobile_captions:
-        for item,evidence in zip(final,selected_evidence,strict=True):
-            item.update(REVIEWED_FRAMING.get(evidence["sha256"],{}))
     video=assemble_video(topic,final,output,hook_source,
                          moving_ending=True,hook_caption=hook_caption,
                          hook_caption_y=(1455 if reviewed_hook else 1712) if mobile_captions else 1190,

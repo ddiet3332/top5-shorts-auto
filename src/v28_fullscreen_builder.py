@@ -143,13 +143,15 @@ class SourceCrop:
 
 
 def create_scene(source,start,seconds,destination,*,clear_rank_rail=False,
-                 picture_height=1614,source_crop=None):
+                 picture_height=1614,source_crop=None,playback_rate=1.0):
     # Render source exactly once: the former split/back/front composition
     # duplicated wide footage in the exposed white margins (rank 2).
     # Solid white padding is deliberately NOT a blurred/source-video backdrop.
     # Keep the complete source image, including action near frame edges.
     left=270 if clear_rank_rail else 0
     available_width=W-left
+    if not 0<playback_rate<=1:
+        raise ValueError("Scene playback rate must be in (0, 1]")
     crop_filter=""
     if source_crop is not None:
         # FFmpeg's t is relative to this seek. Use original time so a replay
@@ -164,7 +166,7 @@ def create_scene(source,start,seconds,destination,*,clear_rank_rail=False,
         f"pad=1080:{picture_height}:{left}+({available_width}-iw)/2:(oh-ih)/2:color=white,"
         "pad=1080:1920:0:306:color=white,"
         "drawbox=x=0:y=420:w=270:h=850:color=white@0.97:t=fill,"
-        "fps=24,format=yuv420p[v]")
+        f"setpts=(PTS-STARTPTS)/{playback_rate},fps=24,format=yuv420p[v]")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
          "-filter_complex",filtergraph,"-map","[v]",
          "-frames:v",str(int(seconds*FPS)),"-an",
