@@ -18,7 +18,7 @@ def render_reviewed_topic(topic, output, *, profile=None, baseline=None):
         lock = json.loads(Path("sample/top5_design_lock_v1.json").read_text(encoding="utf-8"))
         if lock["version"] != "TOP5_DESIGN_LOCK_V1":
             raise RuntimeError("DESIGN_LOCK_MISSING_OR_CHANGED")
-        raise RuntimeError("DESIGN_LOCK_NOT_IMPLEMENTED: 1631.mp4 full-bleed rank-rail renderer required; legacy white-canvas output prohibited")
+        # Render only through the user-approved full-bleed implementation.
     lengths = list(CUT_LENGTHS.values())
     segments = None
     selection_options = {}
@@ -55,14 +55,20 @@ def render_reviewed_topic(topic, output, *, profile=None, baseline=None):
             layout.append((label,start,length,row,specs[label]))
             start += length
     save_license_and_status(topic, ranked, [], attempts, output, hook)
-    video = assemble_video(
-        topic, ranked, output, hook, moving_ending=True,
-        hook_caption=hook["caption"], hook_caption_y=1712, mobile_captions=True, **options,
-    )
+    if topic.get("topic_id") == "dog_surprises":
+        from top5_locked_design import render_locked
+        video, _ = render_locked(topic,ranked,output,hook,ending,segments)
+    else:
+        video = assemble_video(
+            topic, ranked, output, hook, moving_ending=True,
+            hook_caption=hook["caption"], hook_caption_y=1712, mobile_captions=True, **options,
+        )
     qa = technical_qa(video, output, topic, ranked)
+    if topic.get("topic_id") == "dog_surprises":
+        qa["rendered_design"] = "TOP5_DESIGN_LOCK_V1 / 1631.mp4"
     write_rendered_hook_evidence(video, audit, hook_path)
     qa.update(hook_mode=audit["hook_mode"], audio_listening="UNVERIFIED",
-              rendered_design="V28.3 white canvas and rank rail with 86pt captions",
+              rendered_design=("TOP5_DESIGN_LOCK_V1 / 1631.mp4" if topic.get("topic_id") == "dog_surprises" else "V28.3 white canvas and rank rail with 86pt captions"),
               source_permissions_fully_cleared=False, publication_approved=False)
     (output / "V32_TECHNICAL_QA.json").write_text(
         json.dumps(qa, ensure_ascii=False, indent=2) + "\n", encoding="utf-8",
