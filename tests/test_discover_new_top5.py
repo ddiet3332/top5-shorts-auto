@@ -74,6 +74,7 @@ class DiscoveryGateTests(unittest.TestCase):
              patch.object(discovery,"inspect_media",side_effect=inspect), \
              patch.object(discovery,"choose_hook",side_effect=lambda ranks,pool,*rest: pool[0]), \
              patch.object(discovery,"assemble_video",return_value=Path("review.mp4")) as render, \
+             patch.object(discovery,"require_exact_video"), \
              patch.object(discovery,"technical_qa",return_value={"full_decode":"PASS"}):
             report = discovery.run("dog_surprises",Path(directory),[Provider(rows)])
             render.assert_called_once()
@@ -82,6 +83,10 @@ class DiscoveryGateTests(unittest.TestCase):
         self.assertEqual(len({r["sha256"] for r in report["selected"]}),5)
         self.assertNotIn(report["hook"]["sha256"],{r["sha256"] for r in report["selected"]})
         self.assertFalse(report["publication_approved"])
+
+    def test_container_tail_is_not_used_to_fill_rank(self):
+        row = {"cut_start":.533,"peak_motion_sec":6.2,"duration_sec":6.733}
+        self.assertEqual(discovery.fit_rank_window(row,4),2.433)
 
 
 if __name__ == "__main__":

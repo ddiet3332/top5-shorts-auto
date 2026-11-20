@@ -22,6 +22,7 @@ from top5_public_video_discovery import commons
 MAX_DOWNLOADS = 18
 MAX_BYTES = 60 * 1024 * 1024
 MAX_RESULTS = 60
+VIDEO_TAIL_GUARD = .30
 UA = "TOP5-Shorts-Research/1.0 (https://github.com/ddiet3332/top5-shorts-auto)"
 TOPICS = {
     "dog_surprises": ("강아지 행동", "dog", r"dogs?|doggy|pupp(?:y|ies)|retrievers?|labradors?|labradoodles?|collies?|poodles?|terriers?", (
@@ -199,6 +200,28 @@ def metadata_priority(row, subject, actions):
     return 2 if len(intent) == 1 else 1
 
 
+def fit_rank_window(row, seconds):
+    # Container duration can extend beyond the last usable picture.
+    latest = row["duration_sec"] - seconds - VIDEO_TAIL_GUARD
+    desired = row["peak_motion_sec"] - seconds + .5
+    return round(max(0, min(latest, max(row["cut_start"], desired))), 3)
+
+
+def require_exact_video(video):
+    streams = json.loads(subprocess.check_output([
+        "ffprobe", "-v", "error", "-show_streams", "-of", "json", str(video),
+    ], timeout=20))["streams"]
+    if len(streams) != 2:
+        raise ValueError("UNEXPECTED_STREAM_COUNT")
+    picture, audio = streams
+    if (picture["codec_name"], picture["width"], picture["height"],
+        picture["avg_frame_rate"], picture["nb_frames"], audio["codec_name"]
+    ) != ("h264",1080,1920,"24/1","720","aac"):
+        raise ValueError("INVALID_OUTPUT_FRAME_COUNT_OR_FORMAT")
+    if any(float(s["start_time"]) != 0 or float(s["duration"]) != 30 for s in streams):
+        raise ValueError("INVALID_OUTPUT_STREAM_DURATION")
+
+
 def run(topic_id, output, providers=None):
     headline, noun, subject, actions = TOPICS[topic_id]
     providers = [CommonsProvider()] if providers is None else providers
@@ -292,9 +315,10 @@ def run(topic_id, output, providers=None):
     else:
         for row, length in zip(ranked,CUT_LENGTHS.values(),strict=True):
             # Ensure the proxy peak is inside every assigned rank, including shorter ranks.
-            row["cut_start"] = round(max(row["cut_start"],row["peak_motion_sec"]-length+.5),3)
+            row["cut_start"] = fit_rank_window(row, length)
         ranked[-1]["replay_offset_sec"] = max(0, ranked[-1]["peak_motion_sec"]-ranked[-1]["cut_start"]-1.5)
-        if any(row["cut_start"]+length > row["duration_sec"]
+        if any(not row["cut_start"] <= row["peak_motion_sec"] < row["cut_start"]+length
+               or row["cut_start"]+length > row["duration_sec"]-VIDEO_TAIL_GUARD+.001
                for row,length in zip(ranked,CUT_LENGTHS.values(),strict=True)):
             report.update(status="EDITORIAL_REVIEW_REQUIRED",reason="RANK_WINDOW_OUT_OF_BOUNDS")
         else:
@@ -331,6 +355,7 @@ def run(topic_id, output, providers=None):
             save_license_and_status(topic,ranked,[],[],output,hook)
             video = assemble_video(topic,ranked,output,hook,moving_ending=True,
                                    hook_caption=hook["caption"],hook_caption_y=1712,mobile_captions=True)
+            require_exact_video(video)
             qa = technical_qa(video,output,topic,ranked)
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
             (output/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4").unlink(missing_ok=True)
