@@ -167,7 +167,7 @@
         0.8
       ],
       "action": "skate_dismount",
-      "observation": "멀리서 보드가 다가오며 발 사이에 탄 퍼그가 드러나고 바닥으로 내려옴"
+      "observation": "퍼그가 보드 위에서 가까이 다가와 앞발부터 내려옴"
     },
     "rank2": {
       "source_id": "PX-7515923",
@@ -265,7 +265,7 @@
       "sha256": "81e912c5ed4795f5d9a25e319983e4550cc15514b94f3f7f23286385ea03364b",
       "title": "스케이트보드에서 내려오는 퍼그",
       "creator": "Los Muertos Crew",
-      "start_sec": 7.2,
+      "start_sec": 8,
       "payoff_sec": 9.25,
       "payoff_subject_fraction": [
         0.28,
@@ -279,14 +279,14 @@
       "caption_sequence": [
         [
           0.1,
-          "보드가 다가오더니"
+          "보드에 탄 퍼그가 다가와요"
         ],
         [
-          2.25,
-          "발 사이에 강아지도 타고 있어요"
+          1.35,
+          "발 사이에서 균형을 잡더니"
         ],
         [
-          4.0,
+          2.4,
           "앞발부터 보드 밖으로"
         ]
       ],
