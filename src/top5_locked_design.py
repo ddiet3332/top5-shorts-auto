@@ -1,7 +1,7 @@
 """User-locked 1631.mp4 design: full-bleed original footage + translucent left rank rail."""
 import json
 from pathlib import Path
-from top5_auto_v29 import assemble_video, technical_qa
+from top5_auto_v29 import assemble_video, technical_qa, cue_with_ass_override
 import top5_auto_v29 as v29
 from v28_fullscreen_builder import run, FPS, W, H, ASS_HEAD, cue
 
@@ -31,12 +31,12 @@ def locked_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
     t=0.0
     for label,length in segments:
         end=t+length
-        lines.append(cue(t,end,"Rank",r"{\\an7\\pos(0,410)\\p1\\1c&H101010&\\alpha&H77&}m 0 0 l 175 0 175 640 0 640{\\p0}",0,410,7,1))
+        lines.append(cue_with_ass_override(t,end,"Rank","m 0 0 l 175 0 175 640 0 640",0,410,7,1,r"{\\an7\\pos(0,410)\\p1\\1c&H101010&\\alpha&H77&}"))
         active=1 if label in ("rank1","outro") else int(label[-1]) if label.startswith("rank") else None
         for rank in range(1,6):
             y=455+(rank-1)*122
             color=r"\\1c&H00D7FF&" if rank==active else r"\\1c&HFFFFFF&"
-            lines.append(cue(t,end,"Rank",f"{{\\fs58\\bord3\\3c&H000000&{color}}}{rank}위",30,y,7,3))
+            lines.append(cue_with_ass_override(t,end,"Rank",f"{rank}위",30,y,7,3,r"{\\fs58\\bord3\\3c&H000000&"+color+"}"))
         if label=="hook":
             reaction=hook_caption or "잠깐! 이 강아지 보세요"
             stages=[(0,reaction)]
@@ -50,9 +50,8 @@ def locked_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
             stop=t+(float(stages[k+1][0]) if k+1<len(stages) else length)
             if stop<=t+float(offset): continue
             safe=str(message).replace("{","(").replace("}",")")
-            lines.append(cue(t+float(offset),stop,"Caption",
-                             r"{\\fs68\\bord5\\shad0\\1c&HFFFFFF&\\3c&H000000&}"+safe,
-                             540,1050,5,5))
+            lines.append(cue_with_ass_override(t+float(offset),stop,"Caption",safe,
+                             540,1050,5,5,r"{\\fs68\\bord5\\shad0\\1c&HFFFFFF&\\3c&H000000&}"))
         t=end
     path.write_text(ASS_HEAD+"\n".join(lines)+"\n",encoding="utf-8")
     return lines
