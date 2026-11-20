@@ -46,8 +46,8 @@ jobs:
         run: python3 -m pip install -r requirements-video.txt
       - name: Install FFmpeg and Korean caption fonts
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+          timeout 65s sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 || echo 'APT 인덱스 갱신 지연 · 기존 인덱스로 설치 시도'
+          timeout 150s sudo apt-get install -y -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 ffmpeg fonts-nanum fonts-noto-cjk
       - name: Run source and editorial safety regression tests
         run: python3 -m unittest discover -s tests -v
       - name: Download five exact curated originals and render full 30s H264 AAC

@@ -41,8 +41,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Prepare free editing stack
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
+          timeout 65s sudo apt-get update -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15 || echo 'APT 인덱스 갱신 지연 · 기존 인덱스로 설치 시도'
+          timeout 150s sudo apt-get install -y -qq -o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 ffmpeg fonts-nanum fonts-noto-cjk
           python3 -m venv /tmp/v30
           /tmp/v30/bin/pip install -q numpy pillow
       - name: Regression check for design and rights gates
