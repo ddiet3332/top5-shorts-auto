@@ -31,10 +31,10 @@ def locked_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
     t=0.0
     for label,length in segments:
         end=t+length
-        lines.append(cue_with_ass_override(t,end,"Rank","m 0 0 l 175 0 175 640 0 640",0,410,7,1,r"{\\an7\\pos(0,410)\\p1\\1c&H101010&\\alpha&H77&}"))
+        lines.append(cue_with_ass_override(t,end,"Rank","m 0 0 l 175 0 175 690 0 690",0,455,7,1,r"{\\an7\\pos(0,455)\\p1\\1c&H101010&\\alpha&H77&}"))
         active=1 if label in ("rank1","outro") else int(label[-1]) if label.startswith("rank") else None
         for rank in range(1,6):
-            y=455+(rank-1)*122
+            y=505+(rank-1)*135
             color=r"\\1c&H00D7FF&" if rank==active else r"\\1c&HFFFFFF&"
             lines.append(cue_with_ass_override(t,end,"Rank",f"{rank}위",30,y,7,3,r"{\\fs58\\bord3\\3c&H000000&"+color+"}"))
         if label=="hook":
@@ -51,7 +51,7 @@ def locked_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
             if stop<=t+float(offset): continue
             safe=str(message).replace("{","(").replace("}",")")
             lines.append(cue_with_ass_override(t+float(offset),stop,"Caption",safe,
-                             540,1050,5,5,r"{\\fs68\\bord5\\shad0\\1c&HFFFFFF&\\3c&H000000&}"))
+                             540,1180,5,5,r"{\\fs55\\bord5\\shad0\\1c&HFFFFFF&\\3c&H000000&}"))
         t=end
     path.write_text(ASS_HEAD+"\n".join(lines)+"\n",encoding="utf-8")
     return lines
