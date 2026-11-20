@@ -16,6 +16,8 @@ on:
       - 'src/top5_auto_v29.py'
       - 'src/v28_fullscreen_builder.py'
       - 'sample/top5_dog_source_catalog.json'
+      - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
   pull_request:
     paths:
       - '.github/workflows/v32-dog-end-to-end.yml'
@@ -28,6 +30,8 @@ on:
       - 'scripts/persist_dog_evidence.sh'
       - 'src/top5_reviewed_*.py'
       - 'sample/top5_dog_source_catalog.json'
+      - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
       - 'tests/test_dog_run_evidence.py'
       - 'tests/test_dog_editorial_evidence.py'
   workflow_dispatch:
