@@ -21,8 +21,8 @@
       "exit_code": 0,
       "pass": true,
       "findings": [
-        "[Parsed_volumedetect_0 @ 0x709b08002000] mean_volume: -22.8 dB",
-        "[Parsed_volumedetect_0 @ 0x709b08002000] max_volume: -2.5 dB"
+        "[Parsed_volumedetect_0 @ 0x7d4470002000] mean_volume: -22.8 dB",
+        "[Parsed_volumedetect_0 @ 0x7d4470002000] max_volume: -2.5 dB"
       ]
     }
   },
@@ -44,7 +44,7 @@
     ],
     "format": {
       "duration": "30.016000",
-      "size": "3585918"
+      "size": "3587622"
     }
   },
   "technical_pass": true
