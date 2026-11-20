@@ -18,7 +18,7 @@ LABELS = ("hook","rank5","rank4","rank3","rank2","rank1","outro")
 
 
 def shot(row, spec):
-    if row["source_id"] != spec["source_id"]:
+    if row["source_id"] != spec["source_id"] or row["action_family"] != spec["action"]:
         raise ValueError("UNEXPECTED_SOURCE_FOR_REVIEWED_EDIT")
     return {**row, "playback_rate":spec.get("rate",1.0),
             "source_crop":SourceCrop(**dict(zip(CROP_KEYS,spec["crop"],strict=True))) if "crop" in spec else None}
@@ -154,6 +154,8 @@ def collect(video, baseline, output, layout):
                          "source_page":row["source_page"],"source_sha256":row["sha256"],
                          "source_duration_sec":row["duration_sec"],"source_window_sec":[source_start,source_end],
                          "render_window_sec":[start,start+length],"sample_timestamps":dict(samples),
+                         "source_sample_timestamps":{key:round(source_start+(t-start)*row["playback_rate"],3)
+                                                     for key,t in samples},
                          "payoff_relative_sec":round(peak,3),"occupancy_at_peak":occupancy,
                          "bbox_basis":"manual source-frame box projected through actual crop",
                          "semantic_action":"UNVERIFIED","semantic_caption_match":"UNVERIFIED",

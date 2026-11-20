@@ -34,7 +34,7 @@ def render_reviewed_topic(topic, output, *, profile=None, baseline=None):
         ranked = [shot(row,specs[label]) for (label,_),row in zip(segments[1:-1],ranked,strict=True)]
         hook = shot(hook,specs["hook"])
         audit["source_end_sec"] = round(hook["hook_start"]+segments[0][1]*hook["playback_rate"],3)
-        ending = shot({**ranked[-1],"cut_start":profile["ending_start_sec"],
+        ending = shot({**ranked[-1],"cut_start":profile["ending_start_sec"],"action_family":"tug",
                        "caption":profile["ending_caption"]},specs["outro"])
         options.update(segments=segments,ending_source=ending)
         start = 0
