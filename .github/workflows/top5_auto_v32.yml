@@ -7,6 +7,7 @@ on:
       - '.github/workflows/top5_auto_v32.yml'
       - 'src/top5_auto_v32.py'
       - 'src/top5_auto_v29.py'
+      - 'src/v28_fullscreen_builder.py'
       - 'src/top5_hook_selection.py'
       - 'tests/test_top5_auto_v32.py'
       - 'tests/test_v37_story.py'
@@ -103,6 +104,10 @@ jobs:
           ffmpeg -hide_banner -v error -i "$video" \
             -vf "select='eq(n,0)+eq(n,47)+eq(n,48)+eq(n,143)+eq(n,144)+eq(n,263)+eq(n,264)+eq(n,359)+eq(n,360)+eq(n,503)+eq(n,504)+eq(n,647)+eq(n,648)+eq(n,719)',scale=270:480,tile=7x2" \
             -frames:v 1 -update 1 -q:v 3 V32_CUT_BOUNDARIES.jpg
+          # Rows: 0.000–0.167s, 26.833–27.000s, 27.042–27.208s, 29.792–29.958s.
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='between(n,0,4)+between(n,644,653)+between(n,715,719)',scale=216:384,tile=5x4" \
+            -frames:v 1 -update 1 -q:v 3 V32_ENDING_BOUNDARIES.jpg
       - name: Keep both video and not-approved rights evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -123,6 +128,7 @@ jobs:
             output/v32_auto/V32_AUDIO_QA.json
             output/v32_auto/V32_TIMELINE_*.jpg
             output/v32_auto/V32_CUT_BOUNDARIES.jpg
+            output/v32_auto/V32_ENDING_BOUNDARIES.jpg
             output/v32_auto/V32_CHALLENGER_SELECTION.json
             output/v32_auto/V35_SOFA_CHALLENGER_QA.json
             output/v32_auto/V36_CANDIDATE_REPLACEMENTS_QA.json

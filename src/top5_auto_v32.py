@@ -310,6 +310,8 @@ def apply_v37_story_and_door(topic,items,output):
         "File:Salto - Cat Jump.webm":[[0.12,"지붕 사이 거리 재는 중"],[0.92,"망설임 없이 도약!"]],
     }
     for row in rows:
+        if row["title"]=="Pexels PX-40826295":
+            row["clear_rank_rail"]=True
         script=scripts.get(row["title"])
         if script:
             row["caption_sequence"]=script
@@ -376,6 +378,7 @@ def apply_rank_one_story_timing(items):
             # Original source frame scan: the cat first enters around 3.0s
             # and exits near 8.1s. 2.65–8.65 balances both tails.
             row["cut_start"]=2.65
+            row["replay_offset_sec"]=0.9
             row["hook_start"]=4.9
             row["timing_basis"]="V33 actual 0-10s source 18-frame QA and V33 full MP4 A/B"
             row["editorial_timing_reverified"]=True
@@ -560,11 +563,11 @@ def source_digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-# Issue #126: in the reviewed Larry/Chloé original, both cats stay in view
-# as the orange cat rolls back and raises its paws. Bind this cue to the
+# Issue #126: the white cat lunges after a brief pause and both cats tumble.
+# Bind the reviewed opening to the
 # original bytes so a replacement upload cannot inherit the edit.
 REVIEWED_HOOK_STARTS = {
-    "78103e4630f8c096f1836dd83b1a0e04e5dbb46f781e8692e2eee5823275c1cf": 99.5,
+    "78103e4630f8c096f1836dd83b1a0e04e5dbb46f781e8692e2eee5823275c1cf": 95.875,
 }
 
 
@@ -706,13 +709,11 @@ def main():
     hook_source,hook_audit,hook_path=select_v32_hook(
         final,[*hook_pool,*selected],[row["sha256"] for row in selected_evidence],output)
     save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
-    hook_caption=(
-        "두 고양이, 다음 행동은?"
-        if hook_source["title"]=="File:Larry the cat and Chloé playing (100111224612).webm"
-        else "다음 행동을 맞혀 보세요"
-    )
+    reviewed_hook=REVIEWED_HOOK_STARTS.get(hook_audit["sha256"])==hook_source["hook_start"]
+    hook_caption="가만있다가 갑자기 돌진!" if reviewed_hook else "다음 행동을 맞혀 보세요"
     video=assemble_video(topic,final,output,hook_source,
-                         moving_ending=True,hook_caption=hook_caption)
+                         moving_ending=True,hook_caption=hook_caption,
+                         hook_caption_y=1620 if reviewed_hook else 1190)
     qa=technical_qa(video,output,topic,final)
     write_rendered_hook_evidence(video,hook_audit,hook_path)
     qa["hook_mode"]=hook_audit["hook_mode"]

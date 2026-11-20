@@ -130,15 +130,17 @@ def render_endcard(selected,out):
     d.text((80,1680),"영상에서 직접 고른 5개의 장면",font=ft(30),fill="#D5E1EA")
     return img.save(out,quality=92)
 
-def create_scene(source,start,seconds,destination):
+def create_scene(source,start,seconds,destination,*,clear_rank_rail=False):
     # Render source exactly once: the former split/back/front composition
     # duplicated wide footage in the exposed white margins (rank 2).
     # Solid white padding is deliberately NOT a blurred/source-video backdrop.
     # Keep the complete source image, including action near frame edges.
+    left=270 if clear_rank_rail else 0
+    available_width=W-left
     filtergraph=(
-        "[0:v]scale=1080:1614:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,"
+        f"[0:v]scale={available_width}:1614:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,"
         "setsar=1,"
-        "pad=1080:1614:(ow-iw)/2:(oh-ih)/2:color=white,"
+        f"pad=1080:1614:{left}+({available_width}-iw)/2:(oh-ih)/2:color=white,"
         "pad=1080:1920:0:306:color=white,"
         "drawbox=x=0:y=420:w=270:h=850:color=white@0.97:t=fill,"
         "fps=24,format=yuv420p[v]")

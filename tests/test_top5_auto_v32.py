@@ -49,12 +49,12 @@ class V32HookTests(unittest.TestCase):
     def test_reviewed_hook_prefers_the_byte_matched_window(self):
         with TemporaryDirectory() as folder, patch.dict(
             "top5_auto_v32.REVIEWED_HOOK_STARTS",
-            {hashlib.sha256(bytes([6])).hexdigest(): 99.5},
+            {hashlib.sha256(bytes([6])).hexdigest(): 95.875},
         ):
             hook, audit, _ = self.select(Path(folder), count=7, duration=117)
             self.assertEqual(hook["title"], "6.mp4")
-            self.assertEqual(audit["source_start_sec"], 99.5)
-            self.assertEqual(audit["source_end_sec"], 101.5)
+            self.assertEqual(audit["source_start_sec"], 95.875)
+            self.assertEqual(audit["source_end_sec"], 97.875)
 
     def test_repeated_frames_are_rejected_even_with_time_separation(self):
         with TemporaryDirectory() as folder:
