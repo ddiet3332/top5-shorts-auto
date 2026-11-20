@@ -24,6 +24,7 @@ def render_reviewed_topic(topic, output):
     qa = technical_qa(video, output, topic, ranked)
     write_rendered_hook_evidence(video, audit, hook_path)
     qa.update(hook_mode=audit["hook_mode"], audio_listening="UNVERIFIED",
+              rendered_design="V28.3 white canvas and rank rail with 86pt captions",
               source_permissions_fully_cleared=False, publication_approved=False)
     (output / "V32_TECHNICAL_QA.json").write_text(
         json.dumps(qa, ensure_ascii=False, indent=2) + "\n", encoding="utf-8",

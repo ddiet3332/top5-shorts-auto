@@ -47,6 +47,7 @@ def select_reviewed_sources(topic, output, rank_lengths):
                 "author":source["creator"], "provider":"pexels",
                 "license":source["license_label"], "license_url":source["license_url"],
                 "local_path":str(path), "duration_sec":info["duration_sec"],
+                "sha256":digest,
                 "cut_start":start, "payoff_sec":payoff, "action_family":source["action_family"],
                 "payoff_phone_px":round(span, 1),
                 "editorial_quality_heuristic":source["payoff_priority"],
@@ -91,7 +92,8 @@ def select_reviewed_sources(topic, output, rank_lengths):
     audit = {"status":status,"topic":topic["topic_id"],"eligible_families":list(families),
              "rejections":failures,"rank_windows_verified":windows_ok,
              "hook_candidates":[row["source_page"] for row in hooks],
-             "selected":[{k:row[k] for k in ("source_page","cut_start","payoff_sec","action_family",
+             "selected":[{k:row[k] for k in ("source_page","sha256","author","license","license_url",
+                                             "cut_start","payoff_sec","action_family",
                                              "payoff_phone_px","review_basis")} for row in selected],
              "visibility_basis":"reviewed payoff bounding box projected into phone frame",
              "rights_verified":False,"publication_approved":False}
