@@ -64,7 +64,9 @@ jobs:
           video=TOP5_AUTO_V29_REVIEW_1080x1920.mp4
           ffmpeg -hide_banner -v error -xerror -i "$video" -map 0:v:0 -map 0:a:0 -f null -
           ffprobe -v error -show_streams -of json "$video" > V32_MP4_STREAMS.json
-          ffmpeg -hide_banner -v error -i "$video" -map 0:a:0 -c:a pcm_f32le V32_AUDIO.wav
+          # Limit measurements to the MP4 presentation interval. Some AAC
+          # decoders expose the unused samples in the last encoded block.
+          ffmpeg -hide_banner -v error -i "$video" -map 0:a:0 -af atrim=end_sample=1440000 -c:a pcm_f32le V32_AUDIO.wav
           ffmpeg -hide_banner -i V32_AUDIO.wav \
             -af 'ebur128=peak=true,astats,silencedetect=noise=-50dB:d=0.2' \
             -f null - 2> V32_AUDIO_METRICS.txt
@@ -85,12 +87,16 @@ jobs:
               for start, samples in csv.reader(frames):
                   assert int(start) == end, f"Audio timestamp discontinuity at {start}, expected {end}"
                   end += int(samples)
-          assert end == 30 * 48000
+          presented_samples = int(audio["duration_ts"])
+          assert audio["time_base"] == "1/48000" and presented_samples == 30 * 48000
+          padding = end - presented_samples
+          assert 0 <= padding < 1024, f"Unexpected AAC sample count: {end}"
           Path("V32_AUDIO_QA.json").write_text(json.dumps({
-              "start_offset_sec": 0, "decoded_samples_per_channel": end,
+              "start_offset_sec": 0, "presented_samples_per_channel": presented_samples,
+              "decoded_samples_per_channel": end, "aac_tail_padding_samples": padding,
               "audio_timestamp_continuity": "PASS", "listening": "UNVERIFIED",
           }, indent=2) + "\n")
-          print(f"1080x1920, 720 frames, 30s, contiguous audio ({end} samples/channel)")
+          print(f"1080x1920, 720 frames, 30s audio ({presented_samples} samples/channel, {padding} decoder padding)")
           PY
           ffmpeg -hide_banner -v error -i "$video" \
             -vf 'fps=4,scale=216:384,tile=8x3' -q:v 3 'V32_TIMELINE_%02d.jpg'
