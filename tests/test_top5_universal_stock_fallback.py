@@ -76,7 +76,6 @@ class HumanStockFallbackTests(unittest.TestCase):
             self.assertFalse(result["technical_pass"])
             self.assertFalse((root/EXPORT_VIDEO).exists())
 
-            self.make_sources_and_video.__func__ if False else None
             manifest["sources"][4]["sha256"]=hashlib.sha256(b"new source").hexdigest()
             save(source/"SOURCE_DOWNLOAD_QA.json",manifest)
             qa=json.loads((render/"GENERIC_V06_QA.json").read_text())
