@@ -360,6 +360,12 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
             json.dumps(attempts,ensure_ascii=False,indent=2),encoding="utf-8")
         raise SourceShortage("SOURCE_SHORTAGE",f"기술 검사를 통과한 원본 {len(accepted)}/5",attempts)
     accepted.sort(key=lambda x:-x["editorial_quality_heuristic"])
+    # V58: retain ALL genuinely downloaded, decoded, visibility-tested
+    # source windows as optional *independent hook candidates* BEFORE
+    # reducing the ranked list to five distinct categories. Earlier code
+    # threw away up to seven good alternatives and then reopened dim
+    # portions of a ranked aurora for the first two seconds instead.
+    screened_hook_candidates=list(accepted)
     if (topic or {}).get("category") == "자연":
         # We have already inspected actual source windows above. A five-rank
         # nature video should not reuse three camera views of the same named
@@ -428,7 +434,24 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 break
     used.sort(key=lambda x:(x["editorial_quality_heuristic"],x["title"]))
     if reserve_pool is not None:
-        reserve_pool.extend(accepted)
+        reserve_pool.extend(screened_hook_candidates)
+        # Auditable candidate supply. A source being eligible for the first
+        # 2 seconds is NOT evidence that its action is funny or legally cleared.
+        (Path(out)/"V58_HOOK_RESERVE_POOL_QA.json").write_text(
+            json.dumps({
+                "schema_version":1,
+                "topic":(topic or {}).get("topic_id"),
+                "screened_original_source_count":len(screened_hook_candidates),
+                "five_ranked_source_count":len(used),
+                "independent_unranked_source_count":len(screened_hook_candidates)-len({
+                    identity(row) for row in used}),
+                "independent_unranked_source_urls":[row["source_page"]
+                    for row in screened_hook_candidates
+                    if identity(row) not in {identity(u) for u in used}],
+                "actual_hook_scene_pass":False,
+                "source_rights_verified":False,
+                "publication_approved":False,
+            },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if with_hook:
         hook=choose_hook(used,accepted,list(CUT_LENGTHS.values()),attempts)
         return used,attempts,hook
