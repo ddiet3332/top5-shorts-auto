@@ -1,0 +1,37 @@
+name: TOP5 automatic topic routing CI
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/top5-auto-routing-ci.yml'
+      - '.github/workflows/top5_topic_production.yml'
+      - 'src/topic_discovery_audit.py'
+      - 'tests/test_topic_discovery_audit.py'
+      - 'tests/test_top5_topic_workflow_policy.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5-auto-routing-ci.yml'
+      - '.github/workflows/top5_topic_production.yml'
+      - 'src/topic_discovery_audit.py'
+      - 'tests/test_topic_discovery_audit.py'
+      - 'tests/test_top5_topic_workflow_policy.py'
+permissions:
+  contents: read
+jobs:
+  topic-routing-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-video.txt
+      - name: Install same generic Python dependencies
+        run: python -m pip install -r requirements-video.txt
+      - name: Verify manual and auto topic routing
+        run: |
+          python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
+          python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
+# This CI only validates routing. Full videos and rights review are separate.

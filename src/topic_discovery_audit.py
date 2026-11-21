@@ -3,7 +3,7 @@
 import argparse, json, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from top5_auto_v30 import discover_for_topic
+from top5_auto_v30 import choose_topic, discover_for_topic
 
 def main():
     ap=argparse.ArgumentParser()
@@ -12,11 +12,19 @@ def main():
     ap.add_argument("--output", default="output/topic_run/DISCOVERY_AUDIT.json")
     args=ap.parse_args()
     topics=json.loads(Path(args.topics).read_text(encoding="utf-8"))
-    topic=next((x for x in topics if x["topic_id"]==args.topic),None)
-    if topic is None:
-        raise SystemExit("Unknown topic: "+args.topic)
-    candidates,errors=discover_for_topic(topic,discover=True)
-    audit={"topic":args.topic,"search_phrases":topic.get("search",[]),
+    standings=[]
+    if args.topic == "auto":
+        # Resolve once and hand that exact selected topic to the renderer.
+        topic,candidates,standings=choose_topic(topics,"auto")
+        errors=next((row.get("errors",[]) for row in standings
+                     if row["topic_id"]==topic["topic_id"]),[])
+    else:
+        topic=next((x for x in topics if x["topic_id"]==args.topic),None)
+        if topic is None:
+            raise SystemExit("Unknown topic: "+args.topic)
+        candidates,errors=discover_for_topic(topic,discover=True)
+    audit={"requested_topic":args.topic,"topic":topic["topic_id"],
+           "topic_standings":standings,"search_phrases":topic.get("search",[]),
            "candidate_count":len(candidates),"minimum_required":5,
            "candidate_titles":[x["title"] for x in candidates[:40]],
            "source_pages":[x.get("source_page") for x in candidates[:40]],
@@ -26,7 +34,8 @@ def main():
     path=Path(args.output)
     path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    print(json.dumps({"topic":args.topic,"candidates":len(candidates),"status":audit["status"]}),flush=True)
+    print(json.dumps({"requested_topic":args.topic,"topic":topic["topic_id"],
+                      "candidates":len(candidates),"status":audit["status"]}),flush=True)
     return 0
 
 if __name__=="__main__":
