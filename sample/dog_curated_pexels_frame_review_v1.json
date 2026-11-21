@@ -66,11 +66,34 @@
       ],
       "alternate_observation": "Dog on red background mainly stands, pivots and trots in source 6-11s. No clear spin-jump payoff in the nine sampled frames; original 16-21s window loses subject from frame.",
       "alternate_nine_frame_reviewed": true
+    },
+    {
+      "id": "PX-33567553",
+      "status": "REJECTED_WEAK_COMEDIC_PAYOFF",
+      "target": "rank5",
+      "observations": "Actual 5-second preview windows (source 28-33s, 4-9s) show black-white dog biting and manipulating a colorful fabric ball on red sofa; sustained play but no legible surprise/reversal in 18 sampled frames.",
+      "visual_sample_reviewed": true,
+      "full_source_video_reviewed": false,
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false,
+      "evidence_run_id": 44881507508
+    },
+    {
+      "id": "PX-28860202",
+      "status": "REJECTED_TOO_SMALL_FOR_VERTICAL",
+      "target": "rank2",
+      "observations": "Actual 5-second preview from source 2-7s shows dog leaping from shore into the lake, with visible splash; very wide landscape framing makes dog too small for a centered 9:16 comedic payoff, based on 9 sampled frames.",
+      "visual_sample_reviewed": true,
+      "full_source_video_reviewed": false,
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false,
+      "evidence_run_id": 44881507508
     }
   ],
   "evidence_runs": [
     44879229566,
     44880047153,
-    44880585842
+    44880585842,
+    44881507508
   ]
 }
