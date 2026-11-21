@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
-from dog_pixabay_audition import audition_pixabay, download_pixabay
+from dog_pixabay_audition import audition_pixabay, download_pixabay, resume_cached_pixabay_queue
 
 class PixabayAuditionTests(unittest.TestCase):
     def test_preview_and_fail_closed_rights(self):
@@ -199,6 +199,23 @@ class PixabayAuditionTests(unittest.TestCase):
             self.assertEqual(result["cached_preview_count"],0)
             self.assertEqual(result["status"],"NO_PREVIEW")
             self.assertFalse((output/"PB-4740_preview.mp4").exists())
+
+    def test_cache_only_refresh_carries_valid_preview_without_network_or_false_new_status(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output=Path(temp)
+            (output/"PB-100_preview.mp4").write_bytes(b"review")
+            (output/"DOG_PIXABAY_AUDITION_RESULTS.json").write_text(json.dumps({
+                "provider":"pixabay","candidates":[{
+                    "id":"PB-100","status":"PREVIEW_READY_REVIEW_REQUIRED",
+                    "preview_origin":"NEW_THIS_RUN","preview_file":"PB-100_preview.mp4",
+                    "publication_approved":False}]}))
+            status=resume_cached_pixabay_queue(output)
+            self.assertEqual(status["status"],"PREVIEW_READY")
+            self.assertEqual(status["new_preview_count"],0)
+            self.assertEqual(status["cached_preview_count"],1)
+            self.assertEqual(status["candidates"][0]["preview_origin"],"CACHED_PREVIOUS_RUN")
+            self.assertFalse(status["publication_approved"])
+            self.assertTrue((output/"PB-100_preview.mp4").is_file())
 
     def test_rejects_untrusted_video_url(self):
         with tempfile.TemporaryDirectory() as temp:
