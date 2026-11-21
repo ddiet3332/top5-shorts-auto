@@ -1,5 +1,6 @@
 """Model may describe originals, but no text-only result can approve captions."""
 import json
+import hashlib
 import sys
 import tempfile
 import unittest
@@ -10,6 +11,7 @@ sys.path.insert(0,str(ROOT/"src"))
 sys.path.insert(0,str(ROOT/"tests"))
 from test_top5_original_frame_evidence import V40OriginalFramesTests
 from top5_original_frame_evidence import create,SIDE
+from top5_standard_scene_review import VIDEO
 from top5_v41_original_source_vlm import run,load_true_original_frame_inputs
 
 class OriginalSourceModelTests(unittest.TestCase):
@@ -18,6 +20,13 @@ class OriginalSourceModelTests(unittest.TestCase):
         def reader(path,second):
             return Image.new("RGB",(SIDE,SIDE),(int(second*20)%255,20,120))
         create(root,frame_reader=reader)
+        (root/"TOP5_STANDARD_EDITORIAL_QA.json").write_text(json.dumps({
+            "topic":"objects_oddities",
+            "rendered_mp4_sha256":hashlib.sha256((root/VIDEO).read_bytes()).hexdigest(),
+            "five_rank_source_provenance_bound":True,
+            "actual_video_frames_inspected":38,
+            "publication_approved":False
+        }),encoding="utf-8")
         return root
 
     def test_five_original_source_verified_rank_images_and_no_captions(self):
