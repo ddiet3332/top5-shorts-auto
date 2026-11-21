@@ -16,6 +16,7 @@ on:
       - 'tests/test_dog_replacement_gate.py'
       - 'tests/test_dog_replacement_report.py'
       - 'tests/test_dog_source_discovery.py'
+      - 'tests/test_dog_pixabay_discovery.py'
       - 'tests/test_dog_source_audition.py'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
@@ -52,6 +53,7 @@ on:
       - 'tests/test_dog_replacement_gate.py'
       - 'tests/test_dog_replacement_report.py'
       - 'tests/test_dog_source_discovery.py'
+      - 'tests/test_dog_pixabay_discovery.py'
       - 'tests/test_dog_source_audition.py'
   workflow_dispatch:
   schedule:
