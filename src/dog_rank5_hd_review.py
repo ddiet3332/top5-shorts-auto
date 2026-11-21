@@ -63,8 +63,7 @@ def verify_video(path: Path):
         raise ValueError("REVIEW_MP4_NOT_CREATED")
     result=subprocess.run([
         "ffprobe","-v","error","-select_streams","v:0",
-        "-show_entries","stream=width,height,avg_frame_rate,nb_frames,codec_name",
-        "-show_entries","format=duration","-of","json",str(path)
+        "-show_entries","stream=width,height,avg_frame_rate,nb_frames,codec_name:format=duration","-of","json",str(path)
     ],capture_output=True,text=True,timeout=20,check=True)
     data=json.loads(result.stdout)
     video=data["streams"][0]
