@@ -5,6 +5,9 @@ on:
       - '.github/workflows/top5-auto-routing-ci.yml'
       - '.github/workflows/top5_topic_production.yml'
       - 'src/topic_discovery_audit.py'
+      - 'src/top5_all_source_license_audit.py'
+      - 'review/top5_source_license_observations.json'
+      - 'tests/test_top5_all_source_license_audit.py'
       - 'src/top5_topic_recovery.py'
       - 'tests/test_topic_discovery_audit.py'
       - 'tests/test_top5_topic_recovery.py'
@@ -39,6 +42,9 @@ on:
       - '.github/workflows/top5-auto-routing-ci.yml'
       - '.github/workflows/top5_topic_production.yml'
       - 'src/topic_discovery_audit.py'
+      - 'src/top5_all_source_license_audit.py'
+      - 'review/top5_source_license_observations.json'
+      - 'tests/test_top5_all_source_license_audit.py'
       - 'src/top5_topic_recovery.py'
       - 'tests/test_topic_discovery_audit.py'
       - 'tests/test_top5_topic_recovery.py'
@@ -86,6 +92,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
           python -m unittest discover -s tests -p 'test_top5_topic_recovery.py' -v
+          python -m unittest discover -s tests -p 'test_top5_all_source_license_audit.py' -v
           python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           python -m unittest discover -s tests -p 'test_top5_generic_label_safety.py' -v
           python -m unittest discover -s tests -p 'test_top5_category_rotation.py' -v

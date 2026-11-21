@@ -37,6 +37,9 @@ on:
       - 'review/top5_weak_source_windows.json'
       - 'tests/test_top5_reviewed_weak_windows.py'
       - 'src/topic_discovery_audit.py'
+      - 'src/top5_all_source_license_audit.py'
+      - 'review/top5_source_license_observations.json'
+      - 'tests/test_top5_all_source_license_audit.py'
       - 'src/top5_topic_recovery.py'
       - 'tests/test_topic_discovery_audit.py'
       - 'tests/test_top5_topic_recovery.py'
@@ -76,6 +79,7 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_recovery.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_all_source_license_audit.py' -v
       - name: Audit discovery and save failure evidence
         run: /tmp/top5-topic/bin/python src/topic_discovery_audit.py --topic "$TOPIC" --output output/topic_run/DISCOVERY_AUDIT.json
       - name: Run dog-only visual source audition only if dog topic was actually selected
@@ -101,6 +105,8 @@ jobs:
         run: /tmp/top5-topic/bin/python src/top5_standard_scene_review.py --output output/topic_run
       - name: Capture 15 actual ORIGINAL source frames before composited TOP5 captions
         run: /tmp/top5-topic/bin/python src/top5_original_frame_evidence.py --output output/topic_run
+      - name: Verify ranked sources plus independent 0-2s hook are accounted for in licence draft
+        run: /tmp/top5-topic/bin/python src/top5_all_source_license_audit.py --output output/topic_run
       - name: Export review MP4 and rights evidence
         if: always()
         uses: actions/upload-artifact@v4
