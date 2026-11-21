@@ -1,0 +1,142 @@
+name: TOP5 V39 - Exact-source 256M vs 500M video-language benchmark
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/top5_v39_model_comparison.yml'
+      - 'src/top5_smolvlm2_editorial.py'
+      - 'src/top5_v39_model_comparison.py'
+      - 'tests/test_top5_v39_model_comparison.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v39_model_comparison.yml'
+      - 'src/top5_smolvlm2_editorial.py'
+      - 'src/top5_v39_model_comparison.py'
+      - 'tests/test_top5_v39_model_comparison.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: top5-v39-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verified-source-and-compare-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Lightweight dependencies; no model needed for regression
+        run: python -m pip install -q 'Pillow>=10,<13'
+      - name: Reject mismatched video, source hash, frames or fake caption approval
+        run: |
+          python -m unittest discover -s tests -p 'test_top5_v39_model_comparison.py' -v
+          python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
+          python -m unittest discover -s tests -p 'test_top5_vlm_reliability_gate.py' -v
+  real-same-video-model-comparison:
+    needs: verified-source-and-compare-tests
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 43
+    env:
+      HF_HUB_DISABLE_XET: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: top5-v39-smolvlm-500m-v1
+      - name: Install free CPU video language model and FFmpeg
+        timeout-minutes: 10
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m venv /tmp/top5-v39
+          /tmp/top5-v39/bin/pip install -q --upgrade pip
+          /tmp/top5-v39/bin/pip install -q 'torch==2.7.1' --index-url https://download.pytorch.org/whl/cpu
+          /tmp/top5-v39/bin/pip install -q 'transformers==4.51.3' 'safetensors>=0.4.3' 'accelerate>=1.6,<2' 'num2words>=0.5.13,<1' 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Download exact SAME previously rendered 30s MP4 plus actual 256M baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p source baseline
+          gh run download 44906589100 --repo "$GITHUB_REPOSITORY" --name 'TOP5-auto-review-74' --dir source
+          gh run download 44906766012 --repo "$GITHUB_REPOSITORY" --name 'TOP5-V38-real-video-descriptions-9' --dir baseline
+          test -s source/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+          test -s source/topic_run/TOP5_STANDARD_EDITORIAL_QA.json
+          test -s baseline/VLM_SCENE_DESCRIPTION_REVIEW.json
+          python - <<'PY'
+          import json,hashlib
+          from pathlib import Path
+          p=Path('source/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4')
+          h=hashlib.sha256(p.read_bytes()).hexdigest()
+          q=json.loads(Path('source/topic_run/TOP5_STANDARD_EDITORIAL_QA.json').read_text())
+          b=json.loads(Path('baseline/VLM_SCENE_DESCRIPTION_REVIEW.json').read_text())
+          assert h==q['rendered_mp4_sha256']==b['rendered_video_sha256'], 'VIDEO_SHA_MISMATCH'
+          assert q['topic']==b['chosen_topic'], 'TOPIC_MISMATCH'
+          assert len(b['rows'])==5, 'BASELINE_FIVE_RANKS_MISSING'
+          print('Exact source-bound comparison video',h,'topic',q['topic'])
+          PY
+      - name: Describe same 15 actual rank frames with larger 500M model
+        timeout-minutes: 28
+        run: |
+          /tmp/top5-v39/bin/python src/top5_smolvlm2_editorial.py \
+            --source source/topic_run \
+            --output challenger \
+            --model-id HuggingFaceTB/SmolVLM2-500M-Video-Instruct \
+            --max-ranks 5
+      - name: Apply SAME untrusted-model rejection rules
+        run: |
+          /tmp/top5-v39/bin/python src/top5_vlm_reliability_gate.py \
+            --input challenger/VLM_SCENE_DESCRIPTION_REVIEW.json \
+            --output challenger/VLM_RELIABILITY_QA.json
+      - name: Verify source SHA and rank timestamps and write side-by-side comparison
+        run: |
+          /tmp/top5-v39/bin/python src/top5_v39_model_comparison.py \
+            --baseline baseline/VLM_SCENE_DESCRIPTION_REVIEW.json \
+            --challenger challenger/VLM_SCENE_DESCRIPTION_REVIEW.json \
+            --out output
+      - name: Publish evidence-only workflow summary (never videos to YouTube)
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path('output/V39_SAME_VIDEO_256M_VS_500M.json')
+          if p.is_file():
+              x=json.loads(p.read_text())
+              lines=['## Exact same 30-second video VLM comparison',
+                     f"- Topic: {x['topic']}",
+                     f"- 256M ranks with text anomalies: {x['baseline_explicit_warning_ranks']}/5",
+                     f"- 500M ranks with text anomalies: {x['challenger_explicit_warning_ranks']}/5"]
+          else:
+              lines=['## Model comparison failed or incomplete; no output accepted']
+          lines += ['- Anomaly count is NOT true-video-description accuracy',
+                    '- Korean captions: NOT APPROVED',
+                    '- Rights, YPP and 85-point editorial score: NOT CLEARED',
+                    '- YouTube posting: MANUAL ONLY']
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
+              f.write('\n'.join(lines)+'\n')
+          PY
+      - name: Upload 500M output and source-matched compare report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V39-500M-SAME-VIDEO-COMPARISON-${{ github.run_number }}
+          path: |
+            challenger/*.json
+            challenger/*.md
+            output/*.json
+            output/*.md
+          retention-days: 7
+          if-no-files-found: warn
+# Never assume smaller/larger model = semantic truth. No unapproved captions, no rights bypass, no auto-post.
