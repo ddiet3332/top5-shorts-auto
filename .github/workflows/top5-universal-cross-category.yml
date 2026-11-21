@@ -17,6 +17,8 @@ on:
     paths:
       - '.github/workflows/top5-universal-cross-category.yml'
       - 'src/top5_universal_trial.py'
+      - 'src/top5_universal_stock_fallback.py'
+      - 'tests/test_top5_universal_stock_fallback.py'
       - 'tests/test_top5_universal_trial.py'
       - 'review/TOP5_UNIVERSAL_AUTOMATION_CHARTER_2026-11-21.md'
   push:
@@ -24,6 +26,8 @@ on:
     paths:
       - '.github/workflows/top5-universal-cross-category.yml'
       - 'src/top5_universal_trial.py'
+      - 'src/top5_universal_stock_fallback.py'
+      - 'tests/test_top5_universal_stock_fallback.py'
       - 'tests/test_top5_universal_trial.py'
       - 'review/TOP5_UNIVERSAL_AUTOMATION_CHARTER_2026-11-21.md'
       - 'src/top5_auto_v32.py'
@@ -46,7 +50,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Test all four channel families and publication hard gates
-        run: python -m unittest discover -s tests -p 'test_top5_universal_trial.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_top5_universal_trial.py' -v
+          python -m unittest discover -s tests -p 'test_top5_universal_stock_fallback.py' -v
   cross-topic-real-mp4:
     needs: check-universal-contract
     if: github.event_name != 'pull_request'
@@ -71,6 +77,9 @@ jobs:
       - name: Real original footage to distinct-topic review MP4
         id: trial
         timeout-minutes: 31
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           python src/top5_universal_trial.py --topic "${{ matrix.topic }}" \
             --output "output/universal/${{ matrix.topic }}"
@@ -108,6 +117,11 @@ jobs:
             output/universal/${{ matrix.topic }}/*.json
             output/universal/${{ matrix.topic }}/*.jpg
             output/universal/${{ matrix.topic }}/*.txt
+            output/universal/${{ matrix.topic }}/stock_fallback/*.json
+            output/universal/${{ matrix.topic }}/stock_fallback/*.txt
+            output/universal/${{ matrix.topic }}/stock_fallback/sources/SOURCE_DOWNLOAD_QA.json
+            output/universal/${{ matrix.topic }}/stock_fallback/render/GENERIC_V06_QA.json
+            output/universal/${{ matrix.topic }}/stock_fallback/render/QA.md
           if-no-files-found: warn
           retention-days: 7
 # YouTube auto-posting intentionally absent; 85+ actual editorial QA and per-source rights remain mandatory.

@@ -153,13 +153,28 @@ def run_trial(topic, output, *, timeout_seconds=1500):
         log_path.write_text("TRIAL_TIMEOUT\n", encoding="utf-8")
         code = 124
     result = assess(topic, output)
-    result["renderer_exit_code"] = code
+    result["v32_renderer_exit_code"] = code
     if code != 0:
         result["status"] = "BLOCKED_SOURCE_OR_RENDER"
         result["technical_pass"] = False
         result["blockers"] = ["RENDERER_FAILED_OR_SOURCE_SHORTAGE",
                               "EDITORIAL_REVIEW_REQUIRED",
                               "SOURCE_RIGHTS_AND_YPP_UNVERIFIED"]
+        if topic == "human_moments":
+            # Reuse the existing Pixabay/CC source + generic video pipeline,
+            # and validate its evidence independently. No rights approval.
+            try:
+                from top5_universal_stock_fallback import run_human_fallback
+                stock_result=run_human_fallback(output)
+                if stock_result.get("technical_pass") is True:
+                    result=stock_result
+                    result["v32_renderer_exit_code"]=code
+                else:
+                    result["stock_fallback_status"]=stock_result.get("status")
+                    result["stock_fallback_blockers"]=stock_result.get("blockers",[])
+            except Exception as exc:
+                result["stock_fallback_status"]="BLOCKED_UNEXPECTED_FALLBACK_ERROR"
+                result["stock_fallback_error_type"]=type(exc).__name__
     (output / "UNIVERSAL_TOPIC_TRIAL.json").write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return result
