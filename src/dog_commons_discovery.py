@@ -32,11 +32,11 @@ BLOCKED = ("animation", "cartoon", "film trailer", "music video", "compilation",
            "advert", "gameplay", "ai generated", "movie scene", "television")
 
 
-def classify_title(title):
+def classify_title(title, *, dog_category=False):
     text = title.casefold()
     if any(b in text for b in BLOCKED):
         return None
-    if not any(w in text for w in DOG_TERMS):
+    if not dog_category and not any(w in text for w in DOG_TERMS):
         return None
     return next((family for family, terms in ACTIONS.items()
                  if any(term in text for term in terms)), None)
@@ -66,7 +66,7 @@ def discover_commons(*, search=None, categories=None, max_results=28, per_query=
     found, errors = {}, []
     def add(row, route):
         try:
-            family = classify_title(str(row.get("title", "")))
+            family = classify_title(str(row.get("title", "")), dog_category=route == "category:Videos of dogs")
             if not family or not trusted(row):
                 return
             title = row["title"]
@@ -79,6 +79,7 @@ def discover_commons(*, search=None, categories=None, max_results=28, per_query=
                 "license": row.get("license", "CC BY / CC0"),
                 "license_url": row["license_url"],
                 "action_family_from_title": family, "discovery_route": route,
+                "dog_subject_basis": "Wikimedia category metadata" if route == "category:Videos of dogs" else "file title metadata",
                 "semantic_review": "UNVERIFIED", "reviewed_frames": False,
                 "rights_status": "UNVERIFIED", "publication_approved": False,
                 "status": "DISCOVERED_NOT_DOWNLOADED",
