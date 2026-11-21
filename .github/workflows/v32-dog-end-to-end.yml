@@ -102,6 +102,10 @@ jobs:
             args+=(--baseline "$fixture")
           fi
           python src/top5_reviewed_render.py --topic dog_surprises --output output/dog "${args[@]}"
+      - name: Record fail-closed editorial replacement readiness
+        if: always()
+        run: |
+          python src/dog_replacement_report.py --output output/dog/DOG_REPLACEMENT_READINESS.json
       - name: Measure the rendered audio stream
         timeout-minutes: 2
         run: |
@@ -147,6 +151,7 @@ jobs:
             output/dog/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
             output/dog/work/captions.ass
             output/dog/V32_TECHNICAL_QA.json
+            output/dog/DOG_REPLACEMENT_READINESS.json
             output/evidence/review/
           if-no-files-found: error
           retention-days: 30
