@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "review_basis": "Actual full 30-second nature TOP5 MP4 contact sheet at seven timestamps per rank, verified via 2026-11-21 selected-source SHA and cut windows. Individual playback rights and monetization not verified.",
+  "source_video": "TOP5-auto-review-65",
+  "technical_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44891297714",
+  "rejected_windows": [
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Lightning Storm in Rolla.webm",
+      "sha256": "6374da71def3a70d2ec930fcc7deda6affe97c31a06f27ac86ac2b8d27232ece",
+      "start_sec": 18,
+      "tolerance_sec": 0.22,
+      "original_rank": 1,
+      "review_reason": "Five of seven selected first-rank video samples have nearly black visible subject areas. The only strong flash is brief; the apparent top-ranked payoff is not sustained. Reject THIS six-second window, not all Rolla storm footage."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Video from behind Kawaida Waterfall through hanging roots, Kiambu County.webm",
+      "sha256": "89c84300f09609a2ceb53867f54458c04e082fc79d70928dd979fca312d29485",
+      "start_sec": 2.45,
+      "tolerance_sec": 0.22,
+      "original_rank": 3,
+      "review_reason": "Seven sampled composite frames show a static forest/trees view dominating the chosen interval; little visibly identifiable waterfall or dramatic action. In the same TOP5, a second waterfall clip is already ranked fifth. Reject THIS weak cut window, not the original author or other unseen windows."
+    }
+  ],
+  "rights_verified": false,
+  "publication_approved": false
+}
