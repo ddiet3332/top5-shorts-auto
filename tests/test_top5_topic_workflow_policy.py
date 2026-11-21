@@ -15,6 +15,11 @@ class GenericTopicDefaultTests(unittest.TestCase):
                       "objects_oddities", "human_moments", "auto"):
             self.assertIn("- "+topic, workflow)
         self.assertIn("publication", workflow.lower())
+        self.assertLess(workflow.index("Audit discovery and save failure evidence"),
+                        workflow.index("Run dog-only visual source audition only if dog topic was actually selected"))
+        self.assertIn('test "$RESOLVED_TOPIC" = dog_surprises', workflow)
+        self.assertEqual(workflow.count("/tmp/top5-topic/bin/python src/v37_dog_audition.py"), 1)
+        self.assertIn("Skipping dog-only audition", workflow)
 
 
 if __name__ == "__main__":
