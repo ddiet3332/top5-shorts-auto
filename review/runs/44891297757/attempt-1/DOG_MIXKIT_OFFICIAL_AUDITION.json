@@ -1,0 +1,58 @@
+{
+  "provider": "mixkit",
+  "status": "NO_PREVIEW",
+  "candidates": [
+    {
+      "id": "MK-101230",
+      "provider": "mixkit",
+      "source_url": "https://mixkit.co/free-stock-video/girl-doing-tricks-with-dog-101230/",
+      "license_class": "FREE",
+      "rank_target": "rank2",
+      "status": "MIXKIT_FETCH_OR_REVIEW_FAILED",
+      "rights_status": "UNVERIFIED",
+      "semantic_review": "UNVERIFIED",
+      "reviewed_frames": false,
+      "editorial_score": null,
+      "publication_approved": false,
+      "failure_code": "FREE_LICENSE_PAGE_NOT_CONFIRMED",
+      "failure_type": "ValueError"
+    },
+    {
+      "id": "MK-1549",
+      "provider": "mixkit",
+      "source_url": "https://mixkit.co/free-stock-video/dog-jumping-off-a-log-1549/",
+      "license_class": "FREE",
+      "rank_target": "rank5",
+      "status": "MIXKIT_FETCH_OR_REVIEW_FAILED",
+      "rights_status": "UNVERIFIED",
+      "semantic_review": "UNVERIFIED",
+      "reviewed_frames": false,
+      "editorial_score": null,
+      "publication_approved": false,
+      "failure_code": "FREE_LICENSE_PAGE_NOT_CONFIRMED",
+      "failure_type": "ValueError"
+    },
+    {
+      "id": "MK-101245",
+      "provider": "mixkit",
+      "source_url": "https://mixkit.co/free-stock-video/pov-shot-of-happy-dog-playing-101245/",
+      "license_class": "FREE",
+      "rank_target": "rank2",
+      "status": "MIXKIT_FETCH_OR_REVIEW_FAILED",
+      "rights_status": "UNVERIFIED",
+      "semantic_review": "UNVERIFIED",
+      "reviewed_frames": false,
+      "editorial_score": null,
+      "publication_approved": false,
+      "failure_code": "FREE_LICENSE_PAGE_NOT_CONFIRMED",
+      "failure_type": "ValueError"
+    }
+  ],
+  "restricted_ids_blocked": [
+    "MK-36528"
+  ],
+  "publication_approved": false,
+  "rights_status": "UNVERIFIED",
+  "source_audio_approved": false,
+  "note": "Only official explicit download links, never hidden endpoints or access controls."
+}
