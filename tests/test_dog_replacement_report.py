@@ -39,6 +39,33 @@ class ReportTests(unittest.TestCase):
             self.assertFalse(result["publication_approved"])
             self.assertTrue(all(d["status"]=="NO_UPGRADE" for d in result["decisions"]))
 
+    def test_cached_review_queue_is_pending_not_new(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            profile={"shots":{
+                "hook":{"source_id":"A","action":"jump"},
+                "rank5":{"source_id":"B","action":"leap"},
+                "rank4":{"source_id":"C","action":"shake"},
+                "rank3":{"source_id":"D","action":"skate"},
+                "rank2":{"source_id":"E","action":"catch"},
+                "rank1":{"source_id":"F","action":"balance"},
+                "outro":{"source_id":"F","action":"tug"}}}
+            p=root/"profile.json"
+            p.write_text(json.dumps(profile))
+            old=root/"old.json"
+            old.write_text(json.dumps({"candidates":[]}))
+            cached=root/"pixabay.json"
+            cached.write_text(json.dumps({"provider":"pixabay","candidates":[
+                {"id":"PB-111","status":"PREVIEW_READY_REVIEW_REQUIRED",
+                 "preview_origin":"CACHED_PREVIOUS_RUN","publication_approved":False}]}))
+            result=report(p,old,provider_reports=[cached])
+            self.assertEqual(result["provider_preview_count"],1)
+            self.assertEqual(result["provider_preview_new_count"],0)
+            self.assertEqual(result["provider_preview_cached_count"],1)
+            self.assertEqual(result["next_action"],"REVIEW_PENDING_PREVIEWS")
+            self.assertFalse(result["publication_approved"])
+            self.assertIsNone(result["editorial_score"])
+
     def test_unreviewed_candidates_do_not_upgrade(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
