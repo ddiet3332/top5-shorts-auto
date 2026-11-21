@@ -11,9 +11,11 @@ on:
       - 'src/dog_replacement_gate.py'
       - 'src/dog_replacement_report.py'
       - 'src/dog_source_discovery.py'
+      - 'src/dog_source_audition.py'
       - 'tests/test_dog_replacement_gate.py'
       - 'tests/test_dog_replacement_report.py'
       - 'tests/test_dog_source_discovery.py'
+      - 'tests/test_dog_source_audition.py'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
       - 'scripts/persist_dog_evidence.sh'
@@ -103,6 +105,25 @@ jobs:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: |
           python src/dog_source_discovery.py --output output/dog/DOG_DISCOVERY_CANDIDATES.json
+      - name: Generate two bounded candidate previews
+        if: github.event_name != 'pull_request'
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          python src/dog_source_audition.py \
+            --discovery output/dog/DOG_DISCOVERY_CANDIDATES.json \
+            --output output/dog/audition
+      - name: Archive candidate previews for human review
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-candidate-previews-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/DOG_DISCOVERY_CANDIDATES.json
+            output/dog/audition/DOG_AUDITION_RESULTS.json
+            output/dog/audition/*_preview.mp4
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Render five original dog sources with an independent hook
         id: render
         timeout-minutes: 12
