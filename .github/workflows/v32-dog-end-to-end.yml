@@ -119,6 +119,17 @@ jobs:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
           python src/dog_pixabay_discovery.py --output output/dog/DOG_PIXABAY_CANDIDATES.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          result=json.loads(Path('output/dog/DOG_PIXABAY_CANDIDATES.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as out:
+              out.write('### Pixabay dog source diagnostic\n\n')
+              out.write(f"- Discovery: **{result['status']}**; candidates: **{len(result['candidates'])}**\n")
+              for issue in result.get('errors',[]):
+                  out.write(f"- `{issue.get('query','')}`: `{issue.get('error','')}` HTTP `{issue.get('http_status','unknown')}`\n")
+              out.write('- API credentials and raw response bodies are not shown.\n')
+          PY
       - name: Generate bounded Pixabay review previews
         if: github.event_name != 'pull_request'
         timeout-minutes: 5
