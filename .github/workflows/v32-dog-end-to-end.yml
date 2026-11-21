@@ -108,7 +108,6 @@ jobs:
           github-token: ${{ github.token }}
           path: output/fixture
       - name: Discover bounded free dog source candidates
-        if: github.event_name != 'pull_request'
         timeout-minutes: 2
         env:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
