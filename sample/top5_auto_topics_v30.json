@@ -152,7 +152,17 @@
       "wave",
       "nature",
       "cloud",
-      "snow"
+      "snow",
+      "geyser",
+      "tornado",
+      "avalanche",
+      "aurora",
+      "hail",
+      "flood",
+      "ocean",
+      "surf",
+      "glacier",
+      "river"
     ],
     "actions": [
       "eruption",
@@ -162,12 +172,23 @@
       "storm",
       "wave",
       "surge",
-      "rain"
+      "rain",
+      "glow",
+      "flood",
+      "spill",
+      "collapse"
     ],
     "search": [
       "storm lightning",
       "volcano eruption",
-      "waterfall"
+      "waterfall",
+      "tornado cloud",
+      "geyser eruption",
+      "ocean waves crashing",
+      "snow avalanche",
+      "aurora borealis",
+      "river flood",
+      "storm surge"
     ],
     "seeds": []
   },
