@@ -46,6 +46,7 @@ on:
       - 'review/top5_weak_source_windows.json'
       - 'tests/test_top5_reviewed_weak_windows.py'
       - 'src/top5_auto_v30.py'
+      - 'tests/test_v55_nature_source_span.py'
       - 'src/top5_provider_failure_gate.py'
       - 'tests/test_v53_provider_errors.py'
       - 'tests/test_top5_object_diversity.py'
