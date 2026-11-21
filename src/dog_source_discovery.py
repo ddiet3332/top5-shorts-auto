@@ -14,7 +14,7 @@ QUERIES = ("funny dog trick", "dog unexpected reaction", "playful dog")
 API = "https://api.pexels.com/videos/search"
 
 
-def discover(api_key, *, fetch=None, per_page=8, max_results=18):
+def discover(api_key, *, fetch=None, per_page=8, max_results=18, excluded_ids=()):
     if not api_key:
         return {"status": "NO_API_KEY", "candidates": [], "publication_approved": False}
     if not 1 <= per_page <= 12 or not 1 <= max_results <= 36:
@@ -26,7 +26,7 @@ def discover(api_key, *, fetch=None, per_page=8, max_results=18):
                 if response.status != 200:
                     raise ValueError("API_RESPONSE_NOT_OK")
                 return json.load(response)
-    seen = set()
+    seen = set(excluded_ids)
     candidates = []
     errors = []
     for query in QUERIES:
@@ -72,7 +72,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
-    result = discover(os.environ.get("PEXELS_API_KEY", ""))
+    exclusions = set()
+    for filename, key in (("sample/top5_dog_source_catalog.json", "sources"),
+                          ("sample/dog_replacement_audition.json", "candidates")):
+        path = Path(filename)
+        if path.exists():
+            for item in json.loads(path.read_text(encoding="utf-8")).get(key, []):
+                sid = str(item.get("id", ""))
+                if sid.startswith("PX-") and sid[3:].isdigit():
+                    exclusions.add(int(sid[3:]))
+    result = discover(os.environ.get("PEXELS_API_KEY", ""), excluded_ids=exclusions)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("DOG_DISCOVERY", result["status"], "count", len(result["candidates"]), flush=True)
