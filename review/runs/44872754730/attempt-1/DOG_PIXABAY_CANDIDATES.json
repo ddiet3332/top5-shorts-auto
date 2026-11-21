@@ -1,0 +1,23 @@
+{
+  "status": "API_REQUEST_FAILED",
+  "provider": "pixabay",
+  "candidates": [],
+  "errors": [
+    {
+      "query": "funny dog",
+      "error": "HTTP_ERROR",
+      "http_status": 403
+    },
+    {
+      "query": "playful puppy",
+      "error": "HTTP_ERROR",
+      "http_status": 403
+    },
+    {
+      "query": "dog trick",
+      "error": "HTTP_ERROR",
+      "http_status": 403
+    }
+  ],
+  "publication_approved": false
+}
