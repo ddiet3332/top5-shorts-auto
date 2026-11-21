@@ -24,6 +24,7 @@ on:
       - 'src/v28_fullscreen_builder.py'
       - 'src/top5_auto_v30.py'
       - 'tests/test_v55_nature_source_span.py'
+      - 'tests/test_v56_river_overflow_nature.py'
       - 'src/top5_provider_failure_gate.py'
       - 'tests/test_v53_provider_errors.py'
       - 'src/top5_candidate_visual_gate.py'
@@ -82,6 +83,7 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v52_nature_event_diversity.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v55_nature_source_span.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v56_river_overflow_nature.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_standard_scene_review.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_original_frame_evidence.py' -v
