@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "review_only": true,
+  "publication_approved": false,
+  "id": "PX-5263686",
+  "provider": "pexels",
+  "page_url": "https://www.pexels.com/video/cute-dog-rolling-on-his-back-5263686/",
+  "creator": "KATRIN BOLOVTSOVA",
+  "license_label": "Pexels License",
+  "license_url": "https://www.pexels.com/license/",
+  "source_original_sha256_from_run_44879229566": "dfacbc6cc5522107bc21cd6711c9c5b07fd527959313fd0fa6469ee81c327b9b",
+  "rank_target": "rank5",
+  "action_family_hypothesis": "roll_studio",
+  "source_start_sec": 2,
+  "preview_duration_sec": 5,
+  "visual_review_status": "CONDITIONAL",
+  "rights_status": "UNVERIFIED",
+  "audio_approved": false
+}
