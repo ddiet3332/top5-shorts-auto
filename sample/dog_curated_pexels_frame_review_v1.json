@@ -34,6 +34,30 @@
       "visual_sample_reviewed": true,
       "full_source_video_reviewed": false,
       "publication_approved": false
+    },
+    {
+      "id": "PX-3042473",
+      "status": "HOLD_WEAK_MIRROR_PAYOFF",
+      "target": "rank2",
+      "observations": "5-second preview from source 6-11s shows puppy repeatedly approaching and turning before mirror. It is visibly a dog but no substantial surprise for #2.",
+      "visual_sample_reviewed": true,
+      "full_source_video_reviewed": false,
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false
+    },
+    {
+      "id": "PX-7678714",
+      "status": "RESELECT_SOURCE_WINDOW",
+      "target": "rank2",
+      "observations": "Highest-motion source window 16-21s mostly shows collie walking toward camera and leaving frame, despite provider description claiming spin/jump. Need another nonoverlapping 5-second section.",
+      "visual_sample_reviewed": true,
+      "full_source_video_reviewed": false,
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false
     }
+  ],
+  "evidence_runs": [
+    44879229566,
+    44880047153
   ]
 }
