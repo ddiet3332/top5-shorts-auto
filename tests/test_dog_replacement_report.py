@@ -66,6 +66,73 @@ class ReportTests(unittest.TestCase):
             self.assertFalse(result["publication_approved"])
             self.assertIsNone(result["editorial_score"])
 
+    def test_incumbent_scores_require_real_frame_review_fields(self):
+        from dog_replacement_report import incumbent_reviews, RUBRIC
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            profile={"shots":{"rank5":{"source_id":"A"},"rank2":{"source_id":"B"}}}
+            payload={"schema_version":1,"review_kind":"incumbent_rank_segment_scoring",
+                     "rubric_version":"dog_rank_segment_v1","publication_approved":False,
+                     "max_points":RUBRIC,
+                     "ranks":{"rank5":{"source_id":"A","reviewed_frames":False,"points":None},
+                              "rank2":{"source_id":"B","reviewed_frames":False,"points":None}}}
+            path=root/"scores.json"
+            path.write_text(json.dumps(payload))
+            scores, blockers=incumbent_reviews(profile,path)
+            self.assertEqual(scores,{"rank5":None,"rank2":None})
+            self.assertEqual(len(blockers),2)
+            payload["ranks"]["rank5"]={"source_id":"A","reviewed_frames":True,
+                "frame_timestamps_sec":[0.2,2.1,4.4],
+                "review_notes":"Observed five-second original dog motion and a weak visual payoff.",
+                "points":{"visible_action":14,"comedic_surprise":12,
+                          "setup_payoff_timing":10,"mobile_readability":12,"distinctness":5}}
+            path.write_text(json.dumps(payload))
+            scores,blockers=incumbent_reviews(profile,path)
+            self.assertEqual(scores["rank5"],53)
+            self.assertIsNone(scores["rank2"])
+            self.assertEqual(blockers,["RANK2_NOT_VISUALLY_SCORED"])
+            payload["ranks"]["rank5"]["points"]["comedic_surprise"]=99
+            path.write_text(json.dumps(payload))
+            scores,blockers=incumbent_reviews(profile,path)
+            self.assertIsNone(scores["rank5"])
+            self.assertIn("RANK5_SCORE_EVIDENCE_INVALID",blockers)
+
+    def test_report_never_upgrades_unreviewed_candidate_even_when_baseline_scored(self):
+        from dog_replacement_report import RUBRIC
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            profile={"shots":{"hook":{"source_id":"H","action":"bag"},
+                "rank5":{"source_id":"A","action":"jump"},
+                "rank4":{"source_id":"C","action":"shake"},
+                "rank3":{"source_id":"D","action":"skate"},
+                "rank2":{"source_id":"B","action":"catch"},
+                "rank1":{"source_id":"F","action":"balance"},
+                "outro":{"source_id":"F","action":"tug"}}}
+            scored={"schema_version":1,"review_kind":"incumbent_rank_segment_scoring",
+                "rubric_version":"dog_rank_segment_v1","publication_approved":False,
+                "max_points":RUBRIC,"ranks":{
+                    "rank5":{"source_id":"A","reviewed_frames":True,
+                             "frame_timestamps_sec":[0,2,4],
+                             "review_notes":"Exact source verified for weak five-second jump",
+                             "points":{"visible_action":15,"comedic_surprise":12,
+                                       "setup_payoff_timing":10,"mobile_readability":10,
+                                       "distinctness":8}},
+                    "rank2":{"source_id":"B","reviewed_frames":False,"points":None}}}
+            candidate={"id":"PX-TEST","rank_target":"rank5",
+                       "source_url":"https://www.pexels.com/video/test-123/",
+                       "creator":"Source","license_url":"https://www.pexels.com/license/",
+                       "sha256":"a"*64,"action_family":"toy_reaction",
+                       "payoff_sec":2,"start_sec":0,"duration_sec":10,
+                       "editorial_score":97,"reviewed_frames":False,
+                       "semantic_review":"UNVERIFIED","rights_status":"UNVERIFIED"}
+            p,a,s=[root/x for x in ("profile.json","audition.json","scores.json")]
+            for file,data in ((p,profile),(a,{"candidates":[candidate]}),(s,scored)):
+                file.write_text(json.dumps(data))
+            result=report(p,a,incumbent_review_path=s)
+            self.assertEqual(result["incumbent_review_scores"]["rank5"],55)
+            self.assertTrue(all(x["status"]=="NO_UPGRADE" for x in result["decisions"]))
+            self.assertFalse(result["publication_approved"])
+
     def test_unreviewed_candidates_do_not_upgrade(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
