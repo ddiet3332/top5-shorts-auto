@@ -129,6 +129,24 @@
       "tolerance_sec": 0.22,
       "original_rank": 4,
       "review_reason": "V50 universal cross-category real nature run #44922860609 actual seven rank-four frames at 6.30–10.70s: almost identical hazy flooded-river landscape, no distinct action, clear change, or viewer payoff. Reject exact 1–6s window only; original source not globally blocked."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Time Lapse - Aurora Borealis close to Berlin on Oktober 01, 2025.webm",
+      "sha256": "8e69fc1ba799057604c2de4ef18e9dac166280da506ac47df717d9f48866242e",
+      "start_sec": 2,
+      "tolerance_sec": 0.22,
+      "original_rank": 5,
+      "review_reason": "V51 actual 30s video run #44923855198: all 7 rank-five samples show mainly dark dusk horizon/trees with no clearly legible aurora; weak opening nature payoff. V52 exclude only original 2–6s cut, not every Fritzchens Fritz aurora video."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Riverside geyser yellowstone np 20100825 180055.sm.ogv",
+      "sha256": "1285348a61fc42a91dc461f66f5c2f3e05f920b361b3cc015fca6309a9a5bee1",
+      "start_sec": 0,
+      "tolerance_sec": 0.22,
+      "original_rank": 4,
+      "review_reason": "V51 35 rendered rank-four frames run #44923855198 show very similar plume shape across full 5s rather than a new surprising eruption, while a dynamic Strokkur geyser occupies rank two; weak redundant event. Exclude only 0–5s source cut, not the entire Yellowstone footage."
     }
   ],
   "rights_verified": false,
@@ -175,6 +193,13 @@
       "topic_id": "nature_moments",
       "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44922860609",
       "review_basis": "Universal real-render 35-frame nature contact sheet with near-static rank4 Changsha flooding cut; V51 rejects only exact SHA+time",
+      "rights_verified": false,
+      "publication_approved": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44923855198",
+      "review_basis": "V51 actual sampled 35 full MP4 frames plus original-provenance evidence; specific Berlin 2.0s and Yellowstone 0s cuts only",
       "rights_verified": false,
       "publication_approved": false
     }
