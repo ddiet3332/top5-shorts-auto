@@ -66,6 +66,15 @@
       "tolerance_sec": 0.22,
       "original_rank": 2,
       "review_reason": "V43 run #44917082072 actual 30s MP4 7-frame per-rank review at output 15.36-20.62s shows a sports hall, upright track and spectators rather than a discernible domino collapse. Reject this selected 0-6s cut, not whole source or unseen later action."
+    },
+    {
+      "topic_id": "objects_oddities",
+      "title": "File:Domino Roach 2024.webm",
+      "sha256": "c0f392f4f3b5a70e74a756efbc080d70affa7e1796fe16d0d4aa43e21e69d072",
+      "start_sec": 1,
+      "tolerance_sec": 0.22,
+      "original_rank": 1,
+      "review_reason": "V44 real full rendered objects TOP5 35-frame review run #44918160276 (21.3-26.7s) shows a living insect/roach moving among twigs, not an inanimate domino mechanism. Filename contains Domino but is topic-mismatched; exact cut + object family rejected. Same filename alone is not evidence of object motion."
     }
   ],
   "rights_verified": false,
@@ -84,6 +93,13 @@
       "topic_id": "objects_oddities",
       "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44917082072",
       "source_qa": "7 frames across each selected rank in actual 30-second MP4",
+      "rights_verified": false,
+      "publication_approved": false
+    },
+    {
+      "topic_id": "objects_oddities",
+      "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44918160276",
+      "source_qa": "35 actual rendered frames and SHA-verified selected source provenance",
       "rights_verified": false,
       "publication_approved": false
     }
