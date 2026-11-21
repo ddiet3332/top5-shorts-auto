@@ -53,7 +53,44 @@ def incumbent_reviews(profile, review_path):
     return scores,blockers
 
 
-def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbent_review_path=None) -> dict:
+
+def read_sample_reviewed_candidates(path):
+    """Import verified visual-only rank candidates, not rights authorization."""
+    if path is None or not Path(path).is_file():
+        return []
+    data=json.loads(Path(path).read_text(encoding="utf-8"))
+    if (data.get("schema_version")!=1 or
+        data.get("review_scope")!="NINE_FRAME_VISUAL_RANK5_SAMPLE_NOT_PUBLICATION_APPROVAL" or
+        data.get("rubric_version")!="dog_rank_segment_v1" or
+        data.get("publication_approved") is not False):
+        raise ValueError("INVALID_VISUAL_REVIEW_MANIFEST")
+    rows=data.get("candidates",[])
+    if not isinstance(rows,list) or len(rows)!=1:
+        raise ValueError("INVALID_VISUAL_CANDIDATE_COUNT")
+    candidates=[]
+    for row in rows:
+        if (row.get("id")!="PX-5263686" or row.get("rank_target")!="rank5" or
+            row.get("sha256")!="dfacbc6cc5522107bc21cd6711c9c5b07fd527959313fd0fa6469ee81c327b9b" or
+            row.get("action_family")!="roll_studio" or
+            row.get("rights_status")!="UNVERIFIED" or
+            row.get("publication_approved") is not False or
+            row.get("reviewed_frames") is not True or
+            row.get("semantic_review")!="PASS"):
+            raise ValueError("VISUAL_CANDIDATE_PROVENANCE_OR_RIGHTS_INVALID")
+        points=row.get("visual_rubric")
+        if not isinstance(points,dict) or points.keys()!=RUBRIC.keys():
+            raise ValueError("VISUAL_CANDIDATE_RUBRIC_MISSING")
+        if (any(not isinstance(v,(int,float)) or isinstance(v,bool) or
+                not math.isfinite(v) or v<0 or v>RUBRIC[k]
+                for k,v in points.items()) or
+            not isinstance(row.get("editorial_score"),(int,float)) or
+            row["editorial_score"]!=sum(points.values())):
+            raise ValueError("VISUAL_CANDIDATE_SCORE_INVALID")
+        candidates.append(row)
+    return candidates
+
+
+def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbent_review_path=None, reviewed_candidate_path=None) -> dict:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     audition = json.loads(audition_path.read_text(encoding="utf-8"))
     fixed = {label: spec for label, spec in profile["shots"].items()
@@ -70,6 +107,9 @@ def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbe
             candidates[row["rank_target"]].append(row)
         else:
             rejected.append({"id": row.get("id"), "reason": "NO_TARGET_RANK_OR_UNREVIEWED"})
+    visually_reviewed = read_sample_reviewed_candidates(reviewed_candidate_path)
+    for row in visually_reviewed:
+        candidates[row["rank_target"]].append(row)
     reviewed_incumbents, baseline_blockers = incumbent_reviews(profile, incumbent_review_path)
     # Provider previews are only candidate discovery, never independent
     # rights clearance, verified comedy, or automatic rank assignments.
@@ -113,6 +153,8 @@ def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbe
         "incumbent_review_blockers": baseline_blockers,
         "incumbent_scores_are_only_from_verified_frame_review": True,
         "candidate_count": sum(map(len, candidates.values())),
+        "visually_reviewed_candidate_ids_rights_pending": [
+            row["id"] for row in visually_reviewed if row["rights_status"]!="CLEARED"],
         "provider_preview_count": len(provider_ready),
         "provider_preview_new_count": len(provider_new),
         "provider_preview_cached_count": len(provider_cached),
@@ -125,6 +167,9 @@ def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbe
         "editorial_score": None,
         "next_action": ("REVIEW_UPGRADE" if any(
             d.status == "REPLACEMENT_ELIGIBLE" for d in decisions)
+            else "RIGHTS_REVIEW_REQUIRED_FOR_RANK5" if any(
+                d.rank=="rank5" and d.reason=="RIGHTS_REVIEW_REQUIRED"
+                for d in decisions)
             else "REVIEW_NEW_PREVIEWS" if provider_new
             else "REVIEW_PENDING_PREVIEWS" if provider_ready
             else "DISCOVER_AND_REVIEW_CANDIDATES")
@@ -138,8 +183,9 @@ def main():
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--provider-reports",type=Path,nargs="*",default=[])
     p.add_argument("--incumbent-review",type=Path,default=Path("sample/dog_incumbent_segment_review_v1.json"))
+    p.add_argument("--reviewed-candidates",type=Path,default=Path("sample/dog_rank5_reviewed_candidates_v1.json"))
     a = p.parse_args()
-    result = report(a.profile, a.audition, a.provider_reports, a.incumbent_review)
+    result = report(a.profile, a.audition, a.provider_reports, a.incumbent_review, a.reviewed_candidates)
     a.output.parent.mkdir(parents=True, exist_ok=True)
     a.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("DOG_REPLACEMENT_STATUS", result["next_action"], flush=True)

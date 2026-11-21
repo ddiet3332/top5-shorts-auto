@@ -33,6 +33,17 @@ class ReplacementGateTests(unittest.TestCase):
                          used_actions=set(), incumbent_score=60).reason,
                          "RIGHTS_REVIEW_REQUIRED")
 
+    def test_reviewed_better_visual_rank5_clip_remains_rights_blocked(self):
+        better=candidate(sid="PX-5263686", action="roll_studio", score=78)
+        better["rights_status"]="UNVERIFIED"
+        decisions=decide_replacements({"rank5":[better],"rank2":[]},
+            incumbent_scores={"rank5":55,"rank2":72},
+            fixed_source_ids=set(),fixed_action_families=set())
+        self.assertEqual(decisions[0].status,"NO_UPGRADE")
+        self.assertEqual(decisions[0].source_id,"PX-9006741")
+        self.assertEqual(decisions[0].reason,"RIGHTS_REVIEW_REQUIRED")
+        self.assertEqual(decisions[1].reason,"EDITORIAL_SOURCE_SHORTAGE")
+
     def test_no_semantic_review(self):
         c = candidate()
         c["semantic_review"] = "UNVERIFIED"

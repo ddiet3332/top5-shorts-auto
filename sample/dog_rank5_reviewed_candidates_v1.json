@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "review_scope": "NINE_FRAME_VISUAL_RANK5_SAMPLE_NOT_PUBLICATION_APPROVAL",
+  "rubric_version": "dog_rank_segment_v1",
+  "source_visual_review_run": 44883906975,
+  "integrated_30s_review_run": 44884893824,
+  "source_copyright_review": "UNVERIFIED",
+  "youtube_monetization": "UNVERIFIED",
+  "publication_approved": false,
+  "candidates": [
+    {
+      "id": "PX-5263686",
+      "provider": "pexels",
+      "rank_target": "rank5",
+      "source_url": "https://www.pexels.com/video/cute-dog-rolling-on-his-back-5263686/",
+      "creator": "KATRIN BOLOVTSOVA",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "dfacbc6cc5522107bc21cd6711c9c5b07fd527959313fd0fa6469ee81c327b9b",
+      "action_family": "roll_studio",
+      "start_sec": 2,
+      "payoff_sec": 4.9,
+      "duration_sec": 9.47,
+      "editorial_score": 78,
+      "visual_rubric": {
+        "visible_action": 24,
+        "comedic_surprise": 19,
+        "setup_payoff_timing": 16,
+        "mobile_readability": 11,
+        "distinctness": 8
+      },
+      "reviewed_frames": true,
+      "semantic_review": "PASS",
+      "review_basis": "9 manually examined frames at 0.1,0.65,1.2,1.75,2.3,2.85,3.4,3.95,4.5 seconds of source-derived 5s HD portrait plus decoded full 120 frames; action visibly rolls onto back and rises",
+      "limitations": "Visual-only editorial rank-segment score; source audio, performer permissions, source license, monetization and 30s listening not cleared",
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false
+    }
+  ]
+}
