@@ -64,6 +64,7 @@ class V37Tests(unittest.TestCase):
                 r.update({"author":"Uploader",
                           "source_page":"https://commons.wikimedia.org/wiki/"+r["title"].replace(" ","_"),
                           "license":"CC0","license_url":"https://creativecommons.org/publicdomain/zero/1.0"})
+            got[3].update({"author":"Astropulse","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0/"})
             v37_rights_and_description(got,td,audit)
             txt=(Path(td)/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md").read_text()
             self.assertIn("ShareAlike",txt)
