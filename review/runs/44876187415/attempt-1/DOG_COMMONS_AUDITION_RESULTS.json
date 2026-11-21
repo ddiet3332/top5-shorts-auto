@@ -1,0 +1,30 @@
+{
+  "status": "PREVIEW_READY",
+  "provider": "wikimedia_commons",
+  "candidates": [
+    {
+      "id": "CM-a41ba1199869",
+      "provider": "wikimedia_commons",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Puppiesplaying-tokyoarea-jan7-2020.webm",
+      "source_title": "File:Puppiesplaying-tokyoarea-jan7-2020.webm",
+      "creator": "Nesnad",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "action_family_from_title": "play",
+      "semantic_review": "UNVERIFIED",
+      "reviewed_frames": false,
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false,
+      "editorial_score": null,
+      "source_audio_approved": false,
+      "status": "PREVIEW_READY_REVIEW_REQUIRED",
+      "sha256": "52e89ad747baa1007f335fd863745614dd2072fe70f022307c2d098b00e3b847",
+      "duration_sec": 22.522,
+      "motion_score_not_comedy_score": 14.204,
+      "preview_start_sec": 5.0,
+      "preview_file": "CM-a41ba1199869_preview.mp4"
+    }
+  ],
+  "publication_approved": false,
+  "note": "No automatic rank replacement; footage and licenses need actual review."
+}
