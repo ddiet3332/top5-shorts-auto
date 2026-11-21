@@ -193,6 +193,14 @@ jobs:
             --discovery output/dog/DOG_PIXABAY_CANDIDATES.json \
             --media-index "$RUNNER_TEMP/pixabay-media-index.json" \
             --output output/dog/pixabay_audition
+      - name: Resume cached Pixabay preview queue without provider requests
+        if: github.event_name != 'pull_request' && steps.pixabay_discovery.outputs.fetched != 'true'
+        timeout-minutes: 1
+        run: |
+          python src/dog_pixabay_audition.py \
+            --discovery output/dog/DOG_PIXABAY_CANDIDATES.json \
+            --output output/dog/pixabay_audition \
+            --reuse-cached-only
       - name: Cache Pixabay audition previews for reuse on 15-minute builds
         if: github.event_name != 'pull_request' && steps.pixabay_discovery.outputs.fetched == 'true' && steps.pixabay_audition.outcome == 'success'
         uses: actions/cache/save@v4
