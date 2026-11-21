@@ -128,6 +128,15 @@ jobs:
               out.write(f"- Discovery: **{result['status']}**; candidates: **{len(result['candidates'])}**\n")
               for issue in result.get('errors',[]):
                   out.write(f"- `{issue.get('query','')}`: `{issue.get('error','')}` HTTP `{issue.get('http_status','unknown')}`\n")
+              codes={item.get('http_status') for item in result.get('errors',[])}
+              if 401 in codes or 403 in codes:
+                  out.write('- Next action: check Pixabay key validity and API access permissions.\n')
+              elif 429 in codes:
+                  out.write('- Next action: respect Pixabay rate limits; do not retry immediately.\n')
+              elif 400 in codes:
+                  out.write('- Next action: inspect request parameters against Pixabay API documentation.\n')
+              elif any(isinstance(code,int) and code>=500 for code in codes):
+                  out.write('- Next action: check Pixabay service health and retry later.\n')
               out.write('- API credentials and raw response bodies are not shown.\n')
           PY
       - name: Generate bounded Pixabay review previews
