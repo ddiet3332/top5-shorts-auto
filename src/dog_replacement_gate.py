@@ -90,5 +90,9 @@ def decide_replacements(candidates: dict[str, list[dict[str, Any]]],
                 ids.add(result.source_id)
                 actions.add(candidate["action_family"])
                 break
+            # Real candidates exist; report the highest-ranked rejection cause
+            # rather than mislabeling them as a source shortage.
+            if selected.reason == "EDITORIAL_SOURCE_SHORTAGE":
+                selected = result
         decisions.append(selected)
     return decisions
