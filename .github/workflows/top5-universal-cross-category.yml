@@ -100,8 +100,7 @@ jobs:
         if: steps.trial.outcome == 'success'
         timeout-minutes: 7
         run: |
-          python src/top5_scene_evidence.py --topic "${{ matrix.topic }}" \\
-            --output "output/universal/${{ matrix.topic }}"
+          python src/top5_scene_evidence.py --topic "${{ matrix.topic }}" --output "output/universal/${{ matrix.topic }}"
       - name: Report real cross-topic status including source shortages
         if: always()
         run: |
