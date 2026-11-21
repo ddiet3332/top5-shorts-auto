@@ -84,6 +84,34 @@ class CuratedPexelsTests(unittest.TestCase):
             self.assertTrue(all(x["preview_origin"]=="CACHED_PREVIOUS_RUN" for x in cached["candidates"]))
             self.assertFalse(cached["publication_approved"])
 
+    def test_secondary_window_survives_cache_without_new_download(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            p=catalog(root,source())
+            out=root/"out"
+            def dl(item,path,max_bytes):
+                path.write_bytes(b"source-original"*500)
+                return {"duration_sec":17}
+            def preview(src,start,dst):
+                dst.write_bytes(b"video"*500)
+            def frame(src,at,dst):
+                dst.write_bytes(b"image")
+            def windows(src,duration,**kwargs):
+                return [{"start":0,"motion":20.0},
+                        {"start":7,"motion":12.0}]
+            first=audition(p,out,downloader=dl,previewer=preview,
+                           image_maker=frame,window_picker=windows)
+            self.assertEqual(first["new_preview_count"],1)
+            self.assertEqual(first["candidates"][0]["preview_start_sec"],0)
+            alt=first["candidates"][0]["alternative_windows"]
+            self.assertEqual(len(alt),1)
+            self.assertEqual(alt[0]["preview_start_sec"],7)
+            self.assertTrue((out/"PX-31807439_alt_preview.mp4").is_file())
+            cached=resume(p,out)
+            self.assertEqual(cached["cached_preview_count"],1)
+            self.assertEqual(len(cached["candidates"][0]["alternative_windows"]),1)
+            self.assertFalse(cached["publication_approved"])
+
     def test_failed_download_leaves_no_preview_or_rights_approval(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
