@@ -106,6 +106,34 @@ class HumanStockFallbackTests(unittest.TestCase):
             self.assertFalse(result["publication_approved"])
             self.assertFalse((root/EXPORT_VIDEO).exists())
 
+    def test_reviewed_rejected_human_source_ids_are_excluded_before_download(self):
+        from top5_free_source_download import inspect
+        registry=json.loads((Path(__file__).resolve().parents[1]/
+                             "review/rejected_source_ids.json").read_text())
+        bad=set(registry["놀라운 댄스 동작 TOP5"])
+        self.assertEqual(bad,{76124,15922})
+        hits=[
+            {"id":ident,"tags":"dance, dancing, ballerina, person",
+             "user":f"creator-{ident}","duration":10.0,
+             "pageURL":f"https://pixabay.com/videos/id-{ident}/",
+             "videos":{"medium":{"url":f"https://cdn.example/{ident}.mp4"}}}
+            for ident in [76124,15922,111,112,113,114,115,116]]
+        fetched=[]
+        def fake_download(url,path,max_bytes=None):
+            fetched.append(url)
+            Path(path).write_bytes(url.encode())
+        with tempfile.TemporaryDirectory() as td:
+            with (patch("top5_free_source_download.download",side_effect=fake_download),
+                  patch("top5_free_source_download.probe",return_value=9.0),
+                  patch("top5_free_source_download.decode")):
+                result=inspect("dummy",{
+                    "selected":{"topic":"놀라운 댄스 동작 TOP5","category":"people",
+                                "search_queries":["dance","dancing"]}},
+                    Path(td),fetch=lambda key,query:hits,rejected=bad)
+        self.assertEqual(result["downloaded_valid_sources"],5)
+        self.assertTrue(all(row["id"] not in bad for row in result["sources"]))
+        self.assertTrue(all("76124" not in url and "15922" not in url for url in fetched))
+
     def test_no_key_is_a_clear_source_blocker_not_a_fake_video(self):
         with tempfile.TemporaryDirectory() as td:
             with patch.dict(os.environ,{"PIXABAY_API_KEY":""}):

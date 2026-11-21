@@ -19,6 +19,8 @@ on:
       - 'src/top5_universal_trial.py'
       - 'src/top5_universal_stock_fallback.py'
       - 'tests/test_top5_universal_stock_fallback.py'
+      - 'review/rejected_source_ids.json'
+      - 'review/HUMAN_DANCE_ACTUAL_RENDERED_FRAME_REJECTION_2026-11-21.md'
       - 'tests/test_top5_universal_trial.py'
       - 'review/TOP5_UNIVERSAL_AUTOMATION_CHARTER_2026-11-21.md'
   push:
@@ -28,6 +30,8 @@ on:
       - 'src/top5_universal_trial.py'
       - 'src/top5_universal_stock_fallback.py'
       - 'tests/test_top5_universal_stock_fallback.py'
+      - 'review/rejected_source_ids.json'
+      - 'review/HUMAN_DANCE_ACTUAL_RENDERED_FRAME_REJECTION_2026-11-21.md'
       - 'tests/test_top5_universal_trial.py'
       - 'review/TOP5_UNIVERSAL_AUTOMATION_CHARTER_2026-11-21.md'
       - 'src/top5_auto_v32.py'
