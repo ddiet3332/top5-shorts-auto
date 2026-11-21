@@ -57,6 +57,8 @@ def render_reviewed_topic(topic, output, *, profile=None, baseline=None):
     save_license_and_status(topic, ranked, [], attempts, output, hook)
     if topic.get("topic_id") == "dog_surprises":
         from top5_locked_design import render_locked
+        if profile is None or segments is None:
+            raise ValueError("DOG_DESIGN_LOCK_REQUIRES_EDITORIAL_PROFILE")
         video, _ = render_locked(topic,ranked,output,hook,ending,segments)
     else:
         video = assemble_video(
