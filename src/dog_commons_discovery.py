@@ -15,6 +15,8 @@ from top5 import category_candidates, query_candidates, supported_license
 QUERIES = (
     "dog trick", "dog surprise", "dog jumping", "dog rolling",
     "dog chasing", "dog catching", "puppy playing", "dog funny",
+    "dog slipping", "dog barking", "dog opens door", "dog shaking water",
+    "dog frisbee", "dog trick funny",
 )
 CATEGORIES = ("Videos of dogs",)
 DOG_TERMS = ("dog", "dogs", "puppy", "puppies", "canine", "hound", "hund", "perro", "chien")
@@ -26,6 +28,9 @@ ACTIONS = {
     "catch": ("catch", "fetch", "frisbee", "ball"),
     "jump": ("jump", "leap", "hopp", "spring"),
     "chase": ("chase", "chasing", "running", "run"),
+    "shake": ("shak", "splash", "water sprinkler"),
+    "bark": ("bark", "howl"),
+    "door": ("opening door", "opens door", "open door"),
     "play": ("playing", "play", "puppy", "toy"),
 }
 BLOCKED = ("animation", "cartoon", "film trailer", "music video", "compilation",
@@ -60,12 +65,13 @@ def trusted(row):
     return True
 
 
-def discover_commons(*, search=None, categories=None, max_results=28, per_query=35):
+def discover_commons(*, search=None, categories=None, max_results=28, per_query=35, excluded_ids=()):
     if not 1 <= max_results <= 36 or not 5 <= per_query <= 50:
         raise ValueError("DISCOVERY_LIMIT_EXCEEDED")
     search = search or query_candidates
     categories = categories or category_candidates
     found, errors = {}, []
+    excluded_ids = set(excluded_ids)
     def add(row, route):
         try:
             family = classify_title(str(row.get("title", "")), dog_category=route == "category:Videos of dogs")
@@ -73,6 +79,8 @@ def discover_commons(*, search=None, categories=None, max_results=28, per_query=
                 return
             title = row["title"]
             ident = "CM-" + hashlib.sha256(title.encode("utf-8")).hexdigest()[:12]
+            if ident in excluded_ids:
+                return
             found.setdefault(title, {
                 "id": ident, "provider": "wikimedia_commons",
                 "source_title": title, "source_url": row["source_page"],
@@ -125,7 +133,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
-    result = discover_commons()
+    catalog=Path("sample/dog_commons_editorial_rejections_v1.json")
+    ignored=set()
+    if catalog.is_file():
+        data=json.loads(catalog.read_text(encoding="utf-8"))
+        if data.get("schema_version") != 1 or data.get("review_target") != "rank5_rank2_upgrade_only":
+            raise ValueError("INVALID_COMMONS_REJECTION_CATALOG")
+        ignored={row["id"] for row in data.get("rejections",[]) if isinstance(row,dict) and isinstance(row.get("id"),str)}
+    result = discover_commons(excluded_ids=ignored)
+    result["excluded_prior_review_count"]=len(ignored)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("DOG_COMMONS_DISCOVERY", result["status"], len(result["candidates"]), flush=True)
