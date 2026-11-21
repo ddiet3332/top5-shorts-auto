@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import os
 import json
 from pathlib import Path
 import subprocess
@@ -120,7 +121,10 @@ def create_review(manifest_path, output, *, downloader=None, renderer=None, veri
         source.unlink(missing_ok=True)
     (output/"DOG_RANK5_HD_AUDITION.json").write_text(
         json.dumps(row,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    print("DOG_RANK5_HD_AUDITION",row["status"],"right_status=UNVERIFIED",flush=True)
+    print("DOG_RANK5_HD_AUDITION",row["status"],"rights_status=UNVERIFIED",flush=True)
+    if os.environ.get("GITHUB_OUTPUT"):
+        with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as stream:
+            stream.write("ready="+str(row["status"]=="HD_REVIEW_READY").lower()+"\n")
     return row
 
 
