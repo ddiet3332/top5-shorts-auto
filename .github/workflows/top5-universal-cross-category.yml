@@ -1,0 +1,113 @@
+name: TOP5 universal four-family real video trials
+on:
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Choose one family topic or run all four'
+        required: true
+        type: choice
+        default: all
+        options:
+          - all
+          - cat_surprises
+          - human_moments
+          - objects_oddities
+          - nature_moments
+  pull_request:
+    paths:
+      - '.github/workflows/top5-universal-cross-category.yml'
+      - 'src/top5_universal_trial.py'
+      - 'tests/test_top5_universal_trial.py'
+      - 'review/TOP5_UNIVERSAL_AUTOMATION_CHARTER_2026-11-21.md'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5-universal-cross-category.yml'
+      - 'src/top5_universal_trial.py'
+      - 'tests/test_top5_universal_trial.py'
+      - 'review/TOP5_UNIVERSAL_AUTOMATION_CHARTER_2026-11-21.md'
+      - 'src/top5_auto_v32.py'
+      - 'src/top5_auto_v30.py'
+      - 'src/top5_reviewed_sources.py'
+      - 'src/top5_auto_v29.py'
+      - 'sample/top5_auto_topics_v30.json'
+permissions:
+  contents: read
+concurrency:
+  group: top5-universal-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  check-universal-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test all four channel families and publication hard gates
+        run: python -m unittest discover -s tests -p 'test_top5_universal_trial.py' -v
+  cross-topic-real-mp4:
+    needs: check-universal-contract
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        topic: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.topic != 'all' && format('["{0}"]', inputs.topic) || '["cat_surprises","human_moments","objects_oddities","nature_moments"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-video.txt
+      - uses: ./.github/actions/setup-video-tools
+      - name: Install generic production dependencies
+        timeout-minutes: 6
+        run: python -m pip install --disable-pip-version-check -r requirements-video.txt
+      - name: Real original footage to distinct-topic review MP4
+        id: trial
+        timeout-minutes: 31
+        run: |
+          python src/top5_universal_trial.py --topic "${{ matrix.topic }}" \
+            --output "output/universal/${{ matrix.topic }}"
+      - name: Report real cross-topic status including source shortages
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          topic="${{ matrix.topic }}"
+          out=Path("output/universal")/topic
+          report=out/"UNIVERSAL_TOPIC_TRIAL.json"
+          if report.exists():
+              data=json.loads(report.read_text())
+              lines=[f"### {topic} / {data['family']}",
+                     f"- status: {data['status']}",
+                     f"- technical MP4 verified: {data['technical_pass']}",
+                     f"- whole video score: UNVERIFIED",
+                     f"- rights/YPP: UNVERIFIED",
+                     f"- publication approved: false"]
+              lines.extend("- blocker: "+b for b in data.get("blockers",[]))
+          else:
+              lines=[f"### {topic} / CI or setup failure",
+                     "- Trial report unavailable; do not claim a completed video."]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+      - name: Upload actual video, source and failure evidence (never publication)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-universal-${{ matrix.topic }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/universal/${{ matrix.topic }}/*.mp4
+            output/universal/${{ matrix.topic }}/*.json
+            output/universal/${{ matrix.topic }}/*.jpg
+            output/universal/${{ matrix.topic }}/*.txt
+          if-no-files-found: warn
+          retention-days: 7
+# YouTube auto-posting intentionally absent; 85+ actual editorial QA and per-source rights remain mandatory.
