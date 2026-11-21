@@ -6,7 +6,7 @@ on:
         description: "Choose the subject; no code edits required"
         required: true
         type: choice
-        default: dog_surprises
+        default: auto
         options:
           - dog_surprises
           - cat_surprises
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      TOPIC: ${{ github.event.inputs.topic || 'dog_surprises' }}
+      TOPIC: ${{ github.event.inputs.topic || 'auto' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install open-source editing dependencies
@@ -49,6 +49,7 @@ jobs:
         run: |
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_auto_v30.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
       - name: Audition real dog footage using proven V37 cat source pipeline
         run: /tmp/top5-topic/bin/python src/v37_dog_audition.py
       - name: Audit discovery and save failure evidence
