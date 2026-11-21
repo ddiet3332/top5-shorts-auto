@@ -1,0 +1,87 @@
+{
+  "status": "SELECTED",
+  "topic": "dog_surprises",
+  "eligible_families": [
+    "back_trick",
+    "catch",
+    "skate_dismount",
+    "water_shake",
+    "yard_leap"
+  ],
+  "rejections": [],
+  "rank_windows_verified": true,
+  "missing_required_source_ids": [],
+  "hook_candidates": [
+    "https://www.pexels.com/video/dog-jumping-out-of-a-bag-8473589/"
+  ],
+  "selected": [
+    {
+      "source_page": "https://www.pexels.com/video/dog-playing-with-water-9006741/",
+      "sha256": "06e7d4e9b6c644a343baf4d13103e2e0cbf3e7882dfb29584cc4e5bd1caa32e6",
+      "author": "Viktoria B.",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "cut_start": 1,
+      "payoff_sec": 4,
+      "action_family": "yard_leap",
+      "playback_rate": 1.0,
+      "payoff_phone_px": 102.6,
+      "review_basis": "The dog looks up and springs upward in a yard."
+    },
+    {
+      "source_page": "https://www.pexels.com/video/playful-dog-shaking-off-water-in-lake-33268466/",
+      "sha256": "ef00c6f0e2cf780ac683cc2f7d0fbd670cd7c87a607cfbeec60778dc08d594ff",
+      "author": "Brixiv",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "cut_start": 3.5,
+      "payoff_sec": 6.5,
+      "action_family": "water_shake",
+      "playback_rate": 1,
+      "payoff_phone_px": 180.9,
+      "review_basis": "서 있던 보더콜리가 몸을 크게 틀어 물방울이 퍼짐"
+    },
+    {
+      "source_page": "https://www.pexels.com/video/a-young-woman-skateboarding-with-her-dog-8646067/",
+      "sha256": "81e912c5ed4795f5d9a25e319983e4550cc15514b94f3f7f23286385ea03364b",
+      "author": "Los Muertos Crew",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "cut_start": 8,
+      "payoff_sec": 9.25,
+      "action_family": "skate_dismount",
+      "playback_rate": 0.35,
+      "payoff_phone_px": 140.8,
+      "review_basis": "멀리서 보드가 다가오며 발 사이에 탄 퍼그가 드러나고 바닥으로 내려옴"
+    },
+    {
+      "source_page": "https://www.pexels.com/video/a-dog-playing-catch-7515923/",
+      "sha256": "452f84c8963e245972ca395f1980ec1a362dc38f26507ba7fd694f0ea1ebcc39",
+      "author": "RDNE Stock project",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "cut_start": 17,
+      "payoff_sec": 20.5,
+      "action_family": "catch",
+      "playback_rate": 1.0,
+      "payoff_phone_px": 255.2,
+      "review_basis": "The seated dog rises and catches the green ball in its mouth."
+    },
+    {
+      "source_page": "https://www.pexels.com/video/dog-jumping-on-woman-s-back-7628753/",
+      "sha256": "33e59c572f627f40d8959c439b90933908b6387dbbf09aae69a5df45a570c005",
+      "author": "ArtHouse Studio",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "cut_start": 0.35,
+      "payoff_sec": 1.5,
+      "action_family": "back_trick",
+      "playback_rate": 1.0,
+      "payoff_phone_px": 162.8,
+      "review_basis": "A dog jumps onto the crouching handler's back, balances and jumps down."
+    }
+  ],
+  "visibility_basis": "reviewed payoff bounding box projected into phone frame",
+  "rights_verified": false,
+  "publication_approved": false
+}
