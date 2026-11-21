@@ -23,6 +23,7 @@ on:
       - 'tests/test_top5_category_rotation.py'
       - 'tests/test_top5_artifact_resolver.py'
       - 'tests/test_v31_semantic_qa.py'
+      - 'tests/test_v31_topic_repair.py'
   push:
     branches: [main]
     paths:
@@ -47,6 +48,7 @@ on:
       - 'tests/test_top5_category_rotation.py'
       - 'tests/test_top5_artifact_resolver.py'
       - 'tests/test_v31_semantic_qa.py'
+      - 'tests/test_v31_topic_repair.py'
 permissions:
   contents: read
 jobs:
@@ -73,4 +75,5 @@ jobs:
           python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
           python -m unittest discover -s tests -p 'test_top5_exact_frame_render.py' -v
           python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
+          python -m unittest discover -s tests -p 'test_v31_topic_repair.py' -v
 # This CI only validates routing. Full videos and rights review are separate.
