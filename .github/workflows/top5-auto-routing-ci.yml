@@ -22,6 +22,7 @@ on:
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_object_diversity.py'
       - 'tests/test_top5_candidate_visual_gate.py'
+      - 'tests/test_v52_nature_event_diversity.py'
       - 'sample/top5_auto_topics_v30.json'
       - 'review/top5_weak_source_windows.json'
       - 'tests/test_top5_reviewed_weak_windows.py'
@@ -62,6 +63,7 @@ on:
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_object_diversity.py'
       - 'tests/test_top5_candidate_visual_gate.py'
+      - 'tests/test_v52_nature_event_diversity.py'
       - 'sample/top5_auto_topics_v30.json'
       - 'review/top5_weak_source_windows.json'
       - 'tests/test_top5_reviewed_weak_windows.py'
@@ -105,6 +107,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
           python -m unittest discover -s tests -p 'test_top5_reviewed_action_captions.py' -v
           python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
+          python -m unittest discover -s tests -p 'test_v52_nature_event_diversity.py' -v
           python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
           python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
           python -m unittest discover -s tests -p 'test_top5_exact_frame_render.py' -v
