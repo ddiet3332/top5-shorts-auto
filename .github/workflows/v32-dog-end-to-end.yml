@@ -38,6 +38,8 @@ on:
       - 'sample/dog_mixkit_license_screen_v1.json'
       - 'tests/test_dog_rank5_hd_review.py'
       - 'src/dog_rank5_hd_review.py'
+      - 'tests/test_dog_rank5_composition_review.py'
+      - 'src/dog_rank5_composition_review.py'
       - 'sample/dog_rank5_hd_review_v1.json'
       - 'tests/test_dog_mixkit_official_audition.py'
       - 'src/dog_mixkit_official_audition.py'
@@ -68,6 +70,8 @@ on:
       - 'sample/dog_mixkit_license_screen_v1.json'
       - 'tests/test_dog_rank5_hd_review.py'
       - 'src/dog_rank5_hd_review.py'
+      - 'tests/test_dog_rank5_composition_review.py'
+      - 'src/dog_rank5_composition_review.py'
       - 'sample/dog_rank5_hd_review_v1.json'
       - 'tests/test_dog_mixkit_official_audition.py'
       - 'src/dog_mixkit_official_audition.py'
@@ -442,6 +446,32 @@ jobs:
             args+=(--baseline "$fixture")
           fi
           python src/top5_reviewed_render.py --topic dog_surprises --output output/dog "${args[@]}"
+      - name: Compose original-HD rank5 into separate 30-second editorial review
+        if: github.event_name == 'push' && steps.render.outcome == 'success'
+        timeout-minutes: 10
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ -s output/dog/rank5_hd_review/PX-5263686_RANK5_ORIGINAL_PORTRAIT_REVIEW_1080x1920.mp4 &&
+                -s output/dog/rank5_hd_review/DOG_RANK5_HD_AUDITION.json ]]; then
+            python src/dog_rank5_composition_review.py \
+              --baseline output/dog/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
+              --rank5 output/dog/rank5_hd_review/PX-5263686_RANK5_ORIGINAL_PORTRAIT_REVIEW_1080x1920.mp4 \
+              --rank5-report output/dog/rank5_hd_review/DOG_RANK5_HD_AUDITION.json \
+              --output output/dog/rank5_integration
+          else
+            echo "Rank5 original-HD source not ready; existing production video preserved."
+          fi
+      - name: Archive separate 30-second rank5 review NOT FOR PUBLICATION
+        if: always() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-rank5-30s-editorial-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/rank5_integration/DOG_RANK5_30S_INTEGRATION_QA.json
+            output/dog/rank5_integration/TOP5_DOG_RANK5_REPLACED_EDITORIAL_REVIEW_NOT_FOR_PUBLICATION.mp4
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Record fail-closed editorial replacement readiness
         if: steps.render.outcome == 'success'
         run: |
