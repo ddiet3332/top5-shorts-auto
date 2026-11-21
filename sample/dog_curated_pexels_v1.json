@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "goal": "Find truly better 5-second rank5/rank2 dog clips without Pexels API key",
+  "source_provenance": "Official individual Pexels pages verified 2026-11-21; titles/descriptions are provider claims, not frame review",
+  "publication_approved": false,
+  "rights_status": "UNVERIFIED",
+  "sources": [
+    {
+      "id": "PX-31807439",
+      "provider": "pexels",
+      "title": "Playful Dog on Icy Pond with Birds",
+      "page_url": "https://www.pexels.com/video/playful-dog-on-icy-pond-with-birds-31807439/",
+      "creator": "Алан Албегов",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "action_family_hypothesis": "ice_slide",
+      "rank_target": "rank5",
+      "duration_from_page_sec": 9,
+      "page_description": "A playful dog slides across an icy pond alongside curious birds",
+      "editorial_score": null,
+      "reviewed_frames": false,
+      "publication_approved": false
+    },
+    {
+      "id": "PX-5263686",
+      "provider": "pexels",
+      "title": "Cute Dog Rolling on His Back",
+      "page_url": "https://www.pexels.com/video/cute-dog-rolling-on-his-back-5263686/",
+      "creator": "KATRIN BOLOVTSOVA",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "action_family_hypothesis": "roll_studio",
+      "rank_target": "rank5",
+      "duration_from_page_sec": 9,
+      "page_description": "A Jack Russell Terrier rolling against a pink backdrop",
+      "editorial_score": null,
+      "reviewed_frames": false,
+      "publication_approved": false
+    },
+    {
+      "id": "PX-10607242",
+      "provider": "pexels",
+      "title": "Woman Sliding with Dog in Snow",
+      "page_url": "https://www.pexels.com/video/a-woman-sliding-on-a-snow-covered-ground-with-her-dog-running-down-10607242/",
+      "creator": "Martina Tomšič",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "action_family_hypothesis": "sledding_interaction",
+      "rank_target": "rank2",
+      "duration_from_page_sec": 15,
+      "page_description": "A dog and woman enjoy sledding in a snow-covered park",
+      "editorial_score": null,
+      "reviewed_frames": false,
+      "publication_approved": false
+    }
+  ]
+}

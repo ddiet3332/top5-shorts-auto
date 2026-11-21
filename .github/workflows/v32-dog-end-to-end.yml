@@ -34,6 +34,9 @@ on:
       - 'sample/top5_dog_source_catalog.json'
       - 'sample/dog_editorial_rejections_v1.json'
       - 'sample/dog_commons_editorial_rejections_v1.json'
+      - 'sample/dog_curated_pexels_v1.json'
+      - 'tests/test_dog_curated_pexels_audition.py'
+      - 'src/dog_curated_pexels_audition.py'
       - 'src/top5_locked_design.py'
       - 'sample/top5_design_lock_v1.json'
       - 'sample/dog_editorial_profile_v1.json'
@@ -52,6 +55,9 @@ on:
       - 'sample/top5_dog_source_catalog.json'
       - 'sample/dog_editorial_rejections_v1.json'
       - 'sample/dog_commons_editorial_rejections_v1.json'
+      - 'sample/dog_curated_pexels_v1.json'
+      - 'tests/test_dog_curated_pexels_audition.py'
+      - 'src/dog_curated_pexels_audition.py'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
       - 'tests/test_dog_run_evidence.py'
@@ -259,6 +265,47 @@ jobs:
             output/dog/commons_audition/*_preview.mp4
           if-no-files-found: ignore
           retention-days: 7
+      - name: Restore curated Pexels official-footage review previews
+        id: curated_pexels_cache
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: output/dog/curated_pexels/
+          key: dog-curated-pexels-v1-${{ hashFiles('sample/dog_curated_pexels_v1.json') }}
+      - name: Download three official Pexels dog clips for frame review
+        id: curated_pexels_audition
+        if: github.event_name != 'pull_request' && steps.curated_pexels_cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 9
+        run: |
+          python src/dog_curated_pexels_audition.py \
+            --catalog sample/dog_curated_pexels_v1.json \
+            --output output/dog/curated_pexels
+      - name: Restore metadata for cached curated Pexels review previews
+        if: github.event_name != 'pull_request' && steps.curated_pexels_cache.outputs.cache-hit == 'true'
+        timeout-minutes: 1
+        run: |
+          python src/dog_curated_pexels_audition.py \
+            --catalog sample/dog_curated_pexels_v1.json \
+            --output output/dog/curated_pexels \
+            --resume-only
+      - name: Cache curated Pexels video previews only after successful audition
+        if: github.event_name != 'pull_request' && steps.curated_pexels_audition.outputs.ready == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: output/dog/curated_pexels/
+          key: dog-curated-pexels-v1-${{ hashFiles('sample/dog_curated_pexels_v1.json') }}
+      - name: Archive curated real Pexels dog video preview evidence
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-curated-pexels-previews-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/curated_pexels/DOG_CURATED_PEXELS_AUDITION_RESULTS.json
+            output/dog/curated_pexels/*_preview.mp4
+            output/dog/curated_pexels/*_frame*.jpg
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Discover bounded free dog source candidates
         timeout-minutes: 2
         env:
@@ -293,7 +340,8 @@ jobs:
           for file in \
             output/dog/pixabay_audition/DOG_PIXABAY_AUDITION_RESULTS.json \
             output/dog/audition/DOG_AUDITION_RESULTS.json \
-            output/dog/commons_audition/DOG_COMMONS_AUDITION_RESULTS.json; do
+            output/dog/commons_audition/DOG_COMMONS_AUDITION_RESULTS.json \
+            output/dog/curated_pexels/DOG_CURATED_PEXELS_AUDITION_RESULTS.json; do
             if [[ -s "$file" ]]; then
               cp "$file" "output/dog/$(basename "$file")"
             fi
@@ -317,7 +365,8 @@ jobs:
             --provider-reports \
               output/dog/DOG_PIXABAY_AUDITION_RESULTS.json \
               output/dog/DOG_COMMONS_AUDITION_RESULTS.json \
-              output/dog/DOG_AUDITION_RESULTS.json
+              output/dog/DOG_AUDITION_RESULTS.json \
+              output/dog/DOG_CURATED_PEXELS_AUDITION_RESULTS.json
       - name: Measure the rendered audio stream
         timeout-minutes: 2
         run: |
