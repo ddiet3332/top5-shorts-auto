@@ -68,6 +68,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: ./.github/actions/setup-video-tools
+        with:
+          install-fonts: 'true'
+      - name: Confirm actual media tools for real EOF/frame regressions
+        run: |
+          command -v ffmpeg
+          command -v ffprobe
+          ffmpeg -version | head -1
       - name: Install image inspection dependency for test runner
         run: python -m pip install --disable-pip-version-check 'Pillow>=10,<13' 'numpy>=1.26,<3'
       - name: Test all four channel families and publication hard gates
