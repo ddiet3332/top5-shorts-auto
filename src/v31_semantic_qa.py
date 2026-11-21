@@ -402,7 +402,7 @@ def main():
         "items":repair_worklist(results,topic),
     }
     (args.output/"TOP5_EDITORIAL_REPAIR_WORKLIST.json").write_text(
-        json.dumps(worklist,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+        json.dumps(worklist,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("V31 DONE: SEMANTIC ADVISORY ONLY",flush=True)
 
 if __name__=="__main__":main()
