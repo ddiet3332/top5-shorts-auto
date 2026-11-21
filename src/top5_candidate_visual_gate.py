@@ -146,3 +146,58 @@ def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[lis
         excluded.append({"title": row["title"], "site_key": site,
                          "event_family": family, "reason_code": reason})
     return chosen, excluded
+
+
+def object_event_family(title: str) -> str | None:
+    """Coarse title-only object/mechanism labels, not actual scene understanding."""
+    name=re.sub(r"(?i)^file:", "",str(title)).casefold()
+    for pattern, family in (
+        (r"\bdomino(?:es)?\b", "domino"),
+        (r"\barduino\b|\belectronic\b|\bcircuit\b", "electronics"),
+        (r"\bmarble\b|\bball run\b", "marble_run"),
+        (r"\bpendulum\b|\bnewton.?s cradle\b", "pendulum"),
+        (r"\bkinetic sculpture\b|\bkinetic art\b", "kinetic_art"),
+        (r"\brube goldberg\b|\bmachine\b|\bmechanism\b", "machine"),
+        (r"\bspinning top\b|\bgyroscope\b|\bfidget spinner\b", "spinning"),
+        (r"\bbouncing ball\b|\bbounce\b", "bouncing"),
+        (r"\bbottle flip\b", "bottle_flip"),
+        (r"\brobot\b", "robotics"),
+        (r"\bmagnet\b", "magnetism"),
+        (r"\bgear\b", "gears"),
+        (r"\bchain reaction\b", "chain_reaction"),
+    ):
+        if re.search(pattern,name):
+            return family
+    return None
+
+
+def diverse_object_selection(rows: list[dict], *, required: int = 5) -> tuple[list[dict], list[dict]]:
+    """At most two source clips per named mechanism family, distinct by type first.
+
+    A TOP5 list of 3 dominos + a ball + a blinking LED has only 3 distinct
+    events, not 5 editorially interesting or surprising physical phenomena.
+    Unknown titles are NOT considered independent visual evidence; postpone.
+    """
+    chosen, used_indices = [], set()
+    counts = {}
+    for pass_no in (1,2):
+        for i,row in enumerate(rows):
+            if i in used_indices:
+                continue
+            family=object_event_family(row["title"])
+            if family is None or counts.get(family,0)>=pass_no:
+                continue
+            chosen.append(row)
+            used_indices.add(i)
+            counts[family]=counts.get(family,0)+1
+            if len(chosen)>=required:
+                break
+        if len(chosen)>=required:
+            break
+    rejected=[{"title":row["title"],
+               "event_family":object_event_family(row["title"]),
+               "reason_code":("UNKNOWN_OBJECT_EVENT_TYPE"
+                    if object_event_family(row["title"]) is None
+                    else "REPEATED_OBJECT_EVENT_FAMILY")}
+              for i,row in enumerate(rows) if i not in used_indices]
+    return chosen,rejected
