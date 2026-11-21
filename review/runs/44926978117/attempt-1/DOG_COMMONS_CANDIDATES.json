@@ -1,0 +1,9 @@
+{
+  "status": "SOURCE_SHORTAGE",
+  "provider": "wikimedia_commons",
+  "candidates": [],
+  "errors": [],
+  "method": "CC BY/CC0 provider metadata; dog/action words in file title only",
+  "publication_approved": false,
+  "excluded_prior_review_count": 3
+}
