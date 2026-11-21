@@ -105,7 +105,7 @@ jobs:
                   target=Path("input/V31_TOPIC_CONTEXT.json")
                   target.write_text(json.dumps(
                       {"chosen_topic":data["chosen_topic"],
-                       "from_source_name":original.name},indent=2)+"\\n",
+                       "from_source_name":original.name},indent=2)+"\n",
                       encoding="utf-8")
                   print("Model topic bound to upstream render:",data["chosen_topic"])
                   break
