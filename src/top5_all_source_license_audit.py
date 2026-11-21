@@ -74,7 +74,7 @@ def provisional_provider_metadata(output):
     file=output/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md"
     if file.is_file():
         body=file.read_text(encoding="utf-8",errors="replace")
-        for match in re.finditer(r"(?ms)^## ([1-5])위:[^\\n]*\\n(.*?)(?=^## |\\Z)",body):
+        for match in re.finditer(r"(?ms)^## ([1-5])위:[^\n]*\n(.*?)(?=^## |\Z)",body):
             rank=int(match.group(1))
             block=match.group(2)
             vals={}
@@ -87,12 +87,12 @@ def provisional_provider_metadata(output):
     hook_file=output/"SOURCE_CREDITS_REVIEW.md"
     if hook_file.is_file():
         body=hook_file.read_text(encoding="utf-8",errors="replace")
-        match=re.search(r"(?ms)^## 시작 훅\\s*\\n(.*?)(?=^## |\\Z)",body)
+        match=re.search(r"(?ms)^## 시작 훅\s*\n(.*?)(?=^## |\Z)",body)
         if match:
             block=match.group(1)
-            url=re.search(r"(?m)^- 원본 · (https://\\S+)",block)
+            url=re.search(r"(?m)^- 원본 · (https://\S+)",block)
             creator=re.search(r"(?m)^- 제작자 · (.+)$",block)
-            lic=re.search(r"(?m)^- 표시 라이선스 · (.+?) \\(?(https?://\\S+)\\)?\\s*$",block)
+            lic=re.search(r"(?m)^- 표시 라이선스 · (.+?) \(?(https?://\S+)\)?\s*$",block)
             if url and creator and lic:
                 result["hook_0_2sec"]={
                     "source_page":url.group(1).strip(),
