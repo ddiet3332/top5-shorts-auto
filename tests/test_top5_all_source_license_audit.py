@@ -5,6 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
 from top5_all_source_license_audit import audit,collect_visual_sources
+from top5_auto_v32 import v37_rights_and_description
 
 def write(path,obj):
     path.write_text(json.dumps(obj,ensure_ascii=False),encoding="utf-8")
@@ -130,6 +131,24 @@ class AllVisualSourceRightsTests(unittest.TestCase):
         self.assertEqual(hook["creator"],"Trougnouf")
         self.assertEqual(hook["licence_data_status"],"UPSTREAM_METADATA_UNVERIFIED")
         self.assertFalse(hook["publication_approved"])
+
+    def test_share_alike_warning_is_specific_to_used_sources(self):
+        item={"label":"자연", "source_page":"https://example.org/nature",
+              "author":"Example Maker", "license":"CC0",
+              "license_url":"https://creativecommons.org/publicdomain/zero/1.0/",
+              "title":"Aurora", "caption_sequence":None}
+        v37_rights_and_description([item],self.root,{"door_added":False})
+        note=(self.root/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md").read_text()
+        self.assertNotIn("Astropulse",note)
+        self.assertNotIn("ShareAlike obligations",note)
+        item["license"]="CC BY-SA 4.0"
+        item["license_url"]="https://creativecommons.org/licenses/by-sa/4.0/"
+        v37_rights_and_description([item],self.root,{"door_added":False})
+        note=(self.root/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md").read_text()
+        self.assertIn("ShareAlike obligations",note)
+        self.assertIn("https://example.org/nature",note)
+        gate=json.loads((self.root/"V37_STORY_AND_RIGHTS_QA.json").read_text())
+        self.assertFalse(gate["publish"])
 
     def test_missing_hook_is_rejected_not_five_rights_approved(self):
         (self.root/"INDEPENDENT_HOOK_AUDIT.json").unlink()
