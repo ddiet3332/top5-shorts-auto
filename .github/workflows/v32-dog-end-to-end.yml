@@ -8,6 +8,18 @@ on:
       - 'requirements-dog-review.txt'
       - 'src/dog_run_evidence.py'
       - 'src/dog_editorial_evidence.py'
+      - 'src/dog_replacement_gate.py'
+      - 'src/dog_replacement_report.py'
+      - 'src/dog_source_discovery.py'
+      - 'src/dog_pixabay_discovery.py'
+      - 'src/dog_pixabay_audition.py'
+      - 'src/dog_source_audition.py'
+      - 'tests/test_dog_replacement_gate.py'
+      - 'tests/test_dog_replacement_report.py'
+      - 'tests/test_dog_source_discovery.py'
+      - 'tests/test_dog_pixabay_discovery.py'
+      - 'tests/test_dog_pixabay_audition.py'
+      - 'tests/test_dog_source_audition.py'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
       - 'scripts/persist_dog_evidence.sh'
@@ -36,6 +48,16 @@ on:
       - 'sample/dog_replacement_audition.json'
       - 'tests/test_dog_run_evidence.py'
       - 'tests/test_dog_editorial_evidence.py'
+      - 'src/dog_replacement_gate.py'
+      - 'src/dog_replacement_report.py'
+      - 'src/dog_source_discovery.py'
+      - 'src/dog_source_audition.py'
+      - 'tests/test_dog_replacement_gate.py'
+      - 'tests/test_dog_replacement_report.py'
+      - 'tests/test_dog_source_discovery.py'
+      - 'tests/test_dog_pixabay_discovery.py'
+      - 'tests/test_dog_pixabay_audition.py'
+      - 'tests/test_dog_source_audition.py'
   workflow_dispatch:
   schedule:
     - cron: '*/15 * * * *'
@@ -91,6 +113,59 @@ jobs:
           run-id: '44825600263'
           github-token: ${{ github.token }}
           path: output/fixture
+      - name: Discover Pixabay dog candidates using existing repository secret
+        timeout-minutes: 2
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          python src/dog_pixabay_discovery.py --output output/dog/DOG_PIXABAY_CANDIDATES.json
+      - name: Generate bounded Pixabay review previews
+        if: github.event_name != 'pull_request'
+        timeout-minutes: 5
+        continue-on-error: true
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          python src/dog_pixabay_audition.py \
+            --discovery output/dog/DOG_PIXABAY_CANDIDATES.json \
+            --output output/dog/pixabay_audition
+      - name: Archive Pixabay review previews
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-pixabay-previews-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/DOG_PIXABAY_CANDIDATES.json
+            output/dog/pixabay_audition/DOG_PIXABAY_AUDITION_RESULTS.json
+            output/dog/pixabay_audition/*_preview.mp4
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Discover bounded free dog source candidates
+        timeout-minutes: 2
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          python src/dog_source_discovery.py --output output/dog/DOG_DISCOVERY_CANDIDATES.json
+      - name: Generate two bounded candidate previews
+        if: github.event_name != 'pull_request'
+        timeout-minutes: 5
+        continue-on-error: true
+        run: |
+          python src/dog_source_audition.py \
+            --discovery output/dog/DOG_DISCOVERY_CANDIDATES.json \
+            --output output/dog/audition
+      - name: Archive candidate previews for human review
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-candidate-previews-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/DOG_DISCOVERY_CANDIDATES.json
+            output/dog/DOG_PIXABAY_CANDIDATES.json
+            output/dog/audition/DOG_AUDITION_RESULTS.json
+            output/dog/audition/*_preview.mp4
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Render five original dog sources with an independent hook
         id: render
         timeout-minutes: 12
@@ -102,6 +177,10 @@ jobs:
             args+=(--baseline "$fixture")
           fi
           python src/top5_reviewed_render.py --topic dog_surprises --output output/dog "${args[@]}"
+      - name: Record fail-closed editorial replacement readiness
+        if: steps.render.outcome == 'success'
+        run: |
+          python src/dog_replacement_report.py --output output/dog/DOG_REPLACEMENT_READINESS.json
       - name: Measure the rendered audio stream
         timeout-minutes: 2
         run: |
@@ -147,6 +226,9 @@ jobs:
             output/dog/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
             output/dog/work/captions.ass
             output/dog/V32_TECHNICAL_QA.json
+            output/dog/DOG_REPLACEMENT_READINESS.json
+            output/dog/DOG_DISCOVERY_CANDIDATES.json
+            output/dog/DOG_PIXABAY_CANDIDATES.json
             output/evidence/review/
           if-no-files-found: error
           retention-days: 30
