@@ -131,6 +131,39 @@ def verified_video(directory, topic, *, probe=None):
     return True, "TECHNICAL_REVIEW_COPY_VERIFIED"
 
 
+def candidate_failure_diagnostics(trial):
+    """Read per-source failures *before* concluding inventory is exhausted.
+
+    All source windows can be valid even when Wikimedia responds with HTTP 429.
+    Do not re-label rate limiting as a missing fifth editorially useful clip.
+    """
+    report=Path(trial)/"V30_CANDIDATES.json"
+    result={"candidate_attempt_count":0,
+            "temporary_provider_failures":0,
+            "temporary_provider_codes":{},
+            "source_rejection_count":0}
+    if not report.is_file():
+        return result
+    try:
+        rows=json.loads(report.read_text(encoding="utf-8"))
+        if not isinstance(rows,list):
+            return result
+        result["candidate_attempt_count"]=len(rows)
+        for row in rows:
+            if not isinstance(row,dict):
+                continue
+            if row.get("status")=="TEMPORARY_PROVIDER_ERROR":
+                result["temporary_provider_failures"]+=1
+                code=str(row.get("reason_code","UNKNOWN"))
+                result["temporary_provider_codes"][code]=(
+                    result["temporary_provider_codes"].get(code,0)+1)
+            elif row.get("status")=="REJECTED":
+                result["source_rejection_count"]+=1
+    except (OSError,ValueError,json.JSONDecodeError):
+        result["diagnostic_parse_failed"]=True
+    return result
+
+
 def run_recovery(audit_path, output_root, *, runner=None, probe=None):
     audit_path = Path(audit_path)
     output_root = Path(output_root)
@@ -212,10 +245,26 @@ def run_recovery(audit_path, output_root, *, runner=None, probe=None):
                               "publication_approved": False}, ensure_ascii=False), flush=True)
             return True
         shortage = source_shortage(stdout + "\n" + stderr)
+        diagnostic=candidate_failure_diagnostics(trial)
+        # A source selector reporting 0/5 after three HTTP 429s did not
+        # establish that all candidate videos were unsuitable. Do not
+        # immediately hammer the same Wikimedia host with a new topic.
+        provider_down=diagnostic["temporary_provider_failures"]>=2
+        status=("TRANSIENT_PROVIDER_UNAVAILABLE" if provider_down
+                else "REAL_SOURCE_SHORTAGE" if shortage else "NON_SOURCE_RENDER_FAILURE")
         attempts.append({"topic": topic,
-                         "status": "REAL_SOURCE_SHORTAGE" if shortage else "NON_SOURCE_RENDER_FAILURE",
+                         "status":status,
+                         "source_failure_diagnostics":diagnostic,
                          "exit_code": result.returncode,
                          "failure_tail": (stderr or stdout)[-700:]})
+        if provider_down:
+            save("PROVIDER_FAILURE_NOT_SOURCE_SHORTAGE")
+            print(json.dumps({
+                "failed_topic":topic,"reason":"PROVIDER_TEMPORARY_UNAVAILABLE",
+                "provider_failures":diagnostic["temporary_provider_failures"],
+                "next_topic_allowed":False,"publication_approved":False},
+                ensure_ascii=False),flush=True)
+            return False
         save("TRY_NEXT_VERIFIED_TOPIC" if shortage and not manual and index + 1 < len(topics)
              else "BLOCKED_SOURCE_SHORTAGE" if shortage
              else "NON_SOURCE_RENDER_FAILURE_FATAL")

@@ -13,6 +13,8 @@ on:
       - 'tests/test_top5_topic_recovery.py'
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
+      - 'src/top5_provider_failure_gate.py'
+      - 'tests/test_v53_provider_errors.py'
       - 'src/top5_standard_scene_review.py'
       - 'src/top5_original_frame_evidence.py'
       - 'tests/test_top5_original_frame_evidence.py'
@@ -54,6 +56,8 @@ on:
       - 'tests/test_top5_topic_recovery.py'
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
+      - 'src/top5_provider_failure_gate.py'
+      - 'tests/test_v53_provider_errors.py'
       - 'src/top5_standard_scene_review.py'
       - 'src/top5_original_frame_evidence.py'
       - 'tests/test_top5_original_frame_evidence.py'
@@ -100,6 +104,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
           python -m unittest discover -s tests -p 'test_top5_topic_recovery.py' -v
+          python -m unittest discover -s tests -p 'test_v53_provider_errors.py' -v
           python -m unittest discover -s tests -p 'test_top5_all_source_license_audit.py' -v
           python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           python -m unittest discover -s tests -p 'test_top5_generic_label_safety.py' -v

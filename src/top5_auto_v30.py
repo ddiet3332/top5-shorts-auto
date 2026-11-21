@@ -20,6 +20,7 @@ from top5_auto_v29 import (
     assemble_video, technical_qa, save_license_and_status, CUT_LENGTHS
 )
 from top5_hook_selection import SourceShortage, choose_hook, identity
+from top5_provider_failure_gate import download_with_bounded_retry, provider_error_code
 from top5_candidate_visual_gate import (inspect_original_window,
     named_nature_site, diverse_scene_selection, nature_event_family,
     object_event_family, diverse_object_selection)
@@ -221,6 +222,7 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
     accepted=[]
     attempts=[]
     seen=set()
+    provider_failure_streak=0
     for idx,src in enumerate(candidates[:23 if (topic or {}).get("category")=="사물" else MAX_DOWNLOADS],1):
         suffix=Path(src["title"]).suffix.lower()
         if suffix not in (".webm",".mp4",".ogv"):
@@ -234,7 +236,7 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
         row={"title":src["title"],"source_page":src["source_page"],
              "status":"unchecked"}
         try:
-            download_video(src,target)
+            download_with_bounded_retry(download_video,src,target)
             dur=probe_duration(target)
             if not 6.2<=dur<=125:
                 raise ValueError("video duration incompatible with TOP5 6-sec cut")
@@ -269,6 +271,7 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                     label,reaction=PROMOTED.get(
                         src["title"],(story_label(src["title"]),"이 장면을 놓치지 마세요!"))
                 status="metadata_and_motion_only_UNVERIFIED"
+            provider_failure_streak=0
             accepted.append({**src,"local_path":str(target),
                 "cut_start":round(at,2),"duration_sec":round(dur,2),
                 "motion_proxy":round(float(motion),3),
@@ -283,10 +286,25 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                         "review_status":status})
         except Exception as ex:
             target.unlink(missing_ok=True)
-            row.update({"status":"REJECTED","why":type(ex).__name__+
-                         ": "+str(ex)[:110]})
+            code=provider_error_code(ex)
+            if code:
+                # Never blacklist a valid source because Commons temporarily
+                # throttled or its download host dropped a connection.
+                provider_failure_streak+=1
+                row.update({"status":"TEMPORARY_PROVIDER_ERROR",
+                            "reason_code":code,
+                            "why":type(ex).__name__+": "+str(ex)[:150]})
+            else:
+                provider_failure_streak=0
+                row.update({"status":"REJECTED","why":type(ex).__name__+
+                            ": "+str(ex)[:110]})
         attempts.append(row)
         print("CANDIDATE",idx,row["title"],row["status"],flush=True)
+        if provider_failure_streak>=3:
+            # Three consecutive exhausted 429/503 retries: stop hammering
+            # a shared provider, keep per-candidate evidence for recovery QA.
+            print("PROVIDER_CIRCUIT_BREAKER",provider_failure_streak,flush=True)
+            break
         if len(accepted)>=9:
             # Metadata ranking can oversample one event (e.g. four floods).
             # Keep trying further originals while fewer than five distinct
