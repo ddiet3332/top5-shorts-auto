@@ -26,7 +26,7 @@ class V30QA(unittest.TestCase):
                   patch("top5_auto_v30.assemble_video",return_value=out/"video.mp4") as assemble,
                   patch("top5_auto_v30.technical_qa",return_value={"full_decode":"PASS"})):
                 main()
-            select.assert_called_once_with([],out,with_hook=True)
+            select.assert_called_once_with([],out,with_hook=True,topic=topic)
             assemble.assert_called_once_with(topic,clips,out,hook)
 
     def test_locked_visual_spec(self):
