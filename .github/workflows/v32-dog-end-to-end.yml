@@ -271,7 +271,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: output/dog/curated_pexels/
-          key: dog-curated-pexels-v1-${{ hashFiles('sample/dog_curated_pexels_v1.json') }}
+          key: dog-curated-pexels-v2-${{ hashFiles('sample/dog_curated_pexels_v1.json') }}
       - name: Download three official Pexels dog clips for frame review
         id: curated_pexels_audition
         if: github.event_name != 'pull_request' && steps.curated_pexels_cache.outputs.cache-hit != 'true'
@@ -294,7 +294,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: output/dog/curated_pexels/
-          key: dog-curated-pexels-v1-${{ hashFiles('sample/dog_curated_pexels_v1.json') }}
+          key: dog-curated-pexels-v2-${{ hashFiles('sample/dog_curated_pexels_v1.json') }}
       - name: Archive curated real Pexels dog video preview evidence
         if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
