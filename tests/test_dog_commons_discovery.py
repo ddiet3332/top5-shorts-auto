@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from dog_commons_discovery import classify_title, discover_commons, trusted
+from dog_commons_discovery import QUERIES, CATEGORIES, classify_title, discover_commons, trusted
 
 def video(title="File:Dog jumping over a toy.webm", **overrides):
     row = {
@@ -24,6 +24,9 @@ class CommonsDiscoveryTests(unittest.TestCase):
         self.assertEqual(classify_title("File:Dog jumping.webm"), "jump")
         self.assertEqual(classify_title("File:Puppy surprise.webm"), "surprise")
         self.assertIsNone(classify_title("File:Cat jumping.webm"))
+        self.assertEqual(classify_title("File:Dog barking loudly.webm"),"bark")
+        self.assertEqual(classify_title("File:Dog opens door.webm"),"door")
+        self.assertEqual(classify_title("File:Dog shaking water.webm"),"shake")
         self.assertIsNone(classify_title("File:Dog cartoon jumping.webm"))
         self.assertIsNone(classify_title("File:Fractal and DogPlayingTetris rolling during CTWC 2023.webm"))
         self.assertIsNone(classify_title("File:Environmental-Effects-on-Compulsive-Tail-Chasing-in-Dogs-pone.0041684.s004.ogv"))
@@ -45,6 +48,21 @@ class CommonsDiscoveryTests(unittest.TestCase):
         self.assertEqual(result["candidates"][0]["rights_status"], "UNVERIFIED")
         self.assertIn("download_url", result["candidates"][0])
 
+    def test_reviewed_weak_source_is_excluded_before_audition(self):
+        source = video()
+        baseline = discover_commons(
+            search=lambda term, per_query: [source],
+            categories=lambda term, per_query: [], max_results=10)
+        self.assertEqual(len(baseline["candidates"]),1)
+        seen_id=baseline["candidates"][0]["id"]
+        revised = discover_commons(
+            search=lambda term, per_query: [source],
+            categories=lambda term, per_query: [], max_results=10,
+            excluded_ids={seen_id})
+        self.assertEqual(revised["status"],"SOURCE_SHORTAGE")
+        self.assertEqual(revised["candidates"],[])
+        self.assertFalse(revised["publication_approved"])
+
     def test_dog_category_supports_action_only_filenames(self):
         category_row = video("File:Unexpected leap over a couch.webm")
         result = discover_commons(search=lambda term, per_query: [],
@@ -60,7 +78,7 @@ class CommonsDiscoveryTests(unittest.TestCase):
             raise RuntimeError("network down")
         result = discover_commons(search=fail, categories=fail)
         self.assertEqual(result["status"], "SOURCE_REQUEST_FAILED")
-        self.assertEqual(len(result["errors"]), 9)
+        self.assertEqual(len(result["errors"]), len(QUERIES) + len(CATEGORIES))
         self.assertEqual(result["candidates"], [])
 
     def test_untrusted_hostname_and_overlarge(self):
