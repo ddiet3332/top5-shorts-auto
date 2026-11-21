@@ -712,6 +712,11 @@ def main():
     from top5_feedback_repair import load_and_apply
     final,feedback_report=load_and_apply(
         final,"review/feedback/dog_latest.json",output/"FEEDBACK_REPAIR_APPLIED.json")
+    # V50: only SHA+source-URL+cut+rank-matched observations may replace
+    # temporary source-metadata captions. An unseen new source keeps the
+    # unverified label. Never infer rights or a creative 85pt pass.
+    from top5_reviewed_action_captions import apply_reviewed_captions
+    final,caption_evidence=apply_reviewed_captions(topic,final,output)
     (output/"V32_CHALLENGER_SELECTION.json").write_text(json.dumps(
         audit,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     write_gates(output,topic,final,attempts,recommendations)

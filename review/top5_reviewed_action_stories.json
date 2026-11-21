@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "review_basis": "Source SHA256 + exact title + original cut time plus human-supervised inspection of actual V49 #44921764653 composite 35 frames and original 15 samples. Sampled visual captions, NOT end-to-end creative score, original owner licence, full action verification, or YPP approval.",
+  "reviewed_run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44921764653",
+  "stories": [
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Time-lapse of Aurora Borealis in Norway.webm",
+      "sha256": "61b617f219e8d297ff112d2b9e14af19c1af544195d7ba79551ee79ebb709f5f",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Time-lapse_of_Aurora_Borealis_in_Norway.webm",
+      "start_sec": 33,
+      "cut_tolerance_sec": 0.12,
+      "original_rank": 5,
+      "seconds": 4,
+      "caption_sequence": [
+        [
+          0.12,
+          "밤하늘에 번지는 초록빛"
+        ],
+        [
+          1.82,
+          "물 위에도 오로라가 비친다"
+        ]
+      ],
+      "evidence": "Run #44921764653 V49 actual 35 ranked frames plus original SHA-bound frames rank5 times 33.40/35.00/36.60; bright green aurora is visible with a reflection on water",
+      "publication_approved": false,
+      "rights_verified": false,
+      "full_action_verified": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Strokkur geyser eruption in Iceland.webm",
+      "sha256": "d9682686967b6d1b4ae60064aeab852531f4ff63bbea5d796f4eecd2a2f0bca1",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Strokkur_geyser_eruption_in_Iceland.webm",
+      "start_sec": 0,
+      "cut_tolerance_sec": 0.12,
+      "original_rank": 4,
+      "seconds": 5,
+      "caption_sequence": [
+        [
+          0.12,
+          "관광객 앞에 작은 물줄기"
+        ],
+        [
+          1.84,
+          "갑자기 솟는 거대한 물기둥!"
+        ],
+        [
+          3.2,
+          "하늘 높이 터지는 간헐천"
+        ]
+      ],
+      "evidence": "Run #44921764653 V49 actual ranked 7 and original 3 frames 0.42/2.50/4.58 show eruption visibly rising",
+      "publication_approved": false,
+      "rights_verified": false,
+      "full_action_verified": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Tonga Volcano Eruption 2022-01-15 0320Z to 0610Z Himawari-8 visible.webm",
+      "sha256": "df4242d9200662ba4a093b55e62951e128b53c29be8074b0f52e872e823b199d",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tonga_Volcano_Eruption_2022-01-15_0320Z_to_0610Z_Himawari-8_visible.webm",
+      "start_sec": 1.92,
+      "cut_tolerance_sec": 0.12,
+      "original_rank": 3,
+      "seconds": 4,
+      "caption_sequence": [
+        [
+          0.12,
+          "위성 화면 속 작은 분출 구름"
+        ],
+        [
+          1.48,
+          "순식간에 넓어지는 구름"
+        ],
+        [
+          2.66,
+          "바다 위로 퍼지는 거대한 흔적"
+        ]
+      ],
+      "evidence": "Run #44921764653 V49 actual ranked 7 and original 3 Himawari satellite samples 2.32/3.92/5.52 show rapid radial growth; time-lapse, not real-time",
+      "publication_approved": false,
+      "rights_verified": false,
+      "full_action_verified": false
+    }
+  ],
+  "publication_approved": false,
+  "independent_owner_rights_verified": false
+}
