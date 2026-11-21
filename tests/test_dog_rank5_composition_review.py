@@ -15,6 +15,7 @@ def report(video):
         "render_from_original":True,
         "review_video_file":video.name,
         "source_original_sha256":"a"*64,
+        "original_matches_prior_download":True,
         "source_audio_copied":False,
         "rights_status":"UNVERIFIED",
         "publication_approved":False,
