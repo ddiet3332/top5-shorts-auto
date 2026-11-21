@@ -9,6 +9,7 @@ import argparse
 import json
 import re
 import math
+import os
 from pathlib import Path
 from collections import Counter
 
@@ -104,9 +105,26 @@ def choose_topic(topics,requested):
         })
     standings.sort(key=lambda x:(-min(x["metadata_eligible"],5),
                                  -x["heuristic_score"],x["topic_id"]))
-    topic_id=(requested if requested!="auto" else next(
-        (r["topic_id"] for r in standings if r["metadata_eligible"]>=5),
-        standings[0]["topic_id"]))
+    if requested != "auto":
+        topic_id = requested
+    else:
+        viable=[r for r in standings if r["metadata_eligible"]>=5]
+        seed=os.environ.get("TOP5_ROTATION_SEED")
+        if viable and seed is not None:
+            # Run-number seeded rotation prevents the highest-volume cat topic
+            # from being reselected every single execution. Do not rotate into
+            # a category that lacks five metadata-eligible source candidates.
+            if not seed.isdecimal() or len(seed)>12:
+                raise ValueError("INVALID_TOP5_ROTATION_SEED")
+            by_id={t["topic_id"]:t for t in topics}
+            families=sorted({by_id[r["topic_id"]]["category"] for r in viable})
+            chosen_family=families[int(seed)%len(families)]
+            topic_id=next(r["topic_id"] for r in viable
+                          if by_id[r["topic_id"]]["category"]==chosen_family)
+        else:
+            # This legacy unseeded selection is still metadata-first and is
+            # not claimed to be an AI trend recommendation.
+            topic_id=(viable[0]["topic_id"] if viable else standings[0]["topic_id"])
     found=next((t for t in topics if t["topic_id"]==topic_id),None)
     if found is None:
         raise ValueError("Unknown topic")
