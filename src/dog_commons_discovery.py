@@ -29,7 +29,9 @@ ACTIONS = {
     "play": ("playing", "play", "puppy", "toy"),
 }
 BLOCKED = ("animation", "cartoon", "film trailer", "music video", "compilation",
-           "advert", "gameplay", "ai generated", "movie scene", "television")
+           "advert", "gameplay", "ai generated", "movie scene", "television",
+           "tetris", "ctwc", "esport", "video game", "dogplayingtetris",
+           "compulsive-tail-chasing", "pone.", "scientific paper")
 
 
 def classify_title(title, *, dog_category=False):
