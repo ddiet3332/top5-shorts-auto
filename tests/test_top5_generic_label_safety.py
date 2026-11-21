@@ -48,7 +48,9 @@ class GenericLabelSafetyTests(unittest.TestCase):
             with (patch("top5_auto_v30.download_video",side_effect=fake_download),
                   patch("top5_auto_v30.probe_duration",return_value=11.0),
                   patch("top5_auto_v30.motion_highlight",return_value=(1.0,11.0)),
-                  patch("top5_auto_v30.checked_scenes",return_value={})):
+                  patch("top5_auto_v30.checked_scenes",return_value={}),
+                  patch("top5_auto_v30.inspect_original_window",
+                        return_value={"mostly_dark":False,"near_dark_count":0})):
                 selected,attempts=select_sources(candidates,Path(td),
                     topic={"category":"자연","topic_id":"nature_moments"})
             self.assertEqual(len(selected),5)

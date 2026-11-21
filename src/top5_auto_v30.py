@@ -20,6 +20,8 @@ from top5_auto_v29 import (
     assemble_video, technical_qa, save_license_and_status, CUT_LENGTHS
 )
 from top5_hook_selection import SourceShortage, choose_hook, identity
+from top5_candidate_visual_gate import (inspect_original_window,
+    named_nature_site, diverse_scene_selection)
 
 BASE=Path(__file__).resolve().parents[1]
 CHECKED=BASE/"review/v29_checked_actions.json"
@@ -244,6 +246,12 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 raise ValueError("REVIEWED_WEAK_SOURCE_WINDOW: "+weak[:85])
             if motion<0.1:
                 raise ValueError("near-static motion")
+            preflight = None
+            if (topic or {}).get("category") == "자연":
+                preflight = inspect_original_window(target, at)
+                row["visibility_preflight"] = preflight
+                if preflight["mostly_dark"]:
+                    raise ValueError("SOURCE_WINDOW_MOSTLY_DARK")
             reviewed=evidence.get(src["title"])
             if reviewed:
                 quality=float(reviewed["story_strength"])
@@ -263,6 +271,8 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
             accepted.append({**src,"local_path":str(target),
                 "cut_start":round(at,2),"duration_sec":round(dur,2),
                 "motion_proxy":round(float(motion),3),
+                "visual_preselection":preflight,
+                "named_nature_site":named_nature_site(src["title"]) if (topic or {}).get("category") == "자연" else None,
                 "editorial_quality_heuristic":quality,
                 "review_basis":status,"label":label,"caption":reaction,
                 "rights_verified":False,"publication_approved":False,
@@ -284,6 +294,27 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
             json.dumps(attempts,ensure_ascii=False,indent=2),encoding="utf-8")
         raise SourceShortage("SOURCE_SHORTAGE",f"기술 검사를 통과한 원본 {len(accepted)}/5",attempts)
     accepted.sort(key=lambda x:-x["editorial_quality_heuristic"])
+    if (topic or {}).get("category") == "자연":
+        # We have already inspected actual source windows above. A five-rank
+        # nature video should not reuse three camera views of the same named
+        # waterfall just to fill slots. Only explicit site names are compared.
+        distinct, duplicate_sites = diverse_scene_selection(accepted,required=5)
+        (Path(out)/"V30_SOURCE_SCENE_DIVERSITY.json").write_text(
+            json.dumps({
+                "topic":(topic or {}).get("topic_id"),
+                "source_count_candidate":len(accepted),
+                "distinct_named_site_count":len(distinct),
+                "duplicate_site_candidates":duplicate_sites,
+                "method":"filename named-landmark hint, not visual action recognition",
+                "editorial_score":None,
+                "rights_verified":False,"publication_approved":False,
+            },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+        if len(distinct)<5:
+            (Path(out)/"V30_CANDIDATES.json").write_text(
+                json.dumps(attempts,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+            raise SourceShortage("DISTINCT_SCENE_SHORTAGE",
+                f"겹치지 않는 명칭의 자연 원본 구간 {len(distinct)}/5",attempts)
+        accepted=distinct
     used=[]
     author_count=Counter()
     label_count=Counter()
