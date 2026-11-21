@@ -13,12 +13,16 @@ on:
       - 'src/dog_source_discovery.py'
       - 'src/dog_pixabay_discovery.py'
       - 'src/dog_pixabay_audition.py'
+      - 'src/dog_commons_audition.py'
+      - 'src/dog_commons_discovery.py'
       - 'src/dog_source_audition.py'
       - 'tests/test_dog_replacement_gate.py'
       - 'tests/test_dog_replacement_report.py'
       - 'tests/test_dog_source_discovery.py'
       - 'tests/test_dog_pixabay_discovery.py'
       - 'tests/test_dog_pixabay_audition.py'
+      - 'tests/test_dog_commons_audition.py'
+      - 'tests/test_dog_commons_discovery.py'
       - 'tests/test_dog_source_audition.py'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
@@ -57,6 +61,8 @@ on:
       - 'tests/test_dog_source_discovery.py'
       - 'tests/test_dog_pixabay_discovery.py'
       - 'tests/test_dog_pixabay_audition.py'
+      - 'tests/test_dog_commons_audition.py'
+      - 'tests/test_dog_commons_discovery.py'
       - 'tests/test_dog_source_audition.py'
   workflow_dispatch:
   schedule:
@@ -180,6 +186,46 @@ jobs:
             output/dog/DOG_PIXABAY_CANDIDATES.json
             output/dog/pixabay_audition/DOG_PIXABAY_AUDITION_RESULTS.json
             output/dog/pixabay_audition/*_preview.mp4
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Decide Commons fallback search cadence
+        id: commons_gate
+        shell: bash
+        run: |
+          # Frequent builds remain enabled; Commons network exploration is bounded.
+          # Every push/manual run may search, plus about once every 4h on schedule.
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_EVENT_NAME" != schedule ]] || (( GITHUB_RUN_NUMBER % 16 == 0 )); then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Discover Commons CC BY and CC0 dog action candidates
+        if: steps.commons_gate.outputs.enabled == 'true'
+        timeout-minutes: 4
+        continue-on-error: true
+        run: |
+          python src/dog_commons_discovery.py --output output/dog/DOG_COMMONS_CANDIDATES.json
+      - name: Create three real Commons dog action previews
+        if: steps.commons_gate.outputs.enabled == 'true'
+        timeout-minutes: 6
+        continue-on-error: true
+        run: |
+          if [[ -f output/dog/DOG_COMMONS_CANDIDATES.json ]]; then
+            python src/dog_commons_audition.py \
+              --discovery output/dog/DOG_COMMONS_CANDIDATES.json \
+              --output output/dog/commons_audition
+          fi
+      - name: Archive Commons candidate rights and preview evidence
+        if: always() && steps.commons_gate.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-commons-previews-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/DOG_COMMONS_CANDIDATES.json
+            output/dog/commons_audition/DOG_COMMONS_AUDITION_RESULTS.json
+            output/dog/commons_audition/*_preview.mp4
           if-no-files-found: ignore
           retention-days: 7
       - name: Discover bounded free dog source candidates
