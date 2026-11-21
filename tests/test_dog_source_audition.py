@@ -1,5 +1,7 @@
 """Offline tests for bounded audition and publication safety."""
 import json
+import os
+from unittest.mock import patch
 import sys
 import tempfile
 import unittest
@@ -30,6 +32,23 @@ class DogAuditionTests(unittest.TestCase):
             self.assertFalse(row["publication_approved"])
             self.assertTrue((out / row["preview_file"]).exists())
             self.assertFalse((out / "PX-123.mp4").exists())
+
+    def test_rotates_candidates_across_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            discovery = root / "discovery.json"
+            discovery.write_text(json.dumps({"candidates": [
+                {"id": f"PX-{i}", "source_url": f"https://www.pexels.com/video/dog-{i}/",
+                 "creator": "Maker"} for i in (100, 101, 102, 103)]}))
+            def fake_download(source, dest, max_bytes):
+                dest.write_bytes(b"test")
+                return {"duration_sec": 8}
+            def fake_preview(source, start, dest):
+                dest.write_bytes(b"preview")
+            with patch.dict(os.environ, {"GITHUB_RUN_ID": "5"}):
+                result = audition(discovery, root / "out", downloader=fake_download,
+                                  previewer=fake_preview)
+            self.assertEqual([r["id"] for r in result["candidates"]], ["PX-101", "PX-102"])
 
     def test_rejects_unbounded_audition(self):
         with self.assertRaises(ValueError):
