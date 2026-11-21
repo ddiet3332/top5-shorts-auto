@@ -34,7 +34,7 @@ def reliability_rejections(description, source_title, motion):
         flags.append("POSSIBLE_MODEL_TOKEN_TRUNCATION")
     if any(p in lower for p in ("first video","second video","third video")):
         flags.append("CHRONOLOGICAL_FRAMES_CONFUSED_FOR_SEPARATE_VIDEOS")
-    if re.search(r"(?i)\b(?:the text|words on|number on|says|reads|the time)\b",s):
+    if re.search(r"(?i)\b(?:the text|words on|number on|says|reads|the time|text overlay|text in korean|korean text)\b",s):
         # The rank footage has text overlays, but recognizing exact on-screen
         # content is neither action evidence nor a safe thumbnail fact.
         flags.append("UNVERIFIED_TEXT_OR_OCR_CLAIM")
@@ -46,6 +46,23 @@ def reliability_rejections(description, source_title, motion):
     if ("chain reaction" in title or "rube goldberg" in title) and not any(
         w in lower for w in ("chain","machine","mechanism","ball","device")):
         flags.append("MECHANISM_NOT_IDENTIFIED_RECHECK")
+    # V41 model failure: lists objects across three photos but does not say
+    # what actually changed or moved. This is a REVIEW VETO only; an action
+    # verb cannot prove that an action *really* appears in the video.
+    explicit_temporal_motion = re.search(
+        r"(?i)\b(?:moves?|moving|rolls?|rolling|bounces?|bouncing|"
+        r"spins?|spinning|rotat(?:es|ing|ed)|falls?|falling|topples?|"
+        r"tips?|tipping|drops?|dropping|slides?|sliding|swings?|"
+        r"swinging|sways?|swaying|flashes?|flashing|erupts?|"
+        r"erupting|rises?|rising|lifts?|lifting|descends?|"
+        r"collapses?|collapsing|flows?|flowing|turns?|turning|"
+        r"opens?|opening|closes?|closing|jumps?|jumping|"
+        r"walks?|walking|runs?|running|pushes?|pushing|"
+        r"pulls?|pulling|changes?|changing|expands?|expanding)\b",
+        s,
+    )
+    if explicit_temporal_motion is None:
+        flags.append("NO_CLEAR_TEMPORAL_ACTION_DESCRIBED_RECHECK")
     if "nearly static" in lower and (
         max(motion.get("adjacent_gray_change") or [0])>=18):
         flags.append("MODEL_STATIC_CLAIM_CONFLICTS_WITH_FRAME_CHANGES")
