@@ -1,6 +1,7 @@
 import json
 import sys
 import tempfile
+import urllib.error
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -26,6 +27,50 @@ class PixabayAuditionTests(unittest.TestCase):
             self.assertEqual(result["candidates"][0]["rights_status"],"UNVERIFIED")
             self.assertFalse((root/"out"/"PB-123.mp4").exists())
             self.assertTrue((root/"out"/"PB-123_preview.mp4").exists())
+    def test_transient_media_index_skips_second_pixabay_api_query(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            discovery=root/"candidates.json"
+            discovery.write_text(json.dumps({"candidates":[{"id":"PB-123","provider":"pixabay",
+                "source_url":"https://pixabay.com/videos/id-123/","creator":"A"}]}))
+            seen=[]
+            def direct_download(video_id,key,path,*,media_url):
+                seen.append(media_url)
+                path.write_bytes(b"original video data")
+                return {"duration_sec":8}
+            def previewer(_src,_start,target):
+                target.write_bytes(b"preview data")
+            result=audition_pixabay(discovery,root/"out","fake-key",
+                media_index={"PB-123":"https://cdn.pixabay.com/video/123.mp4"},
+                downloader=direct_download,previewer=previewer)
+            self.assertEqual(result["status"],"PREVIEW_READY")
+            self.assertEqual(seen,["https://cdn.pixabay.com/video/123.mp4"])
+            self.assertNotIn("cdn.pixabay.com",str(result))
+            self.assertFalse(result["publication_approved"])
+
+    def test_http_failure_status_is_preserved_without_url(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            discovery=root/"candidates.json"
+            discovery.write_text(json.dumps({"candidates":[{"id":"PB-123","provider":"pixabay"}]}))
+            def reject(video_id,key,path,*,media_url):
+                raise urllib.error.HTTPError("https://cdn.pixabay.com/video/123.mp4",403,
+                                             "Forbidden",{},None)
+            result=audition_pixabay(discovery,root/"out","fake-key",
+                media_index={"PB-123":"https://cdn.pixabay.com/video/123.mp4"},
+                downloader=reject)
+            self.assertEqual(result["status"],"NO_PREVIEW")
+            self.assertEqual(result["candidates"][0]["http_status"],403)
+            self.assertFalse(result["publication_approved"])
+            self.assertNotIn("cdn.pixabay.com",str(result))
+
+    def test_direct_media_url_rejects_untrusted_host_without_lookup(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError,"UNTRUSTED_VIDEO_HOST"):
+                download_pixabay(123,"fake",Path(temp)/"video.mp4",
+                    media_url="https://evil.example/video.mp4",
+                    fetch=lambda _:self.fail("must not perform API lookup"))
+
     def test_rejects_untrusted_video_url(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(ValueError):
