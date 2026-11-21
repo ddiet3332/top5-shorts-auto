@@ -107,11 +107,16 @@ def render_parts(work, title, source_dir, sources, captions, preset):
               "boxblur=12:2,scale=1080:1920,setsar=1[blur];"
               "[fg]scale=1080:1030:force_original_aspect_ratio=decrease:force_divisible_by=2[subject];"
               "[blur][subject]overlay=(W-w)/2:860-h/2[scene];"
-              "[scene][1:v]overlay,setsar=1,fps=24,format=yuv420p[v]")
+              # Short/rounded stock clips can yield 143 frames for a nominal 6s cut.
+              # Pad only the final frame where necessary, then fix PTS and frames.
+              "[scene][1:v]overlay,setsar=1,fps=24,"
+              "tpad=stop_mode=clone:stop_duration=1,"
+              "trim=end_frame=144,setpts=N/(24*TB),format=yuv420p[v]")
         run(FFMPEG + ["-v", "error", "-y", "-ss", str(source["cut_start_sec"]),
                       "-i", str(source_dir / source["file"]), "-i", str(plate),
                       "-filter_complex_threads", "2", "-filter_complex", vf, "-map", "[v]",
-                      "-t", "6", "-an", "-c:v", "libx264", "-threads", "4",
+                      "-frames:v", "144", "-fps_mode", "cfr", "-r", "24",
+                      "-an", "-c:v", "libx264", "-threads", "4",
                       "-preset", preset, "-crf", "23", str(part)])
         parts.append(part)
     listing = work / "concat.txt"
@@ -147,10 +152,31 @@ def verify_media(video, observations=None):
         observations.update(peak_db=float(peak[1]) if peak else None,
                             black_times_sec=[float(t) for t in re.findall(r"black_start:([\d.]+)", log)],
                             silence_detected="silence_start:" in log)
-    return {"format": (v["width"], v["height"], v["codec_name"], a["codec_name"]) ==
-            (1080, 1920, "h264", "aac") and
-            str(v.get("nb_frames")) == "720" and
-            all(29.90 <= float(stream.get("duration", 0)) <= 30.15 for stream in (v, a)),
+    correct_codecs = (v.get("width"), v.get("height"), v.get("codec_name"),
+                      a.get("codec_name")) == (1080, 1920, "h264", "aac")
+    correct_fps = v.get("r_frame_rate") == "24/1"
+    correct_frames = str(v.get("nb_frames")) == "720"
+    durations = []
+    for stream in (v, a):
+        try:
+            durations.append(float(stream.get("duration", 0)))
+        except (TypeError, ValueError):
+            durations.append(0.)
+    correct_durations = all(29.90 <= d <= 30.15 for d in durations)
+    if observations is not None:
+        observations["format_probe"] = {
+            "video_codec": v.get("codec_name"), "audio_codec": a.get("codec_name"),
+            "width": v.get("width"), "height": v.get("height"),
+            "video_fps": v.get("r_frame_rate"),
+            "video_frames": v.get("nb_frames"),
+            "video_duration_sec": durations[0], "audio_duration_sec": durations[1],
+            "expected_video_frames": 720,
+            "failed": [name for name, ok in (
+                ("codec_or_dimensions", correct_codecs), ("fps", correct_fps),
+                ("frame_count", correct_frames), ("stream_duration", correct_durations))
+                if not ok],
+        }
+    return {"format": correct_codecs and correct_fps and correct_frames and correct_durations,
             "full_decode": True, "audio": bool(peak and -23 <= float(peak[1]) <= -1
                                                 and "silence_start:" not in log),
             "black": "black_start:" not in log}
