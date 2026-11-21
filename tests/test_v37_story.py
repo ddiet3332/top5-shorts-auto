@@ -69,6 +69,23 @@ class V37Tests(unittest.TestCase):
             txt=(Path(td)/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md").read_text()
             self.assertIn("ShareAlike",txt)
             self.assertIn("BLOCKED",txt)
+    def test_direct_katzensprung_to_reviewed_door_needs_no_weak_pexels_pair(self):
+        source_rows=rows()
+        source_rows[3]["title"]="File:Katzensprung in Zeitlupe.webm"
+        meta={"author":"Astropulse","license":"CC BY-SA 4.0",
+              "license_url":"https://creativecommons.org/licenses/by-sa/4.0/"}
+        with tempfile.TemporaryDirectory() as td, \
+             patch("v37_cat_audition.commons_download",return_value=meta) as commons, \
+             patch("top5.probe_duration",return_value=22.204):
+            final,audit=apply_v37_story_and_door({"topic_id":"cat_surprises"},source_rows,td)
+        self.assertEqual(len(final),5)
+        self.assertEqual(final[3]["title"],"File:Cat opening door.webm")
+        self.assertEqual(final[3]["cut_start"],15.9)
+        self.assertTrue(final[3]["requires_sharealike_attribution"])
+        self.assertTrue(audit["door_added"])
+        self.assertEqual(commons.call_count,1)
+        self.assertFalse(audit["publication_approved"])
+
     def test_failed_download_preserves_previous_candidate(self):
         with tempfile.TemporaryDirectory() as td, \
              patch("v37_cat_audition.commons_download",side_effect=RuntimeError("blocked")):
