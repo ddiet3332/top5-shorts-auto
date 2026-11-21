@@ -70,7 +70,7 @@ jobs:
           python-version: '3.12'
       - uses: ./.github/actions/setup-video-tools
         with:
-          install-fonts: 'true'
+          fonts: 'true'
       - name: Confirm actual media tools for real EOF/frame regressions
         run: |
           command -v ffmpeg
