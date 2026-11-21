@@ -1,0 +1,28 @@
+{
+  "status": "CANDIDATES_FOUND",
+  "provider": "wikimedia_commons",
+  "candidates": [
+    {
+      "id": "CM-a41ba1199869",
+      "provider": "wikimedia_commons",
+      "source_title": "File:Puppiesplaying-tokyoarea-jan7-2020.webm",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Puppiesplaying-tokyoarea-jan7-2020.webm",
+      "download_url": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Puppiesplaying-tokyoarea-jan7-2020.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "creator": "Nesnad",
+      "size_bytes": 5919795,
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0",
+      "action_family_from_title": "play",
+      "discovery_route": "search:puppy playing",
+      "dog_subject_basis": "file title metadata",
+      "semantic_review": "UNVERIFIED",
+      "reviewed_frames": false,
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false,
+      "status": "DISCOVERED_NOT_DOWNLOADED"
+    }
+  ],
+  "errors": [],
+  "method": "CC BY/CC0 provider metadata; dog/action words in file title only",
+  "publication_approved": false
+}
