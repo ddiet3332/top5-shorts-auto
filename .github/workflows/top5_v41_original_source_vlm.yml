@@ -1,0 +1,134 @@
+name: TOP5 V41 - 500M on original caption-free source frames
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'TOP5 Topic-Driven Production successful run ID with V40 original frames'
+        required: true
+        default: '44913886508'
+        type: string
+      artifact_name:
+        description: 'Exact source artifact'
+        required: true
+        default: 'TOP5-auto-review-76'
+        type: string
+  workflow_run:
+    workflows: ["TOP5 Topic-Driven Production"]
+    types: [completed]
+  pull_request:
+    paths:
+      - '.github/workflows/top5_v41_original_source_vlm.yml'
+      - 'src/top5_v41_original_source_vlm.py'
+      - 'tests/test_top5_v41_original_source_vlm.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v41_original_source_vlm.yml'
+      - 'src/top5_v41_original_source_vlm.py'
+      - 'tests/test_top5_v41_original_source_vlm.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: v41-original-sources-${{ github.event.workflow_run.id || github.ref }}
+  cancel-in-progress: false
+jobs:
+  source-bytes-and-model-safety-regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Minimal dependencies (no actual model required)
+        run: python -m pip install -q 'Pillow>=10,<13'
+      - name: Test 15 untouched source image hashes, rank/source binding, editorial and rights hard gates
+        run: |
+          python -m unittest discover -s tests -p 'test_top5_original_frame_evidence.py' -v
+          python -m unittest discover -s tests -p 'test_top5_v41_original_source_vlm.py' -v
+  run-500m-on-clean-actual-original-frames:
+    needs: source-bytes-and-model-safety-regression
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 39
+    env:
+      HF_HUB_DISABLE_XET: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: top5-v39-smolvlm-500m-v1
+      - name: Install open-source CPU 500M video-image model
+        timeout-minutes: 10
+        run: |
+          python -m venv /tmp/top5-v41
+          /tmp/top5-v41/bin/pip install -q --upgrade pip
+          /tmp/top5-v41/bin/pip install -q 'torch==2.7.1' --index-url https://download.pytorch.org/whl/cpu
+          /tmp/top5-v41/bin/pip install -q 'transformers==4.51.3' 'safetensors>=0.4.3' 'accelerate>=1.6,<2' 'num2words>=0.5.13,<1' 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Download real 30sec output with SHA-bound pre-composition originals
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_RUN: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || github.event_name == 'workflow_dispatch' && inputs.source_run || '44913886508' }}
+          EXACT_ARTIFACT: ${{ github.event_name == 'workflow_run' && format('TOP5-auto-review-{0}', github.event.workflow_run.run_number) || github.event_name == 'workflow_dispatch' && inputs.artifact_name || 'TOP5-auto-review-76' }}
+        run: |
+          [[ "$UPSTREAM_RUN" =~ ^[0-9]{8,20}$ ]] || { echo 'Invalid original source run'; exit 1; }
+          [[ "$EXACT_ARTIFACT" =~ ^TOP5-auto-review-[0-9]+$ ]] || { echo 'Invalid original source artifact'; exit 1; }
+          mkdir -p input
+          gh run download "$UPSTREAM_RUN" --repo "$GITHUB_REPOSITORY" --name "$EXACT_ARTIFACT" --dir input
+          test -s input/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+          test -s input/topic_run/V40_ORIGINAL_FRAME_MANIFEST.json
+          test -s input/topic_run/V40_ORIGINAL_SOURCE_FRAMES/rank_1_1.jpg
+          test -s input/topic_run/V40_ORIGINAL_SOURCE_FRAMES/rank_5_3.jpg
+      - name: Run 500M on clean original rank frames (not final video overlays)
+        timeout-minutes: 24
+        run: |
+          /tmp/top5-v41/bin/python src/top5_v41_original_source_vlm.py \
+            --source input/topic_run \
+            --output output/v41
+      - name: Enforce same no-hallucination-text / no-auto-caption gates
+        if: success()
+        run: |
+          /tmp/top5-v41/bin/python src/top5_vlm_reliability_gate.py \
+            --input output/v41/VLM_SCENE_DESCRIPTION_REVIEW.json \
+            --output output/v41/VLM_RELIABILITY_QA.json
+      - name: Preserve honest review-only outcome
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path("output/v41/VLM_SCENE_DESCRIPTION_REVIEW.json")
+          if p.is_file():
+              d=json.loads(p.read_text())
+              lines=["## V41 clean original-source 500M QA",
+                     f"- original source topic: {d['chosen_topic']}",
+                     f"- actual ranked original descriptions: {len(d['rows'])}/5",
+                     "- TOP5 caption/rank overlay: excluded from model input"]
+          else:
+              lines=["## V41 model failed or incomplete - no captions certified"]
+          lines+=["- Model description factual correctness: NOT CONFIRMED",
+                  "- Final creative caption + 85-point editorial approval: NO",
+                  "- Rights/YPP: NOT CLEARED",
+                  "- YouTube upload remains MANUAL"]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+      - name: Export original-source 500M model candidate descriptions, never auto post
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V41-500M-ORIGINAL-SOURCE-CONTENT-${{ github.run_number }}
+          path: |
+            output/v41/*.json
+            output/v41/*.md
+          if-no-files-found: warn
+          retention-days: 7
+# Do not use generated descriptions as publication-ready original creative Korean captions.
