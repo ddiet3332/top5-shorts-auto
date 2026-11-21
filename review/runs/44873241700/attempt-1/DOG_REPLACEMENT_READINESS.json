@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "design_lock": "TOP5_DESIGN_LOCK_V1",
+  "candidate_count": 0,
+  "decisions": [
+    {
+      "rank": "rank5",
+      "status": "NO_UPGRADE",
+      "source_id": "PX-9006741",
+      "reason": "EDITORIAL_SOURCE_SHORTAGE"
+    },
+    {
+      "rank": "rank2",
+      "status": "NO_UPGRADE",
+      "source_id": "PX-7515923",
+      "reason": "EDITORIAL_SOURCE_SHORTAGE"
+    }
+  ],
+  "unassigned_auditions": [
+    {
+      "id": "PX-10914657",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-20218496",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-32536736",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-4107672",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-7683157",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-8465792",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-9606805",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-5669753",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    }
+  ],
+  "publication_approved": false,
+  "editorial_score": null,
+  "next_action": "DISCOVER_AND_REVIEW_CANDIDATES"
+}
