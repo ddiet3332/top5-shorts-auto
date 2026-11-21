@@ -1,4 +1,5 @@
 """V32 tests: fixed layout and source replacement are editorial, never rights approval."""
+import hashlib
 import json,sys,unittest
 import numpy as np
 from pathlib import Path
@@ -44,6 +45,16 @@ class V32HookTests(unittest.TestCase):
             self.assertTrue(audit["independent_hook"])
             self.assertEqual(hook["hook_mode"], "independent_source")
             self.assertEqual(audit["sha256"], source_digest(root / "5.mp4"))
+
+    def test_reviewed_hook_prefers_the_byte_matched_window(self):
+        with TemporaryDirectory() as folder, patch.dict(
+            "top5_auto_v32.REVIEWED_HOOK_STARTS",
+            {hashlib.sha256(bytes([6])).hexdigest(): 95.875},
+        ):
+            hook, audit, _ = self.select(Path(folder), count=7, duration=117)
+            self.assertEqual(hook["title"], "6.mp4")
+            self.assertEqual(audit["source_start_sec"], 95.875)
+            self.assertEqual(audit["source_end_sec"], 97.875)
 
     def test_repeated_frames_are_rejected_even_with_time_separation(self):
         with TemporaryDirectory() as folder:

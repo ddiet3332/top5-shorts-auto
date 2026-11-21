@@ -5,7 +5,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
-from top5_auto_v32 import add_v36_action_clips, V36_PAIR_SOURCE, V36_JUMPSCARE_TITLE
+from top5_auto_v32 import add_v36_action_clips, RANK_FIVE_BOX, RANK_FIVE_BOX_SHA256
+from v12_pexels_audition import official_video_id
 
 def baseline():
     return [
@@ -18,29 +19,22 @@ def baseline():
 
 class V36EditorialTests(unittest.TestCase):
     def test_only_inspected_shots_replaced_and_rights_remain_blocked(self):
-        media={"title":V36_JUMPSCARE_TITLE,
-               "source_page":"https://commons.wikimedia.org/wiki/File:Cat_Jumpscare.webm",
-               "author":"Panini!","license":"CC0",
-               "license_url":"https://creativecommons.org/publicdomain/zero/1.0",
-               "source_claim":"own work"}
+        self.assertEqual(official_video_id(RANK_FIVE_BOX),15135238)
         with TemporaryDirectory() as td, \
-            patch("top5_auto_v32.fetch_json",return_value={}), \
-            patch("top5_auto_v32.extract_candidates",return_value=iter([media])), \
-            patch("top5_auto_v32.download_video"), \
-            patch("top5.probe_duration",return_value=10.35), \
+            patch("top5_auto_v32.source_digest",return_value=RANK_FIVE_BOX_SHA256), \
             patch("top5_auto_v32.download_single_pexels",
-                  return_value={"duration_sec":40.96}):
+                  side_effect=[{"duration_sec":8.64},{"duration_sec":40.96}]):
             result,audit=add_v36_action_clips({"topic_id":"cat_surprises"},baseline(),td)
         self.assertEqual(len(result),5)
-        self.assertEqual(result[0]["title"],V36_JUMPSCARE_TITLE)
-        self.assertAlmostEqual(result[0]["cut_start"],4.0)
+        self.assertEqual(result[0]["title"],"Pexels PX-15135238")
+        self.assertAlmostEqual(result[0]["cut_start"],2.625)
         self.assertEqual(result[3]["title"],"Pexels PX-17536779")
         self.assertAlmostEqual(result[3]["cut_start"],31.4)
         self.assertFalse(result[0]["publication_approved"])
         self.assertFalse(result[3]["rights_verified"])
         self.assertFalse(audit["publication_approved"])
         self.assertFalse(audit["youtube_reused_content_approved"])
-        self.assertTrue(audit["jumpscare_added"])
+        self.assertTrue(audit["box_added"])
         self.assertTrue(audit["pair_added"])
 
     def test_unrelated_topic_not_modified(self):
@@ -52,13 +46,21 @@ class V36EditorialTests(unittest.TestCase):
 
     def test_missing_sources_are_not_fabricated(self):
         with TemporaryDirectory() as td, \
-            patch("top5_auto_v32.fetch_json",side_effect=RuntimeError("blocked")), \
             patch("top5_auto_v32.download_single_pexels",side_effect=RuntimeError("blocked")):
             result,audit=add_v36_action_clips({"topic_id":"cat_surprises"},baseline(),td)
         self.assertEqual([x["title"] for x in result],
                          [x["title"] for x in baseline()])
-        self.assertFalse(audit["jumpscare_added"])
+        self.assertFalse(audit["box_added"])
         self.assertFalse(audit["pair_added"])
         self.assertFalse(audit["rights_independently_verified"])
+
+    def test_changed_box_bytes_preserve_the_bag_source(self):
+        with TemporaryDirectory() as td, \
+            patch("top5_auto_v32.source_digest",return_value="wrong"), \
+            patch("top5_auto_v32.download_single_pexels",
+                  side_effect=[{"duration_sec":8.64},RuntimeError("blocked")]):
+            result,audit=add_v36_action_clips({"topic_id":"cat_surprises"},baseline(),td)
+        self.assertEqual(result[0]["title"],"File:Cat in a Bag.webm")
+        self.assertFalse(audit["box_added"])
 
 if __name__=="__main__": unittest.main()

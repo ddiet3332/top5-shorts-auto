@@ -1,0 +1,219 @@
+{
+  "topic_id": "dog_surprises",
+  "sources": [
+    {
+      "id": "PX-31147382",
+      "provider": "pexels",
+      "title": "문틈으로 고개를 내미는 강아지",
+      "page_url": "https://www.pexels.com/video/curious-dog-peeking-around-a-doorframe-31147382/",
+      "creator": "K",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "2908cac477c02aef56d6ead501762f48450cfb1f66980ed7c22397d41127adeb",
+      "start_sec": 0.75,
+      "payoff_sec": 3.25,
+      "payoff_subject_fraction": [
+        0.48,
+        0.32
+      ],
+      "action_family": "peek",
+      "payoff_priority": 58,
+      "label": "문틈으로 고개를 내미는 강아지",
+      "observed_action": "A black dog slowly brings its muzzle past the doorframe.",
+      "caption": "검은 강아지가 슬쩍",
+      "caption_sequence": [
+        [
+          0.1,
+          "조용한 문틈"
+        ],
+        [
+          0.92,
+          "검은 강아지가 슬쩍"
+        ]
+      ]
+    },
+    {
+      "id": "PX-6869468",
+      "provider": "pexels",
+      "title": "해변에서 모래를 파는 강아지",
+      "page_url": "https://www.pexels.com/video/a-dog-in-a-pet-harness-digging-6869468/",
+      "creator": "Dario Fernandez Ruz",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "98662b3d7b97f9f06e1caed2c69417f1e8632fb7d6110106e02aeffcf2b1426a",
+      "start_sec": 2.25,
+      "payoff_sec": 4.8,
+      "payoff_subject_fraction": [
+        0.62,
+        0.4
+      ],
+      "action_family": "dig",
+      "payoff_priority": 65,
+      "label": "해변에서 모래를 파는 강아지",
+      "observed_action": "The dog turns sideways and digs with alternating front paws.",
+      "caption": "앞발로 모래를 파요!",
+      "caption_sequence": [
+        [
+          0.1,
+          "해변에서 코를 낮추더니"
+        ],
+        [
+          1.9,
+          "앞발로 모래를 파요!"
+        ]
+      ]
+    },
+    {
+      "id": "PX-34711078",
+      "provider": "pexels",
+      "title": "나뭇가지를 물고 달려오는 강아지",
+      "page_url": "https://www.pexels.com/video/playful-dog-running-in-backyard-with-stick-34711078/",
+      "creator": "Kevin Early",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "f08decd96f09db8a86ac3f7eab8e141b8ff5df9dad609909f9d6129a864a8b0d",
+      "start_sec": 4.75,
+      "payoff_sec": 7.125,
+      "payoff_subject_fraction": [
+        0.38,
+        0.32
+      ],
+      "action_family": "carry",
+      "payoff_priority": 72,
+      "label": "나뭇가지를 물고 달려오는 강아지",
+      "observed_action": "A dog runs toward the camera carrying a branch crosswise.",
+      "caption": "나뭇가지를 물고 왔어요!",
+      "caption_sequence": [
+        [
+          0.12,
+          "멀리서 달려오더니"
+        ],
+        [
+          1.05,
+          "나뭇가지를 물고 왔어요!"
+        ]
+      ]
+    },
+    {
+      "id": "PX-7515923",
+      "provider": "pexels",
+      "title": "초록 공을 입으로 받는 강아지",
+      "page_url": "https://www.pexels.com/video/a-dog-playing-catch-7515923/",
+      "creator": "RDNE Stock project",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "452f84c8963e245972ca395f1980ec1a362dc38f26507ba7fd694f0ea1ebcc39",
+      "start_sec": 16.05,
+      "payoff_sec": 20.5,
+      "payoff_subject_fraction": [
+        0.52,
+        0.58
+      ],
+      "action_family": "catch",
+      "payoff_priority": 80,
+      "label": "초록 공을 입으로 받는 강아지",
+      "observed_action": "The seated dog rises and catches the green ball in its mouth.",
+      "caption": "초록 공을 입으로 받아요!",
+      "caption_sequence": [
+        [
+          0.2,
+          "앉아서 위를 보더니"
+        ],
+        [
+          4.2,
+          "초록 공을 입으로 받아요!"
+        ]
+      ]
+    },
+    {
+      "id": "PX-7628753",
+      "provider": "pexels",
+      "title": "사람 등 위로 올라타는 강아지",
+      "page_url": "https://www.pexels.com/video/dog-jumping-on-woman-s-back-7628753/",
+      "creator": "ArtHouse Studio",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "33e59c572f627f40d8959c439b90933908b6387dbbf09aae69a5df45a570c005",
+      "start_sec": 0.125,
+      "payoff_sec": 1.5,
+      "payoff_subject_fraction": [
+        0.46,
+        0.37
+      ],
+      "action_family": "back_trick",
+      "payoff_priority": 85,
+      "label": "사람 등 위로 올라타는 강아지",
+      "observed_action": "A dog jumps onto the crouching handler's back, balances and jumps down.",
+      "caption": "다시 땅으로 착지!",
+      "caption_sequence": [
+        [
+          0.08,
+          "사람이 몸을 낮추자"
+        ],
+        [
+          0.75,
+          "등 위로 올라탄 강아지!"
+        ],
+        [
+          3.1,
+          "다시 땅으로 착지!"
+        ]
+      ],
+      "replay_offset_sec": 0.4
+    },
+    {
+      "id": "PX-9006741",
+      "provider": "pexels",
+      "title": "잔디에서 뛰어오르는 강아지",
+      "page_url": "https://www.pexels.com/video/dog-playing-with-water-9006741/",
+      "creator": "Viktoria B.",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "06e7d4e9b6c644a343baf4d13103e2e0cbf3e7882dfb29584cc4e5bd1caa32e6",
+      "start_sec": 0.5,
+      "payoff_sec": 3.5,
+      "payoff_subject_fraction": [
+        0.38,
+        0.56
+      ],
+      "action_family": "yard_leap",
+      "payoff_priority": 40,
+      "label": "잔디에서 뛰어오르는 강아지",
+      "observed_action": "The dog looks up and springs upward in a yard.",
+      "caption": "잔디에서 펄쩍!",
+      "caption_sequence": [
+        [
+          0.1,
+          "위를 올려다보더니"
+        ],
+        [
+          2.25,
+          "잔디에서 펄쩍!"
+        ]
+      ]
+    },
+    {
+      "id": "PX-8473589",
+      "provider": "pexels",
+      "title": "가방 밖으로 뛰어내리는 강아지",
+      "page_url": "https://www.pexels.com/video/dog-jumping-out-of-a-bag-8473589/",
+      "creator": "Cup of Couple",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "sha256": "85e8e4ebbba9c3aecfb0badc5db502eceb03e03d088d31114a5668b763891d08",
+      "start_sec": 2.875,
+      "payoff_sec": 4.5,
+      "payoff_subject_fraction": [
+        0.31,
+        0.49
+      ],
+      "action_family": "bag_exit",
+      "payoff_priority": 90,
+      "label": "가방 밖으로 뛰어내리는 강아지",
+      "observed_action": "A dog resting inside a bag suddenly jumps down to the right.",
+      "caption": "가방에서 강아지가 폴짝!",
+      "caption_sequence": [],
+      "independent_hook": true
+    }
+  ]
+}

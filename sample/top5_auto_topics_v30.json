@@ -52,6 +52,8 @@
   },
   {
     "topic_id": "dog_surprises",
+    "source_catalog": "sample/top5_dog_source_catalog.json",
+    "mobile_captions": true,
     "headline": "강아지 돌발 행동",
     "video_subject": "강아지들의 예상 밖 행동 TOP5",
     "category": "동물",

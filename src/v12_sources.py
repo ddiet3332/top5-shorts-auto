@@ -40,7 +40,8 @@ def allowed_page(record):
         return False
     p=urllib.parse.urlsplit(str(record.get('page_url','')))
     licensed=urllib.parse.urlsplit(str(record.get('license_url','')))
-    if p.scheme!='https' or p.netloc!=rules['host'] or not p.path.startswith(rules['prefix']):
+    path=p.path.removeprefix('/es-es') if provider=='pexels' else p.path
+    if p.scheme!='https' or p.netloc!=rules['host'] or not path.startswith(rules['prefix']):
         return False
     if licensed.scheme!='https' or licensed.netloc!=rules['license_host']:
         return False
@@ -48,7 +49,7 @@ def allowed_page(record):
         return False
     if provider=='mixkit' and not re.fullmatch(r'/free-stock-video/[^/]+-[0-9]+/?',p.path):
         return False
-    if provider=='pexels' and not re.fullmatch(r'/video/[^/]+-[0-9]+/?',p.path):
+    if provider=='pexels' and not re.fullmatch(r'/video/[^/]+-[0-9]+/?',path):
         return False
     if provider=='pixabay' and not re.fullmatch(r'/videos/[^/]+-[0-9]+/?',p.path):
         return False

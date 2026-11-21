@@ -212,17 +212,19 @@ def cue_with_ass_override(start,end,style,plain_text,x,y,align,layer,override):
     Only constant, internally authored overrides are passed here.
     """
     base=cue(start,end,style,plain_text,x,y,align,layer)
-    marker="}"+plain_text
-    if not base.endswith(marker):
+    prefix,marker,escaped=base.partition("}")
+    if not marker:
         raise ValueError("ASS cue structure changed; refuse malformed subtitle")
-    return base[:-len(plain_text)]+override+plain_text
+    return prefix+marker+override+escaped
 
-def build_dynamic_subtitles(path,topic,items):
+def build_dynamic_subtitles(path,topic,items,*,moving_ending=False,hook_caption=None,
+                            hook_caption_y=1190,mobile_captions=False,segments=SEGMENTS,ending_caption=None):
     subtitle_lines=[]
     # At 360px review size the original topic header was unreadably small.
     # ASS inline overrides preserve the existing 60pt reaction-caption template.
-    subtitle_lines.append(cue_with_ass_override(0,27,"MainTopic",topic["headline"],540,112,8,5,r"{\fs82\bord3}"))
-    subtitle_lines.append(cue_with_ass_override(0,27,"TopFive","TOP5",540,220,8,5,r"{\fs100\bord2}"))
+    title_end=sum(sec for label,sec in segments if moving_ending or label!="outro")
+    subtitle_lines.append(cue_with_ass_override(0,title_end,"MainTopic",topic["headline"],540,112,8,5,r"{\fs82\bord3}"))
+    subtitle_lines.append(cue_with_ass_override(0,title_end,"TopFive","TOP5",540,220,8,5,r"{\fs100\bord2}"))
     # Never render raw provider/source titles as rank labels: Pexels metadata is
     # often long English text and collided with the action in mobile samples.
     # Show short Korean action labels derived from the already-authored
@@ -239,10 +241,10 @@ def build_dynamic_subtitles(path,topic,items):
     # Hook intentionally does not reveal which rank its footage belongs to.
     positions={"hook":None,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
     start=0
-    for label,sec in SEGMENTS:
+    for label,sec in segments:
         end=start+sec
-        if label!="outro":
-            active=positions[label]
+        if label!="outro" or moving_ending:
+            active=1 if label=="outro" else positions.get(label)
             for rank in range(1,6):
                 y=485+(rank-1)*143
                 style="Active" if rank==active else "Rank"
@@ -260,24 +262,38 @@ def build_dynamic_subtitles(path,topic,items):
                     muted_label=f"{rank}위"
                     subtitle_lines.append(cue_with_ass_override(start,end,style,muted_label,35,y,7,5,r"{\alpha&H85&\fs65}"))
             rank_index={"rank5":0,"rank4":1,"rank3":2,"rank2":3,"rank1":4}
-            row=items[rank_index[label]] if label!="hook" else {}
-            reaction=(row.get("caption") or REACTIONS[label]) if label!="hook" else REACTIONS[label]
-            if label!="hook" and row.get("caption_sequence"):
+            row=items[rank_index[label]] if label in rank_index else {}
+            caption_row=items[-1] if label=="outro" else row
+            if mobile_captions:
+                caption_y=hook_caption_y if label=="hook" else caption_row.get("mobile_caption_y",1712)
+                def caption_line(begin,stop,text):
+                    return cue_with_ass_override(begin,stop,"Caption",text,540,caption_y,5,5,
+                                                 r"{\fs86\bord4\shad0\1c&H181818&\3c&HFFFFFF&}")
+            else:
+                caption_y=hook_caption_y if label=="hook" else 1190
+                def caption_line(begin,stop,text):
+                    return cue(begin,stop,"Caption",text,504,caption_y,5)
+            if label=="outro":
+                reaction=ending_caption or "1위 장면 다시 보기"
+            elif label=="hook":
+                reaction=hook_caption or REACTIONS[label]
+            else:
+                reaction=row.get("caption") or REACTIONS[label]
+            if row.get("caption_sequence"):
                 # V37 original scene commentary: setup -> observed payoff.
-                # One line at a time in the LOCKED 60pt x/y design.
+                # Only one reaction line should appear at any point.
                 stages=row["caption_sequence"]
                 points=[float(v[0]) for v in stages]
-                if (not 2<=len(stages)<=3 or points[0]<0 or
+                if (not 1<=len(stages)<=3 or points[0]<0 or
                     any(points[i+1]-points[i]<0.65 for i in range(len(points)-1)) or
                     sec-points[-1]<0.65):
                     raise ValueError("Original commentary timing invalid")
                 for i,(offset,words) in enumerate(stages):
                     stop=start+(float(stages[i+1][0]) if i+1<len(stages) else sec)
-                    subtitle_lines.append(cue(start+float(offset),stop,"Caption",
-                                              str(words),504,1190,5))
+                    subtitle_lines.append(caption_line(start+float(offset),stop,str(words)))
             else:
-                time=start + (0.0 if label=="hook" else min(1.1,sec*.22))
-                subtitle_lines.append(cue(time,end,"Caption",reaction,504,1190,5))
+                time=start + (min(1.1,sec*.22) if label in rank_index else 0.0)
+                subtitle_lines.append(caption_line(time,end,reaction))
         start=end
     path.write_text(ASS_HEAD+"\n".join(subtitle_lines)+"\n",encoding="utf-8")
     return subtitle_lines
@@ -342,7 +358,17 @@ def save_license_and_status(topic,items,recommendations,attempts,output,hook_sou
          "creative_action_human_verified":False,"publication_approved":False},
          ensure_ascii=False,indent=2),encoding="utf-8")
 
-def assemble_video(topic,items,output,hook_source):
+def rank_one_replay_start(top, seconds):
+    """Keep the replay within the same original window used for rank one."""
+    latest=CUT_LENGTHS["rank1"]*top.get("playback_rate",1.0)-seconds
+    if latest<0:
+        raise ValueError("Rank one original window is too short for replay")
+    offset=max(0,min(top.get("replay_offset_sec",latest/2),latest))
+    return top["cut_start"]+offset
+
+
+def assemble_video(topic,items,output,hook_source,*,moving_ending=False,hook_caption=None,
+                   hook_caption_y=1190,mobile_captions=False,segments=SEGMENTS,ending_source=None):
     work=output/"work"
     work.mkdir(parents=True,exist_ok=True)
     segment_files=[]
@@ -350,30 +376,53 @@ def assemble_video(topic,items,output,hook_source):
         raise SourceShortage("NO_DISTINCT_HOOK","검수된 훅 소스가 필요합니다")
     first=hook_source
     hook=work/"part_00.mp4"
-    hook_at=max(0.0,min(first["duration_sec"]-2.1,
+    hook_rate=first.get("playback_rate",1.0)
+    hook_at=max(0.0,min(first["duration_sec"]-segments[0][1]*hook_rate-.1,
                           float(first.get("hook_start",first["cut_start"]+1.3))))
-    for row, seconds in zip(items,CUT_LENGTHS.values(),strict=True):
+    for row, (_,seconds) in zip(items,segments[1:-1],strict=True):
         if identity(first)==identity(row) and (
                 first.get("hook_mode")!="nonoverlapping_rank_source"
-                or not separated(hook_at,row["cut_start"],seconds)):
+                or not separated(hook_at,row["cut_start"],seconds*row.get("playback_rate",1.0))):
             raise ValueError("훅 구간과 순위 구간이 겹칩니다")
-    create_scene(first["local_path"],max(0,hook_at),2,hook)
+    picture_height=1320 if mobile_captions else 1614
+    create_scene(first["local_path"],hook_at,segments[0][1],hook,picture_height=picture_height,
+                 source_crop=first.get("source_crop"),playback_rate=hook_rate)
     segment_files.append(hook)
-    for number,(name,sec) in enumerate(SEGMENTS[1:-1],1):
+    for number,(name,sec) in enumerate(segments[1:-1],1):
         clip=items[number-1]
         part=work/f"part_{number:02}.mp4"
         start=clip["cut_start"]
-        if start+sec>clip["duration_sec"]+.03:
+        rate=clip.get("playback_rate",1.0)
+        if start+sec*rate>clip["duration_sec"]+.03:
             raise ValueError("Source action ends before selected rank cut")
-        create_scene(clip["local_path"],start,sec,part)
+        create_scene(clip["local_path"],start,sec,part,clear_rank_rail=clip.get("clear_rank_rail",False),
+                     picture_height=picture_height,source_crop=clip.get("source_crop"),
+                     playback_rate=rate)
         segment_files.append(part)
-    card=work/"original_5_clip_endcard.jpg"
-    render_dynamic_endcard(items,card)
     ending=work/"part_06.mp4"
-    run(["ffmpeg","-hide_banner","-v","error","-y","-loop","1",
-         "-framerate","24","-i",str(card),"-t","3","-vf","format=yuv420p",
-         "-c:v","libx264","-preset","veryfast","-crf","23",
-         "-r","24","-an",str(ending)],timeout=50)
+    outro_seconds=segments[-1][1]
+    if moving_ending:
+        source=ending_source or items[-1]
+        start=source["cut_start"] if ending_source else rank_one_replay_start(source,outro_seconds)
+        create_scene(source["local_path"],start,outro_seconds,ending,
+                     clear_rank_rail=source.get("clear_rank_rail",False),
+                     picture_height=picture_height,source_crop=source.get("source_crop"))
+        (output/"V32_ENDING_SOURCE.json").write_text(json.dumps({
+            "source_page":source.get("source_page"),
+            "source_start_sec":round(start,3),
+            "source_end_sec":round(start+outro_seconds,3),
+            "mode":"continuation" if ending_source else "rank1_replay",
+            "rank":1,
+            "end_to_start_transition":"HARD_CUT",
+            "publication_approved":False,
+        },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    else:
+        card=work/"original_5_clip_endcard.jpg"
+        render_dynamic_endcard(items,card)
+        run(["ffmpeg","-hide_banner","-v","error","-y","-loop","1",
+             "-framerate","24","-i",str(card),"-t",str(outro_seconds),"-vf","format=yuv420p",
+             "-c:v","libx264","-preset","veryfast","-crf","23",
+             "-r","24","-an",str(ending)],timeout=50)
     segment_files.append(ending)
     listing=work/"files.txt"
     listing.write_text("".join("file '"+str(x.resolve()).replace("'","'\\''")+
@@ -382,12 +431,20 @@ def assemble_video(topic,items,output,hook_source):
     run(["ffmpeg","-hide_banner","-v","error","-y","-f","concat",
          "-safe","0","-i",str(listing),"-c","copy",str(combined)],timeout=90)
     subtitles=work/"captions.ass"
-    build_dynamic_subtitles(subtitles,topic,items)
+    build_dynamic_subtitles(subtitles,topic,items,moving_ending=moving_ending,
+                            hook_caption=hook_caption,hook_caption_y=hook_caption_y,
+                            mobile_captions=mobile_captions,segments=segments,
+                            ending_caption=ending_source["caption"] if ending_source else None)
     audio=work/"synth_music.wav"
-    create_soundtrack(audio)
+    if moving_ending:
+        # The legacy action accents were timed against a different edit.
+        cuts=[sum(sec for _,sec in segments[:i]) for i in range(len(segments))]
+        create_soundtrack(audio,cue_times=cuts,action_accents=False)
+    else:
+        create_soundtrack(audio)
     final=output/"TOP5_AUTO_V29_REVIEW_1080x1920.mp4"
     run(["ffmpeg","-hide_banner","-v","error","-y","-i",str(combined),
-         "-i",str(audio),"-vf",f"ass={subtitles}",
+         "-i",str(audio),"-vf",f"ass={subtitles.as_posix()}",
          "-map","0:v:0","-map","1:a:0",
          "-c:v","libx264","-preset","veryfast","-crf","22","-r","24",
          "-c:a","aac","-b:a","160k","-ar","48000",

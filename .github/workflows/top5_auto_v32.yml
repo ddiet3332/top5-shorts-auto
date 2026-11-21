@@ -6,8 +6,17 @@ on:
     paths:
       - '.github/workflows/top5_auto_v32.yml'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_reviewed_sources.py'
+      - 'sample/top5_*source_catalog.json'
+      - 'src/top5_reviewed_render.py'
+      - 'sample/top5_auto_topics_v30.json'
+      - 'src/top5_auto_v29.py'
+      - 'src/v12_sources.py'
+      - 'src/v12_pexels_audition.py'
+      - 'src/v28_fullscreen_builder.py'
       - 'src/top5_hook_selection.py'
       - 'tests/test_top5_auto_v32.py'
+      - 'tests/test_v37_story.py'
   workflow_dispatch:
     inputs:
       topic:
@@ -41,6 +50,10 @@ jobs:
   make-30-second-review:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        topic: ${{ fromJSON(github.event_name == 'pull_request' && '["cat_surprises","dog_surprises"]' || format('["{0}"]', inputs.topic || 'auto')) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -54,23 +67,128 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Choose topic, add valid video challenger and render original 30s TOP5
         env:
-          TOPIC: ${{ github.event.inputs.topic || 'auto' }}
-        run: python src/top5_auto_v32.py --topic "$TOPIC" --output output/v32_auto
-      - name: Validate entire MP4 with video and audio decoding
+          TOPIC: ${{ matrix.topic }}
         run: |
-          ffmpeg -hide_banner -v error -xerror -i output/v32_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
+          if [ "$TOPIC" = "dog_surprises" ]; then
+            python src/top5_reviewed_render.py --topic "$TOPIC" --output output/v32_auto
+          else
+            python src/top5_auto_v32.py --topic "$TOPIC" --output output/v32_auto
+          fi
+      - name: Validate MP4 and extract frame and audio evidence
+        run: |
+          cd output/v32_auto
+          video=TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+          ffmpeg -hide_banner -v error -xerror -i "$video" -map 0:v:0 -map 0:a:0 -f null -
+          ffprobe -v error -show_streams -of json "$video" > V32_MP4_STREAMS.json
+          # Limit measurements to the MP4 presentation interval. Some AAC
+          # decoders expose the unused samples in the last encoded block.
+          ffmpeg -hide_banner -v error -i "$video" -map 0:a:0 -af atrim=end_sample=1440000 -c:a pcm_f32le V32_AUDIO.wav
+          ffmpeg -hide_banner -i V32_AUDIO.wav \
+            -af 'ebur128=peak=true,astats,silencedetect=noise=-50dB:d=0.2' \
+            -f null - 2> V32_AUDIO_METRICS.txt
+          ffprobe -v error -select_streams a:0 -show_entries frame=best_effort_timestamp,nb_samples \
+            -of csv=p=0 "$video" > V32_AUDIO_FRAMES.csv
+          python - <<'PY'
+          import csv
+          import json
+          from pathlib import Path
+
+          video, audio = json.loads(Path("V32_MP4_STREAMS.json").read_text())["streams"]
+          assert (video["width"], video["height"], video["nb_frames"]) == (1080, 1920, "720")
+          assert video["avg_frame_rate"] == "24/1"
+          assert audio["sample_rate"] == "48000"
+          assert all(float(s["start_time"]) == 0 and float(s["duration"]) == 30 for s in (video, audio))
+          with open("V32_AUDIO_FRAMES.csv", newline="") as frames:
+              end = 0
+              for start, samples in csv.reader(frames):
+                  assert int(start) == end, f"Audio timestamp discontinuity at {start}, expected {end}"
+                  end += int(samples)
+          presented_samples = int(audio["duration_ts"])
+          assert audio["time_base"] == "1/48000" and presented_samples == 30 * 48000
+          padding = end - presented_samples
+          assert 0 <= padding < 1024, f"Unexpected AAC sample count: {end}"
+          Path("V32_AUDIO_QA.json").write_text(json.dumps({
+              "start_offset_sec": 0, "presented_samples_per_channel": presented_samples,
+              "decoded_samples_per_channel": end, "aac_tail_padding_samples": padding,
+              "audio_timestamp_continuity": "PASS", "listening": "UNVERIFIED",
+          }, indent=2) + "\n")
+          print(f"1080x1920, 720 frames, 30s audio ({presented_samples} samples/channel, {padding} decoder padding)")
+          PY
+          if [ -f REVIEWED_SOURCE_SELECTION.json ]; then
+            python - <<'PY'
+          import io
+          import json
+          import subprocess
+          from pathlib import Path
+          from PIL import Image
+
+          rows = json.loads(Path("REVIEWED_SOURCE_SELECTION.json").read_text())["selected"]
+          sheet = Image.new("RGB", (360*len(rows), 640))
+          for index, (row, start) in enumerate(zip(rows, (2, 6, 11, 15, 21), strict=True)):
+              timestamp = start + row["payoff_sec"] - row["cut_start"]
+              data = subprocess.check_output([
+                  "ffmpeg", "-v", "error", "-ss", str(timestamp),
+                  "-i", "TOP5_AUTO_V29_REVIEW_1080x1920.mp4",
+                  "-vf", "scale=360:640", "-frames:v", "1", "-c:v", "png", "-f", "image2pipe", "-",
+              ])
+              sheet.paste(Image.open(io.BytesIO(data)), (360*index, 0))
+          sheet.save("V32_PAYOFF_PHONE_QA.jpg", quality=92)
+          PY
+          fi
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf 'fps=4,scale=216:384,tile=8x3' -q:v 3 'V32_TIMELINE_%02d.jpg'
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='eq(n,0)+eq(n,47)+eq(n,48)+eq(n,143)+eq(n,144)+eq(n,263)+eq(n,264)+eq(n,359)+eq(n,360)+eq(n,503)+eq(n,504)+eq(n,647)+eq(n,648)+eq(n,719)',scale=270:480,tile=7x2" \
+            -frames:v 1 -update 1 -q:v 3 V32_CUT_BOUNDARIES.jpg
+          # Rows: 0.000–0.167s, 26.833–27.000s, 27.042–27.208s, 29.792–29.958s.
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='between(n,0,4)+between(n,644,653)+between(n,715,719)',scale=216:384,tile=5x4" \
+            -frames:v 1 -update 1 -q:v 3 V32_ENDING_BOUNDARIES.jpg
+          # 0, 0.25, 0.5, 1, 1.5 and 2 seconds. Each tile is 360x640.
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='eq(n,0)+eq(n,6)+eq(n,12)+eq(n,24)+eq(n,36)+eq(n,48)',scale=360:640,tile=3x2" \
+            -frames:v 1 -update 1 -q:v 2 V32_HOOK_PHONE_QA.jpg
+          # One 360px-wide rendered caption sample per segment.
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='eq(n,12)+eq(n,140)+eq(n,208)+eq(n,322)+eq(n,480)+eq(n,570)+eq(n,696)',scale=360:640,tile=4x2" \
+            -frames:v 1 -update 1 -q:v 2 V32_CAPTIONS_PHONE_QA.jpg
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='between(n,504,719)*not(mod(n,12))+eq(n,719)',scale=270:480,tile=5x4" \
+            -frames:v 1 -update 1 -q:v 2 V32_RANK1_REPLAY_QA.jpg
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='between(n,48,144)*not(mod(n,8))',scale=270:480,tile=5x3" \
+            -frames:v 1 -update 1 -q:v 2 V32_RANK5_BOX_QA.jpg
+          ffmpeg -hide_banner -v error -i "$video" \
+            -vf "select='eq(n,266)+eq(n,284)+eq(n,306)+eq(n,324)+eq(n,336)+eq(n,358)',scale=360:640,tile=3x2" \
+            -frames:v 1 -update 1 -q:v 2 V32_RANK3_PAYOFF_QA.jpg
       - name: Keep both video and not-approved rights evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TOP5-V32-auto-review-${{ github.run_number }}
+          name: TOP5-V32-${{ matrix.topic }}-review-${{ github.run_number }}
           path: |
             output/v32_auto/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
             output/v32_auto/V29_ACTUAL_12FRAME_QA.jpg
             output/v32_auto/V32_TECHNICAL_QA.json
             output/v32_auto/SELECTED_SOURCE_PROVENANCE.json
+            output/v32_auto/REVIEWED_SOURCE_SELECTION.json
+            output/v32_auto/V32_PAYOFF_PHONE_QA.jpg
             output/v32_auto/INDEPENDENT_HOOK_AUDIT.json
             output/v32_auto/V32_RENDERED_HOOK_QA.jpg
+            output/v32_auto/V32_ENDING_SOURCE.json
+            output/v32_auto/work/captions.ass
+            output/v32_auto/V32_MP4_STREAMS.json
+            output/v32_auto/V32_AUDIO.wav
+            output/v32_auto/V32_AUDIO_METRICS.txt
+            output/v32_auto/V32_AUDIO_QA.json
+            output/v32_auto/V32_TIMELINE_*.jpg
+            output/v32_auto/V32_CUT_BOUNDARIES.jpg
+            output/v32_auto/V32_ENDING_BOUNDARIES.jpg
+            output/v32_auto/V32_HOOK_PHONE_QA.jpg
+            output/v32_auto/V32_CAPTIONS_PHONE_QA.jpg
+            output/v32_auto/V32_RANK1_REPLAY_QA.jpg
+            output/v32_auto/V32_RANK5_BOX_QA.jpg
+            output/v32_auto/V32_RANK3_PAYOFF_QA.jpg
             output/v32_auto/V32_CHALLENGER_SELECTION.json
             output/v32_auto/V35_SOFA_CHALLENGER_QA.json
             output/v32_auto/V36_CANDIDATE_REPLACEMENTS_QA.json

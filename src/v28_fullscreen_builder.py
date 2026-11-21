@@ -15,6 +15,7 @@ import hashlib
 import io
 import json
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps
@@ -130,18 +131,42 @@ def render_endcard(selected,out):
     d.text((80,1680),"영상에서 직접 고른 5개의 장면",font=ft(30),fill="#D5E1EA")
     return img.save(out,quality=92)
 
-def create_scene(source,start,seconds,destination):
+@dataclass(frozen=True, kw_only=True)
+class SourceCrop:
+    width: int
+    height: int
+    y: int
+    start_x: int
+    end_x: int
+    pan_start: float
+    pan_end: float
+
+
+def create_scene(source,start,seconds,destination,*,clear_rank_rail=False,
+                 picture_height=1614,source_crop=None,playback_rate=1.0):
     # Render source exactly once: the former split/back/front composition
     # duplicated wide footage in the exposed white margins (rank 2).
     # Solid white padding is deliberately NOT a blurred/source-video backdrop.
     # Keep the complete source image, including action near frame edges.
+    left=270 if clear_rank_rail else 0
+    available_width=W-left
+    if not 0<playback_rate<=1:
+        raise ValueError("Scene playback rate must be in (0, 1]")
+    crop_filter=""
+    if source_crop is not None:
+        # FFmpeg's t is relative to this seek. Use original time so a replay
+        # of the same action gets exactly the same framing.
+        crop=source_crop
+        pan=(f"{crop.start_x}+({crop.end_x}-{crop.start_x})*"
+             f"clip((t+{start}-{crop.pan_start})/({crop.pan_end}-{crop.pan_start}),0,1)")
+        crop_filter=f"crop={crop.width}:{crop.height}:'{pan}':{crop.y},"
     filtergraph=(
-        "[0:v]scale=1080:1614:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,"
+        f"[0:v]{crop_filter}scale={available_width}:{picture_height}:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,"
         "setsar=1,"
-        "pad=1080:1614:(ow-iw)/2:(oh-ih)/2:color=white,"
+        f"pad=1080:{picture_height}:{left}+({available_width}-iw)/2:(oh-ih)/2:color=white,"
         "pad=1080:1920:0:306:color=white,"
         "drawbox=x=0:y=420:w=270:h=850:color=white@0.97:t=fill,"
-        "fps=24,format=yuv420p[v]")
+        f"setpts=(PTS-STARTPTS)/{playback_rate},fps=24,format=yuv420p[v]")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
          "-filter_complex",filtergraph,"-map","[v]",
          "-frames:v",str(int(seconds*FPS)),"-an",

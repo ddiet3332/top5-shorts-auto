@@ -1,0 +1,296 @@
+{
+  "baseline_sha256": "23f626c8855f26953d8dab7a8688fbe00e89d040b51da19fee1525ee9cfdc9db",
+  "segments": [
+    [
+      "hook",
+      2
+    ],
+    [
+      "rank5",
+      5
+    ],
+    [
+      "rank4",
+      5
+    ],
+    [
+      "rank3",
+      5
+    ],
+    [
+      "rank2",
+      5
+    ],
+    [
+      "rank1",
+      5
+    ],
+    [
+      "outro",
+      3
+    ]
+  ],
+  "ending_start_sec": 9.25,
+  "ending_caption": "착지 뒤엔 장난감 줄다리기",
+  "edits": {
+    "PX-8473589": {
+      "start_sec": 4.17,
+      "payoff_sec": 4.6,
+      "caption": "가방 위로 고개, 곧바로 폴짝!"
+    },
+    "PX-9006741": {
+      "start_sec": 1,
+      "payoff_sec": 4,
+      "payoff_priority": 62,
+      "caption_sequence": [
+        [
+          0.1,
+          "풀밭에서 몸을 낮추더니"
+        ],
+        [
+          2.65,
+          "뒷발로 차고 위로 펄쩍"
+        ]
+      ]
+    },
+    "PX-7515923": {
+      "start_sec": 17,
+      "payoff_sec": 20.5,
+      "caption_sequence": [
+        [
+          0.1,
+          "가만히 앉아 위를 보더니"
+        ],
+        [
+          3.35,
+          "두 발로 서서 초록 공을 덥석"
+        ]
+      ]
+    },
+    "PX-7628753": {
+      "start_sec": 0.35,
+      "payoff_sec": 1.5,
+      "caption_sequence": [
+        [
+          0.08,
+          "사람이 몸을 낮추자"
+        ],
+        [
+          0.78,
+          "등 위에 올라 균형을 잡아요"
+        ],
+        [
+          3.02,
+          "등에서 뛰어내려 착지"
+        ]
+      ]
+    }
+  },
+  "shots": {
+    "hook": {
+      "source_id": "PX-8473589",
+      "crop": [
+        1380,
+        970,
+        55,
+        230,
+        540,
+        4.28,
+        5.02
+      ],
+      "rate": 0.8,
+      "box": [
+        0.44,
+        0.2,
+        0.72,
+        0.66
+      ],
+      "action": "bag_exit",
+      "observation": "가방 안에서 고개를 내밀고 오른쪽으로 뛰어내림"
+    },
+    "rank5": {
+      "source_id": "PX-9006741",
+      "crop": [
+        872,
+        720,
+        0,
+        350,
+        350,
+        0,
+        1
+      ],
+      "box": [
+        0.56,
+        0.09,
+        0.82,
+        0.77
+      ],
+      "action": "yard_leap",
+      "observation": "낮게 웅크린 뒤 잔디에서 뒷발로 도약"
+    },
+    "rank4": {
+      "source_id": "PX-33268466",
+      "crop": [
+        1720,
+        1080,
+        0,
+        200,
+        200,
+        0,
+        1
+      ],
+      "box": [
+        0.26,
+        0.16,
+        0.95,
+        0.91
+      ],
+      "action": "water_shake",
+      "observation": "서 있던 보더콜리가 몸을 크게 틀어 물방울이 퍼짐"
+    },
+    "rank3": {
+      "source_id": "PX-8646067",
+      "crop": [
+        820,
+        1240,
+        600,
+        108,
+        0,
+        8.45,
+        9.6
+      ],
+      "rate": 0.35,
+      "box": [
+        0.42,
+        0.5,
+        0.68,
+        0.8
+      ],
+      "action": "skate_dismount",
+      "observation": "퍼그가 보드 위에서 가까이 다가와 앞발부터 내려옴"
+    },
+    "rank2": {
+      "source_id": "PX-7515923",
+      "box": [
+        0.2,
+        0.03,
+        0.82,
+        0.83
+      ],
+      "action": "catch",
+      "observation": "앉았다가 몸을 일으켜 초록 공을 입으로 받음"
+    },
+    "rank1": {
+      "source_id": "PX-7628753",
+      "crop": [
+        1080,
+        1530,
+        260,
+        0,
+        0,
+        0,
+        1
+      ],
+      "box": [
+        0.36,
+        0.17,
+        0.84,
+        0.47
+      ],
+      "action": "back_trick",
+      "observation": "몸을 낮춘 사람 등 위로 뛰어올라 잠시 균형을 잡고 착지"
+    },
+    "outro": {
+      "source_id": "PX-7628753",
+      "crop": [
+        1080,
+        1530,
+        260,
+        0,
+        0,
+        0,
+        1
+      ],
+      "box": [
+        0.27,
+        0.45,
+        0.68,
+        0.92
+      ],
+      "action": "tug",
+      "observation": "착지 이후 원형 장난감을 사람과 당김",
+      "payoff_sec": 9.75
+    }
+  },
+  "replacement_audition": "sample/dog_replacement_audition.json",
+  "additional_sources": [
+    {
+      "provider": "pexels",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "id": "PX-33268466",
+      "page_url": "https://www.pexels.com/video/playful-dog-shaking-off-water-in-lake-33268466/",
+      "sha256": "ef00c6f0e2cf780ac683cc2f7d0fbd670cd7c87a607cfbeec60778dc08d594ff",
+      "title": "물방울을 털어내는 보더콜리",
+      "creator": "Brixiv",
+      "start_sec": 3.5,
+      "payoff_sec": 6.5,
+      "payoff_subject_fraction": [
+        0.67,
+        0.76
+      ],
+      "action_family": "water_shake",
+      "payoff_priority": 65,
+      "label": "물방울을 털어내는 보더콜리",
+      "observed_action": "서 있던 보더콜리가 몸을 크게 틀어 물방울이 퍼짐",
+      "caption": "한 번 털자 물방울이 사방으로",
+      "caption_sequence": [
+        [
+          0.1,
+          "물가에 가만히 서 있다가"
+        ],
+        [
+          1.6,
+          "한 번 털자 물방울이 사방으로"
+        ]
+      ],
+      "playback_rate": 1
+    },
+    {
+      "provider": "pexels",
+      "license_label": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "id": "PX-8646067",
+      "page_url": "https://www.pexels.com/video/a-young-woman-skateboarding-with-her-dog-8646067/",
+      "sha256": "81e912c5ed4795f5d9a25e319983e4550cc15514b94f3f7f23286385ea03364b",
+      "title": "스케이트보드에서 내려오는 퍼그",
+      "creator": "Los Muertos Crew",
+      "start_sec": 8,
+      "payoff_sec": 9.25,
+      "payoff_subject_fraction": [
+        0.28,
+        0.32
+      ],
+      "action_family": "skate_dismount",
+      "payoff_priority": 72,
+      "label": "스케이트보드에서 내려오는 퍼그",
+      "observed_action": "멀리서 보드가 다가오며 발 사이에 탄 퍼그가 드러나고 바닥으로 내려옴",
+      "caption": "앞발부터 보드 밖으로",
+      "caption_sequence": [
+        [
+          0.1,
+          "보드 위에 선 퍼그!"
+        ],
+        [
+          2.8,
+          "앞발부터 보드 밖으로"
+        ],
+        [
+          4,
+          "보드에서 내려왔어요!"
+        ]
+      ],
+      "playback_rate": 0.35
+    }
+  ]
+}
