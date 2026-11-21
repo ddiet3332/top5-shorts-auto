@@ -71,7 +71,53 @@ FALLBACK=[
 # Deliberately conservative subject hypotheses from original filenames.
 # A matching *title* only defines a question for the model, never certifies
 # that the selected 6-second frames actually depict the described event.
+SUPPORTED_TOPICS = {"cat_surprises", "dog_surprises", "human_moments",
+                    "objects_oddities", "nature_moments"}
+
+# The expected action competes with *specific* alternative interpretations,
+# rather than assuming that a stock title proves something happened on-screen.
+# Coarse categories below are hints only; relative logits are not calibrated.
 GENERIC_SCENES=[
+    (("geyser", "strokkur"),[
+        "A natural geyser erupts upward with a visible plume of water.",
+        "Steam hangs over a landscape without a water eruption.",
+        "A wide static rocky landscape without a visible geyser.",
+        "A city street scene with buildings and no geyser."]),
+    (("flood", "flooding", "flooded"),[
+        "Overflowing floodwater visibly covers streets, buildings or land.",
+        "An old town with dry streets and no visible floodwater.",
+        "A calm river flowing within its normal riverbanks.",
+        "An empty landscape without water or a flood."]),
+    (("aurora", "northern lights", "borealis"),[
+        "Bright aurora lights form visible colored bands in the night sky.",
+        "A dark night sky without clearly visible aurora lights.",
+        "An ordinary cloudy daytime sky.",
+        "A street of buildings photographed at night."]),
+    (("tornado", "twister", "waterspout"),[
+        "A visible rotating tornado funnel extends below a storm cloud.",
+        "Dark ordinary storm clouds without a distinct tornado funnel.",
+        "A calm cloudy sky without strong weather.",
+        "A person walking along a road."]),
+    (("avalanche", "snow slide"),[
+        "A fast-moving avalanche of snow flows downhill.",
+        "A snow-covered static mountain with no avalanche.",
+        "A calm mountain landscape with no moving snow.",
+        "A busy city street."]),
+    (("glacier",),[
+        "A glacier or moving ice is visible in a cold landscape.",
+        "A snowy landscape without any visible glacier.",
+        "An ordinary forest with no snow or ice.",
+        "A street full of people."]),
+    (("ocean", "surf", "wave"),[
+        "Large ocean waves crash with moving white foam.",
+        "Calm ocean water without breaking waves.",
+        "A still river or lake with no crashing waves.",
+        "A city scene without ocean water."]),
+    (("hail",),[
+        "Hailstones fall rapidly onto the ground during a storm.",
+        "Rain falls gently without hailstones.",
+        "A dry road on a clear day.",
+        "A cloudy sky with no precipitation."]),
     (("waterfall","cascading","cascade"),[
         "A video showing a natural waterfall flowing over a rocky edge.",
         "A video showing a calm lake without a waterfall.",
@@ -104,8 +150,36 @@ GENERIC_SCENES=[
         "A video of an empty street with no people."]),
 ]
 
-def prompts_for(title,label):
+def prompts_for(title,label,topic_id=None):
+    if topic_id is not None and topic_id not in SUPPORTED_TOPICS:
+        raise ValueError("UNVERIFIED_OR_UNSUPPORTED_TOPIC_CONTEXT")
     key=(title+" "+label).lower()
+    if topic_id in ("nature_moments","objects_oddities","human_moments"):
+        for terms,arr in GENERIC_SCENES:
+            if any(term in key for term in terms):
+                return arr
+        if topic_id=="human_moments":
+            return [
+                "A real person moves, dances, or performs a physical action.",
+                "Stylized dancing silhouettes or abstract human graphics.",
+                "A static crowd without a clear individual physical action.",
+                "An empty indoor room with no people."]
+        # Unknown object/nature filenames are genuinely inconclusive.
+        return None
+    if topic_id=="cat_surprises":
+        # IDs such as Pexels PX-15135238 are not semantic titles, but their
+        # *verified production topic* makes cat-vs-empty prompts appropriate.
+        for terms,arr in SCENES:
+            if any(t.lower() in key for t in terms):
+                return arr
+        return FALLBACK
+    if topic_id=="dog_surprises":
+        return [
+            "A dog runs, jumps or plays actively.",
+            "A dog sits still without playful movement.",
+            "A dog walks slowly without interacting with anything.",
+            "A scene without any dog."]
+
     # Do not evaluate real object, nature, or human footage as cats.
     if not any(k in key for k in ("cat","kitten","katz","chloé","moomin","larry","felis","dog","puppies","canine","hund","perro")):
         for terms,arr in GENERIC_SCENES:
@@ -198,14 +272,61 @@ def summary(flags):
             "youtube_monetization_approved":False,
             "publication_approved":False}
 
+def verified_topic_context(path):
+    """Read a topic chosen by the actual upstream render, never guessed from a filename."""
+    if path is None:
+        return None
+    data=json.loads(Path(path).read_text(encoding="utf-8"))
+    topic=data.get("chosen_topic")
+    if topic not in SUPPORTED_TOPICS:
+        raise ValueError("UNVERIFIED_OR_UNSUPPORTED_TOPIC_CONTEXT")
+    return topic
+
+
+def repair_worklist(ranks,topic):
+    """Prioritize candidate replacement and caption re-review; never fabricate a story."""
+    items=[]
+    for row in ranks:
+        flag=row["verdict"]["flag"]
+        motion_proxy=row["motion_proxy"]
+        low_motion=motion_proxy["fraction_low_change"] >= 0.7
+        if flag=="POSSIBLE_CAPTION_SCENE_MISMATCH":
+            disposition="CHECK_SOURCE_CUT_AND_REPLACE_IF_MISMATCH_CONFIRMED"
+        elif flag=="UNSUPPORTED_SUBJECT_NEEDS_EDITORIAL_REVIEW":
+            disposition="VERIFY_SUBJECT_WITH_REAL_FRAMES_BEFORE_WRITING"
+        elif low_motion:
+            disposition="CHECK_ACTION_PAYOFF_AND_TIMING"
+        else:
+            disposition="VERIFY_ACTUAL_EVENT_BEFORE_WRITING"
+        items.append({
+            "rank":row["rank"],
+            "original_title":row["original_title"],
+            "source_topic":topic,
+            "relative_signal":flag,
+            "low_motion_advisory":low_motion,
+            "repair_priority":0 if row["rank"]==1 and flag!="RELATIVE_TEXT_VIDEO_MATCH_ONLY" else
+                              1 if flag=="POSSIBLE_CAPTION_SCENE_MISMATCH" else
+                              2 if flag=="UNSUPPORTED_SUBJECT_NEEDS_EDITORIAL_REVIEW" else 3,
+            "next_action":disposition,
+            "actual_action_confirmed":False,
+            "suggested_creative_caption":None,
+            "caption_ready_to_render":False,
+            "ranking_payoff_verified":False,
+            "publisher_rights_verified":False,
+        })
+    return sorted(items,key=lambda item:(item["repair_priority"],-item["rank"]))
+
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--video",type=Path,required=True)
     ap.add_argument("--selection",type=Path,required=True)
     ap.add_argument("--output",type=Path,required=True)
+    ap.add_argument("--topic-file",type=Path)
     args=ap.parse_args()
     args.output.mkdir(parents=True,exist_ok=True)
     rows=verify(args.video,args.selection)
+    topic=verified_topic_context(args.topic_file)
     import torch
     from transformers import XCLIPProcessor,XCLIPModel
     torch.set_num_threads(2)
@@ -216,7 +337,7 @@ def main():
         times=sample_times(start,end)
         frames=[take(args.video,t) for t in times]
         allframes.append((rank,frames))
-        prompts=prompts_for(src["title"],src.get("label",""))
+        prompts=prompts_for(src["title"],src.get("label",""),topic)
         if prompts is None:
             # Filename/label insufficient for defensible scene hypothesis.
             # Include its actual frames in storyboard, but no false model vote.
@@ -245,6 +366,8 @@ def main():
     flags=[r["verdict"]["flag"] for r in results]
     report={
       "model":MODEL,"status":"REVIEW_ONLY_NEVER_PUBLISH",
+      "upstream_verified_topic":topic,
+      "topic_bound_to_actual_render":topic is not None,
       "uses_free_open_source_model_not_paid_API":True,
       "method":"8-frame X-CLIP video/text comparison, 4 English prompts per rank",
       "dataset":"Kinetics-400",
@@ -266,6 +389,20 @@ def main():
           margin=r["verdict"]["expected_minus_best_alternative"]))
     lines+=["","All source rights, third-party permissions, YPP and publication: **NOT CLEARED**."]
     (args.output/"V31_SEMANTIC_QA.md").write_text("\n".join(lines)+"\n",encoding="utf-8")
+    worklist={
+        "schema_version":1,
+        "actual_upstream_topic":topic,
+        "topic_context_present":topic is not None,
+        "editorial_score_100":None,
+        "rights_cleared":False,
+        "publication_approved":False,
+        "generated_creative_captions":False,
+        "automatic_source_replacement_executed":False,
+        "method":"X-CLIP prompt-relative comparison + real 8-frame motion cues, advisory only",
+        "items":repair_worklist(results,topic),
+    }
+    (args.output/"TOP5_EDITORIAL_REPAIR_WORKLIST.json").write_text(
+        json.dumps(worklist,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
     print("V31 DONE: SEMANTIC ADVISORY ONLY",flush=True)
 
 if __name__=="__main__":main()
