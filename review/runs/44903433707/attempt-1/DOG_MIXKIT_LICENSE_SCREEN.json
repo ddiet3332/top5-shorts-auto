@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "provider": "mixkit",
+  "status": "FREE_LICENSE_PAGES_FOUND",
+  "free_license_page_candidates": [
+    {
+      "id": "MK-101230",
+      "provider": "mixkit",
+      "source_url": "https://mixkit.co/free-stock-video/girl-doing-tricks-with-dog-101230/",
+      "title": "Girl Doing Tricks with Dog",
+      "rank_target": "rank2",
+      "action_family_hypothesis": "dog_tricks",
+      "license_class": "FREE",
+      "eligible_for_commercial_license_screen": true,
+      "metadata_review": "OFFICIAL_PAGE_FREE_LICENSE_CLAIM",
+      "download_status": "NOT_ATTEMPTED",
+      "semantic_review": "UNVERIFIED",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    },
+    {
+      "id": "MK-1549",
+      "provider": "mixkit",
+      "source_url": "https://mixkit.co/free-stock-video/dog-jumping-off-a-log-1549/",
+      "title": "Dog jumping off a log",
+      "rank_target": "rank5",
+      "action_family_hypothesis": "log_jump",
+      "license_class": "FREE",
+      "eligible_for_commercial_license_screen": true,
+      "metadata_review": "OFFICIAL_PAGE_FREE_LICENSE_CLAIM",
+      "download_status": "NOT_ATTEMPTED",
+      "semantic_review": "UNVERIFIED",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    },
+    {
+      "id": "MK-101245",
+      "provider": "mixkit",
+      "source_url": "https://mixkit.co/free-stock-video/pov-shot-of-happy-dog-playing-101245/",
+      "title": "POV Shot of Happy Dog Playing",
+      "rank_target": "rank2",
+      "action_family_hypothesis": "pov_chase",
+      "license_class": "FREE",
+      "eligible_for_commercial_license_screen": true,
+      "metadata_review": "OFFICIAL_PAGE_FREE_LICENSE_CLAIM",
+      "download_status": "NOT_ATTEMPTED",
+      "semantic_review": "UNVERIFIED",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    }
+  ],
+  "commercially_blocked": [
+    {
+      "id": "MK-36528",
+      "reason": "MIXKIT_RESTRICTED_OR_UNVERIFIED_LICENSE",
+      "publication_approved": false
+    }
+  ],
+  "preview_count": 0,
+  "publication_approved": false,
+  "next_action": "VERIFY_OFFICIAL_MEDIA_DOWNLOAD_AND_VISUAL_PAYOFF",
+  "note": "Free license page classification is not proof of content ownership or video monetization."
+}
