@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "scope": "Only these exact five Pixabay original-byte hashes, canonical source pages, topic and 6s start offsets. Editorial rejection of observed weak cut; not a global clip/license verdict. If better original cut exists, it remains eligible.",
+  "reviewed_video": "TOP5_REVIEW_1080x1920.mp4",
+  "reviewed_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44931116936",
+  "rejected_windows": [
+    {
+      "topic": "강아지의 웃긴 행동 TOP5",
+      "provider": "pixabay",
+      "source_id": 77509,
+      "sha256": "2d637cbad18d3dbe0ee186b544a57d005be2780b7fcd8635c313b3e5a52aafad",
+      "source_page": "https://pixabay.com/videos/id-77509/",
+      "source_start_sec": 0,
+      "tolerance_sec": 0.12,
+      "observed_rank": 5,
+      "review_reason": "Sitting then reclining on grass; only routine posture changes, no visible comic setup/payoff in sampled selected interval.",
+      "review_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44931116936",
+      "evidence": "2026-11-22 PR V59 actual 30-second MP4 (3 rendered rank frames per source) + 9 source-wide frames per original; approximate temporal sampling, not full motion semantics"
+    },
+    {
+      "topic": "강아지의 웃긴 행동 TOP5",
+      "provider": "pixabay",
+      "source_id": 77534,
+      "sha256": "225da89b135971cd76368affad021bb0185c24e57bf1512aaddd61a9b10e92dd",
+      "source_page": "https://pixabay.com/videos/id-77534/",
+      "source_start_sec": 1.147,
+      "tolerance_sec": 0.12,
+      "observed_rank": 4,
+      "review_reason": "Dog repeatedly reaches toward person's hand; consistent interaction without a notable surprise or reversal in sampled rank interval.",
+      "review_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44931116936",
+      "evidence": "2026-11-22 PR V59 actual 30-second MP4 (3 rendered rank frames per source) + 9 source-wide frames per original; approximate temporal sampling, not full motion semantics"
+    },
+    {
+      "topic": "강아지의 웃긴 행동 TOP5",
+      "provider": "pixabay",
+      "source_id": 111252,
+      "sha256": "5f2ccdaef8e44f10175087a3381bd1325adf7ff01b1bb4ce733f8a65688fbd80",
+      "source_page": "https://pixabay.com/videos/id-111252/",
+      "source_start_sec": 17,
+      "tolerance_sec": 0.12,
+      "observed_rank": 3,
+      "review_reason": "Dog moves in a small colorful bed then sits upright; visible movement, but not a clearly established humorous payoff for rank three.",
+      "review_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44931116936",
+      "evidence": "2026-11-22 PR V59 actual 30-second MP4 (3 rendered rank frames per source) + 9 source-wide frames per original; approximate temporal sampling, not full motion semantics"
+    },
+    {
+      "topic": "강아지의 웃긴 행동 TOP5",
+      "provider": "pixabay",
+      "source_id": 77626,
+      "sha256": "a401fc52b7a808aef473a50b8d64ab4d3306e4d158a09e235478c9236b3e57db",
+      "source_page": "https://pixabay.com/videos/id-77626/",
+      "source_start_sec": 0,
+      "tolerance_sec": 0.12,
+      "observed_rank": 2,
+      "review_reason": "Dog in yellow flower field looks around; visually pleasant, no discernible comedic action/turn in selected six seconds.",
+      "review_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44931116936",
+      "evidence": "2026-11-22 PR V59 actual 30-second MP4 (3 rendered rank frames per source) + 9 source-wide frames per original; approximate temporal sampling, not full motion semantics"
+    },
+    {
+      "topic": "강아지의 웃긴 행동 TOP5",
+      "provider": "pixabay",
+      "source_id": 77511,
+      "sha256": "685d4e0574321e254005421d4609c5cc44ed256e5c8a3d865339da195c7e09a5",
+      "source_page": "https://pixabay.com/videos/id-77511/",
+      "source_start_sec": 6.343,
+      "tolerance_sec": 0.12,
+      "observed_rank": 1,
+      "review_reason": "Husky panting and moving head on ground; no strong closing-rank humorous or surprising payoff in rendered + source samples.",
+      "review_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44931116936",
+      "evidence": "2026-11-22 PR V59 actual 30-second MP4 (3 rendered rank frames per source) + 9 source-wide frames per original; approximate temporal sampling, not full motion semantics"
+    }
+  ],
+  "license_verified": false,
+  "editorial_score_verified": false,
+  "publication_approved": false
+}
