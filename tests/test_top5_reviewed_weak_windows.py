@@ -14,9 +14,10 @@ REGISTRY=ROOT/"review/top5_weak_source_windows.json"
 
 
 class ReviewedWeakSceneTests(unittest.TestCase):
-    def test_two_actual_nature_cut_rejections_are_not_global_source_bans(self):
+    def test_actual_nature_and_object_cut_rejections_are_scoped(self):
         rows=json.loads(REGISTRY.read_text())["rejected_windows"]
-        self.assertEqual(len(rows),2)
+        self.assertEqual(len(rows),5)
+        self.assertEqual({x["original_rank"] for x in rows if x["topic_id"] == "objects_oddities"}, {1, 2, 5})
         for row in rows:
             args=(row["topic_id"],row["title"],row["sha256"],row["start_sec"])
             self.assertIsInstance(reviewed_weak_window(*args),str)
@@ -29,6 +30,7 @@ class ReviewedWeakSceneTests(unittest.TestCase):
             self.assertIsNone(reviewed_weak_window(
                 row["topic_id"],row["title"]+" different",row["sha256"],row["start_sec"]))
         self.assertFalse(json.loads(REGISTRY.read_text())["publication_approved"])
+        self.assertTrue(all("original_rank" in x and len(x["sha256"]) == 64 for x in rows))
 
     def test_source_selector_skips_exact_reviewed_weak_cut_in_actual_candidate_loop(self):
         weak=json.loads(REGISTRY.read_text())["rejected_windows"][0]
