@@ -308,10 +308,10 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 "method":"filename named-landmark hint, not visual action recognition",
                 "editorial_score":None,
                 "rights_verified":False,"publication_approved":False,
-            },ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+            },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
         if len(distinct)<5:
             (Path(out)/"V30_CANDIDATES.json").write_text(
-                json.dumps(attempts,ensure_ascii=False,indent=2)+"\\n",encoding="utf-8")
+                json.dumps(attempts,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
             raise SourceShortage("DISTINCT_SCENE_SHORTAGE",
                 f"겹치지 않는 명칭의 자연 원본 구간 {len(distinct)}/5",attempts)
         accepted=distinct
