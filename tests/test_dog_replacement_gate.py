@@ -54,6 +54,25 @@ class ReplacementGateTests(unittest.TestCase):
         self.assertEqual([d.status for d in result],
                          ["REPLACEMENT_ELIGIBLE", "NO_UPGRADE"])
 
+    def test_malformed_hash_rejected(self):
+        c = candidate()
+        c["sha256"] = "z" * 64
+        self.assertEqual(evaluate_candidate("rank5", c, used_ids=set(),
+                         used_actions=set(), incumbent_score=60).reason,
+                         "MISSING_VERIFIED_HASH")
+
+    def test_nan_score_rejected(self):
+        c = candidate(score=float("nan"))
+        self.assertEqual(evaluate_candidate("rank5", c, used_ids=set(),
+                         used_actions=set(), incumbent_score=60).reason,
+                         "NONFINITE_TIMING_OR_SCORE")
+
+    def test_bad_candidate_score_does_not_crash_batch(self):
+        c = candidate(score="not-a-number")
+        decisions = decide_replacements({"rank5": [c]}, incumbent_scores={"rank5": 60},
+                                        fixed_source_ids=set(), fixed_action_families=set())
+        self.assertEqual(decisions[0].status, "NO_UPGRADE")
+
     def test_payoff_outside_window(self):
         c = candidate()
         c["payoff_sec"] = 5.5
