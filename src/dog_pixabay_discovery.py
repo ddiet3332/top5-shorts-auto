@@ -60,7 +60,17 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--output",required=True,type=Path)
     args=parser.parse_args()
-    result=discover_pixabay(os.environ.get("PIXABAY_API_KEY",""))
+    excluded=set()
+    for filename in ("sample/top5_dog_source_catalog.json","sample/dog_replacement_audition.json"):
+        file=Path(filename)
+        if file.exists():
+            data=json.loads(file.read_text(encoding="utf-8"))
+            for key in ("sources","candidates"):
+                for item in data.get(key,[]):
+                    sid=str(item.get("id",""))
+                    if sid.startswith("PB-") and sid[3:].isdigit():
+                        excluded.add(sid[3:])
+    result=discover_pixabay(os.environ.get("PIXABAY_API_KEY",""),excluded_ids=excluded)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("PIXABAY_DISCOVERY",result["status"],"count",len(result["candidates"]))
