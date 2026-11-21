@@ -35,6 +35,9 @@ on:
       - 'tests/test_top5_reviewed_action_captions.py'
       - 'src/top5_auto_v29.py'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_nature_rank_repair.py'
+      - 'review/top5_v56_nature_rank_evidence.json'
+      - 'tests/test_top5_nature_rank_repair.py'
       - 'src/top5_artifact_resolver.py'
       - 'src/top5_production_review.py'
       - 'tests/test_top5_exact_frame_render.py'
@@ -80,6 +83,9 @@ on:
       - 'tests/test_top5_reviewed_action_captions.py'
       - 'src/top5_auto_v29.py'
       - 'src/top5_auto_v32.py'
+      - 'src/top5_nature_rank_repair.py'
+      - 'review/top5_v56_nature_rank_evidence.json'
+      - 'tests/test_top5_nature_rank_repair.py'
       - 'src/top5_artifact_resolver.py'
       - 'src/top5_production_review.py'
       - 'tests/test_top5_exact_frame_render.py'
@@ -115,6 +121,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_top5_category_rotation.py' -v
           python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
           python -m unittest discover -s tests -p 'test_top5_reviewed_action_captions.py' -v
+          python -m unittest discover -s tests -p 'test_top5_nature_rank_repair.py' -v
           python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
           python -m unittest discover -s tests -p 'test_v52_nature_event_diversity.py' -v
           python -m unittest discover -s tests -p 'test_v55_nature_source_span.py' -v
