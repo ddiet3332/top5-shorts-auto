@@ -1,6 +1,7 @@
 import sys
 import unittest
 import urllib.error
+import urllib.parse
 import tempfile
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
@@ -73,7 +74,8 @@ class PixabayDiscoveryTests(unittest.TestCase):
 
     def test_unrelated_trick_and_halloween_results_are_dropped(self):
         for tags in ("skateboarder, skateboarding, trick, jump",
-                     "skeleton, halloween, party, ghost, trick"):
+                     "skeleton, halloween, party, ghost, trick",
+                     "hotdog, picnic, sausage, food, eating"):
             hit={"id":321,"duration":10,"pageURL":"https://pixabay.com/videos/id-321/",
                  "tags":tags,"user":"creator",
                  "videos":{"medium":{"url":"https://cdn.pixabay.com/video/321.mp4"}}}
@@ -81,6 +83,24 @@ class PixabayDiscoveryTests(unittest.TestCase):
             result=discover_pixabay("mock",fetch=lambda url:{"hits":[hit]},transient_media=media)
             self.assertEqual(result["candidates"],[])
             self.assertEqual(media,{})
+
+    def test_scans_all_three_dog_action_queries_without_first_query_monopoly(self):
+        visited=[]
+        def fake_get(url):
+            query=urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)["q"][0]
+            visited.append(query)
+            offset={"funny dog":100,"playful puppy":200,"dog trick":300}[query]
+            return {"hits":[{"id":offset+i,"duration":9,
+                    "pageURL":f"https://pixabay.com/videos/dog-{offset+i}/",
+                    "tags":"dog, puppy, playful",
+                    "videos":{"medium":{"url":f"https://cdn.pixabay.com/{offset+i}.mp4"}}}
+                    for i in range(10)]}
+        videos=discover_pixabay("mock",fetch=fake_get,max_results=18)
+        self.assertEqual(visited,["funny dog","playful puppy","dog trick"])
+        self.assertEqual(len(videos["candidates"]),18)
+        self.assertEqual([sum(row["discovery_query"]==q for row in videos["candidates"])
+                          for q in visited],[6,6,6])
+        self.assertFalse(videos["publication_approved"])
 
     def test_obvious_green_screen_source_is_not_treated_as_real_dog(self):
         hit={"id":345,"duration":10,"pageURL":"https://pixabay.com/videos/dog-345/",

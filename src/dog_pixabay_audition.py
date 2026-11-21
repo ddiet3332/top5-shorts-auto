@@ -88,6 +88,61 @@ def load_provisional_rejections(path):
             and row["id"].startswith("PB-") and row["id"][3:].isdigit()}
 
 
+def recover_cached_previews(output, rejected_ids):
+    """Only reuse a local, existing, well-named preview: never assume a cache hit is a new download."""
+    evidence = output / "DOG_PIXABAY_AUDITION_RESULTS.json"
+    if not evidence.is_file():
+        return []
+    try:
+        data = json.loads(evidence.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    if not isinstance(data, dict) or data.get("provider") != "pixabay":
+        return []
+    ready = []
+    seen = set()
+    for row in data.get("candidates", []):
+        if not isinstance(row, dict):
+            continue
+        sid = row.get("id")
+        if not isinstance(sid, str) or not sid.startswith("PB-") or not sid[3:].isdigit():
+            continue
+        if sid in seen or sid in rejected_ids or row.get("status") != "PREVIEW_READY_REVIEW_REQUIRED":
+            continue
+        name = sid + "_preview.mp4"
+        media = output / name
+        if row.get("preview_file") != name or not media.is_file() or media.stat().st_size == 0:
+            continue
+        seen.add(sid)
+        ready.append({**row, "preview_origin": "CACHED_PREVIOUS_RUN",
+                      "rights_status": "UNVERIFIED", "semantic_review": "UNVERIFIED",
+                      "reviewed_frames": False, "editorial_score": None,
+                      "publication_approved": False})
+    return ready[:12]
+
+
+def resume_cached_pixabay_queue(output, rejection_file=Path("sample/dog_editorial_rejections_v1.json")):
+    """Refresh review metadata from local previews without any network request."""
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    rejected = load_provisional_rejections(rejection_file)
+    recovered = recover_cached_previews(output, rejected)
+    allowed = {row["id"] for row in recovered}
+    for preview in output.glob("PB-*_preview.mp4"):
+        if preview.stem.removesuffix("_preview") not in allowed:
+            preview.unlink(missing_ok=True)
+    result = {
+        "status": "PREVIEW_READY" if recovered else "NO_PREVIEW",
+        "provider": "pixabay", "candidates": recovered,
+        "new_preview_count": 0, "cached_preview_count": len(recovered),
+        "skipped_provisionally_rejected_ids": sorted(rejected),
+        "publication_approved": False
+    }
+    (output/"DOG_PIXABAY_AUDITION_RESULTS.json").write_text(
+        json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    return result
+
+
 def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None,previewer=None,media_index=None,rejection_file=Path("sample/dog_editorial_rejections_v1.json")):
     if not 0<=max_items<=6:
         raise ValueError("MAX_ITEMS_EXCEEDED")
@@ -95,8 +150,11 @@ def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None
     output.mkdir(parents=True,exist_ok=True)
     payload=json.loads(Path(discovery_path).read_text(encoding="utf-8"))
     rejected=load_provisional_rejections(rejection_file)
+    recovered = recover_cached_previews(output, rejected)
+    recovered_ids = {row["id"] for row in recovered}
     pool=[r for r in payload.get("candidates",[])
-          if r.get("provider")=="pixabay" and r.get("id") not in rejected]
+          if r.get("provider")=="pixabay" and r.get("id") not in rejected
+          and r.get("id") not in recovered_ids]
     run=os.environ.get("GITHUB_RUN_ID","0")
     offset=int(run)%len(pool) if pool and run.isdigit() else 0
     rotated=pool[offset:]+pool[:offset]
@@ -123,6 +181,7 @@ def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None
         preview=output/(sid+"_preview.mp4")
         row={"id":sid,"source_url":item.get("source_url"),"creator":item.get("creator",""),
              "license_url":"https://pixabay.com/service/license-summary/",
+             "preview_origin":"NEW_THIS_RUN",
              "rights_status":"UNVERIFIED","semantic_review":"UNVERIFIED",
              "reviewed_frames":False,"editorial_score":None,"publication_approved":False}
         try:
@@ -150,8 +209,21 @@ def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None
         finally:
             raw.unlink(missing_ok=True)
         rows.append(row)
-    result={"status":"PREVIEW_READY" if any(r["status"]=="PREVIEW_READY_REVIEW_REQUIRED" for r in rows)
-            else "NO_PREVIEW","provider":"pixabay","candidates":rows,
+    # Keep at most 12 actionable previews across 24-hour API search cycles.
+    # Old previews retain their file on disk; no new API request or download is implied.
+    pending = [row for row in rows if row["status"]=="PREVIEW_READY_REVIEW_REQUIRED"]
+    pending += recovered
+    pending = pending[:12]
+    valid = {row["id"] for row in pending}
+    for preview in output.glob("PB-*_preview.mp4"):
+        if preview.stem.removesuffix("_preview") not in valid:
+            preview.unlink(missing_ok=True)
+    failures = [row for row in rows if row["status"]!="PREVIEW_READY_REVIEW_REQUIRED"]
+    candidates = pending + failures
+    result={"status":"PREVIEW_READY" if pending else "NO_PREVIEW",
+            "provider":"pixabay","candidates":candidates,
+            "new_preview_count":sum(row.get("preview_origin")=="NEW_THIS_RUN" for row in pending),
+            "cached_preview_count":sum(row.get("preview_origin")=="CACHED_PREVIOUS_RUN" for row in pending),
             "skipped_provisionally_rejected_ids":sorted(rejected),
             "publication_approved":False}
     (output/"DOG_PIXABAY_AUDITION_RESULTS.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
@@ -163,10 +235,14 @@ def main():
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("--media-index",type=Path)
     parser.add_argument("--rejection-file",type=Path,default=Path("sample/dog_editorial_rejections_v1.json"))
+    parser.add_argument("--reuse-cached-only",action="store_true")
     args=parser.parse_args()
-    media_index=json.loads(args.media_index.read_text(encoding="utf-8")) if args.media_index else None
-    result=audition_pixabay(args.discovery,args.output,os.environ.get("PIXABAY_API_KEY",""),
-                           media_index=media_index,rejection_file=args.rejection_file)
+    if args.reuse_cached_only:
+        result=resume_cached_pixabay_queue(args.output,args.rejection_file)
+    else:
+        media_index=json.loads(args.media_index.read_text(encoding="utf-8")) if args.media_index else None
+        result=audition_pixabay(args.discovery,args.output,os.environ.get("PIXABAY_API_KEY",""),
+                               media_index=media_index,rejection_file=args.rejection_file)
     print("PIXABAY_AUDITION",result["status"],len(result["candidates"]))
 
 if __name__=="__main__":

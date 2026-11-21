@@ -25,7 +25,9 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
                 return json.load(response)
     seen = set(str(x) for x in excluded_ids)
     rows, errors = [], []
+    per_query_cap = max(1, (max_results + len(QUERIES) - 1) // len(QUERIES))
     for query in QUERIES:
+        collected_this_query = 0
         url = API + "?" + urllib.parse.urlencode({"key":api_key,"q":query,"per_page":per_page,"page":1,"safesearch":"true"})
         try:
             payload = fetch(url)
@@ -55,7 +57,7 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
                 tags = str(hit.get("tags", ""))[:240]
                 # Pixabay's full-text query can return non-dog "trick" footage.
                 # Tags are only a metadata filter; they do not verify video semantics.
-                if not re.search(r"(?<!\\w)(?:dog|dogs|puppy|puppies|canine|doggy|pup)(?!\\w)",
+                if not re.search(r"(?<!\w)(?:dog|dogs|puppy|puppies|canine|doggy|pup)(?!\w)",
                                  tags.casefold()):
                     continue
                 if any(term in (tags + " " + str(hit.get("user", ""))).lower()
@@ -71,7 +73,8 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
                              "publication_approved":False,"status":"DISCOVERED_NOT_DOWNLOADED"})
                 if transient_media is not None:
                     transient_media[f"PB-{vid}"] = media_url  # ephemeral only; never in artifacts/cache
-                if len(rows)>=max_results:
+                collected_this_query += 1
+                if len(rows) >= max_results or collected_this_query >= per_query_cap:
                     break
         except urllib.error.HTTPError as exc:
             errors.append({"query":query,"error":"HTTP_ERROR","http_status":exc.code})
