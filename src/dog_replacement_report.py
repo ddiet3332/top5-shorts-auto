@@ -27,6 +27,8 @@ def report(profile_path: Path, audition_path: Path, provider_reports=()) -> dict
     # rights clearance, verified comedy, or automatic rank assignments.
     provider_auditions = []
     provider_ready = []
+    provider_new = []
+    provider_cached = []
     for source in provider_reports:
         source = Path(source)
         if not source.is_file():
@@ -41,12 +43,15 @@ def report(profile_path: Path, audition_path: Path, provider_reports=()) -> dict
                     continue
                 row = {"provider":name, "id":item.get("id"),
                        "status":item.get("status"),
+                       "preview_origin":item.get("preview_origin","NEW_THIS_RUN"),
                        "rights_status":item.get("rights_status","UNVERIFIED"),
                        "editorial_score":None,
                        "publication_approved":False}
                 provider_auditions.append(row)
                 if row["status"]=="PREVIEW_READY_REVIEW_REQUIRED":
                     provider_ready.append(row)
+                    (provider_cached if row["preview_origin"]=="CACHED_PREVIOUS_RUN"
+                     else provider_new).append(row)
         except (ValueError, OSError, TypeError):
             provider_auditions.append({"provider":source.stem,
                                        "status":"INVALID_PROVIDER_AUDITION",
@@ -58,6 +63,8 @@ def report(profile_path: Path, audition_path: Path, provider_reports=()) -> dict
         "design_lock": "TOP5_DESIGN_LOCK_V1",
         "candidate_count": sum(map(len, candidates.values())),
         "provider_preview_count": len(provider_ready),
+        "provider_preview_new_count": len(provider_new),
+        "provider_preview_cached_count": len(provider_cached),
         "provider_preview_ids_pending_review": [r["id"] for r in provider_ready],
         "provider_auditions": provider_auditions,
         "provider_preview_score_is_not_automatic": True,
@@ -67,7 +74,8 @@ def report(profile_path: Path, audition_path: Path, provider_reports=()) -> dict
         "editorial_score": None,
         "next_action": ("REVIEW_UPGRADE" if any(
             d.status == "REPLACEMENT_ELIGIBLE" for d in decisions)
-            else "REVIEW_NEW_PREVIEWS" if provider_ready
+            else "REVIEW_NEW_PREVIEWS" if provider_new
+            else "REVIEW_PENDING_PREVIEWS" if provider_ready
             else "DISCOVER_AND_REVIEW_CANDIDATES")
     }
 
