@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_basis": "Scoped real MP4 frame-review rejection: 2026-11-21 nature run #44891297714, objects run #44913886508 and V41 #44914424579, V43 objects universal cross-topic #44917082072; SHA+topic+start match; no global source bans and no rights clearance.",
+  "review_basis": "Actual selected-window review, not global-source bans; prior nature/objects V43–V45 plus V46 natural history run #44919422681. Topic+original SHA256+original cut start ±0.22s; no automatic semantic truth claim.",
   "source_video": "TOP5-auto-review-65",
   "technical_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44891297714",
   "rejected_windows": [
@@ -75,6 +75,33 @@
       "tolerance_sec": 0.22,
       "original_rank": 1,
       "review_reason": "V44 real full rendered objects TOP5 35-frame review run #44918160276 (21.3-26.7s) shows a living insect/roach moving among twigs, not an inanimate domino mechanism. Filename contains Domino but is topic-mismatched; exact cut + object family rejected. Same filename alone is not evidence of object motion."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Blue Shafts - Aurora Borealis close to Berlin on Oktober 01, 2025.webm",
+      "sha256": "fcbda74d670802606677ed579540b0054d486a0a5f0f707bd4a0c9bdad793a4c",
+      "start_sec": 4.12,
+      "tolerance_sec": 0.22,
+      "original_rank": 5,
+      "review_reason": "Run #44919422681 full 35-frame review: all seven selected 2.30–5.70s rank-five frames show mostly dark silhouetted sky, aurora only indistinct; weak hook or surprising visual. Reject only selected original 4.12–8.12s cut, not the complete 2025 aurora source."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Lightning Storm Moves Across the USA.webm",
+      "sha256": "b1b636439f713357499af885403b8b4c33d37bf66f53749386c353eb18d1e787",
+      "start_sec": 10,
+      "tolerance_sec": 0.22,
+      "original_rank": 4,
+      "review_reason": "Run #44919422681 actual seven full rank-four frames show nearly identical grayscale satellite weather maps; no obvious moving lightning/visible surprise in this 10–15s source cut. Reject only this scene, not the full satellite animation."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:1938 flood at Atwood.webm",
+      "sha256": "ea02f7451d41d3f5c561935e86000c25af04b60b5b344d45b805cb2bb7684662",
+      "start_sec": 40,
+      "tolerance_sec": 0.22,
+      "original_rank": 1,
+      "review_reason": "Run #44919422681 all seven rank-one actual rendered frames show archival black-and-white neighborhood/street, with no clear dramatic flooding or surprise payoff from original 40–46s cut. Unsuitable as top rank without better scene verification; reject only this exact cut, not historical source itself."
     }
   ],
   "rights_verified": false,
@@ -100,6 +127,13 @@
       "topic_id": "objects_oddities",
       "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44918160276",
       "source_qa": "35 actual rendered frames and SHA-verified selected source provenance",
+      "rights_verified": false,
+      "publication_approved": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44919422681",
+      "review_basis": "Independent actual TOP5_STANDARD_35_FRAME_QA.jpg 7 ranked frames each, verified against V32 selected-source SHA and original start/end",
       "rights_verified": false,
       "publication_approved": false
     }

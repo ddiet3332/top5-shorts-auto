@@ -16,7 +16,8 @@ REGISTRY=ROOT/"review/top5_weak_source_windows.json"
 class ReviewedWeakSceneTests(unittest.TestCase):
     def test_actual_nature_and_object_cut_rejections_are_scoped(self):
         rows=json.loads(REGISTRY.read_text())["rejected_windows"]
-        self.assertEqual(len(rows),8)
+        self.assertEqual(len(rows),11)
+        self.assertEqual(len([x for x in rows if x['topic_id']=='nature_moments']),5)
         self.assertEqual(len([x for x in rows if x['topic_id']=='objects_oddities']),6)
         self.assertEqual({x["original_rank"] for x in rows if x["topic_id"] == "objects_oddities"}, {1, 2, 5})
         for row in rows:
