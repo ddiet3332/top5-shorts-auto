@@ -1,0 +1,130 @@
+name: TOP5 V38 - Generative visual scene review (NO publication)
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'Successful TOP5 Topic-Driven Production GitHub Actions run id'
+        required: true
+        type: string
+      artifact_name:
+        description: 'Exact artifact name, e.g. TOP5-auto-review-71'
+        required: true
+        type: string
+  workflow_run:
+    workflows: ["TOP5 Topic-Driven Production"]
+    types: [completed]
+  pull_request:
+    paths:
+      - '.github/workflows/top5_v38_vlm_scene_audit.yml'
+      - 'src/top5_smolvlm2_editorial.py'
+      - 'tests/test_top5_smolvlm2_editorial.py'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/top5_v38_vlm_scene_audit.yml'
+      - 'src/top5_smolvlm2_editorial.py'
+      - 'tests/test_top5_smolvlm2_editorial.py'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: top5-v38-vlm-${{ github.event.workflow_run.id || github.ref }}
+  cancel-in-progress: false
+jobs:
+  safety-and-temporal-regressions:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install only unit-test dependencies (no external model)
+        run: python -m pip install -q 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Test source digest binding, actual rank sampling, no fake creative or rights status
+        run: python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
+  actual-five-rank-vlm:
+    needs: safety-and-temporal-regressions
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 43
+    env:
+      HF_HUB_DISABLE_XET: '1'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: top5-smolvlm2-256m-video-v1
+      - name: Install CPU open-source video language model and FFmpeg
+        timeout-minutes: 9
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          python -m venv /tmp/top5-vlm
+          /tmp/top5-vlm/bin/pip install -q --upgrade pip
+          /tmp/top5-vlm/bin/pip install -q 'torch==2.7.1' --index-url https://download.pytorch.org/whl/cpu
+          /tmp/top5-vlm/bin/pip install -q 'transformers==4.51.3' 'safetensors>=0.4.3' 'accelerate>=1.6,<2' 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Download the correct original 30-second MP4 and source evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_RUN: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || inputs.source_run }}
+          EXPECTED_ARTIFACT: ${{ github.event_name == 'workflow_run' && format('TOP5-auto-review-{0}', github.event.workflow_run.run_number) || inputs.artifact_name }}
+        run: |
+          test -n "$UPSTREAM_RUN"
+          [[ "$UPSTREAM_RUN" =~ ^[0-9]{8,20}$ ]] || { echo 'bad source run'; exit 1; }
+          [[ "$EXPECTED_ARTIFACT" =~ ^TOP5-[-a-zA-Z0-9_]+$ ]] || { echo 'invalid artifact name'; exit 1; }
+          mkdir -p input
+          gh run download "$UPSTREAM_RUN" --repo "$GITHUB_REPOSITORY" --name "$EXPECTED_ARTIFACT" --dir input
+          if test -d input/topic_run; then
+            mv input/topic_run/* input/
+            rmdir input/topic_run
+          fi
+          test -s input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+          test -s input/TOP5_STANDARD_EDITORIAL_QA.json
+          test -s input/SELECTED_SOURCE_PROVENANCE.json
+          test -s input/TOPIC_RECOMMENDATIONS_V32.json
+          test -s input/V30_CREATIVE_AND_RIGHTS_GATES.json
+      - name: Generate 3 chronological visual descriptions for all 5 real ranked scenes
+        timeout-minutes: 29
+        run: |
+          /tmp/top5-vlm/bin/python src/top5_smolvlm2_editorial.py --source input --output output/v38 --max-ranks 5
+      - name: Report only actual model-backed visual observations, not publishability
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path('output/v38/VLM_SCENE_DESCRIPTION_REVIEW.json')
+          if p.is_file():
+              d=json.loads(p.read_text(encoding='utf-8'))
+              lines=['## TOP5 actual 3-frame video-language screening',
+                  f"- input topic: {d['chosen_topic']}",
+                  f"- ranks with AI descriptions: {len(d['rows'])}/5",
+                  "- model's descriptions are NOT verified facts or observed action",
+                  "- caption finalization/85pt editorial score: NOT CLEARED",
+                  "- video source rights/likeness and YPP: NOT CLEARED",
+                  "- publication status: REVIEW ONLY"]
+          else:
+              lines=['## VLM audit unavailable',
+                    'No verified AI action observations; old rendered video remains review-only.']
+          with open(os.environ["GITHUB_STEP_SUMMARY"],'a',encoding='utf-8') as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+      - name: Upload independent VLM review hints, not finished captions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TOP5-V38-real-video-descriptions-${{ github.run_number }}
+          path: |
+            output/v38/*.json
+            output/v38/*.md
+          if-no-files-found: warn
+          retention-days: 7
+# This workflow never scores 85+, verifies licenses/YPP or publishes YouTube videos.
