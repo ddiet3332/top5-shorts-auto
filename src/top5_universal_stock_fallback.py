@@ -95,6 +95,12 @@ def assess_human_fallback(root, *, probe=media_probe):
                     x.get("rights_verified") is False and
                     x.get("full_video_decode") is True for x in rows)):
             raise ValueError("FIVE_DISTINCT_DOWNLOADED_HUMAN_SOURCES_REQUIRED")
+        # The original downloader may have accepted misleading metadata
+        # from a stock provider. Recheck *the selected five* independently.
+        from top5_free_source_download import obvious_topic_mismatch
+        if any(obvious_topic_mismatch(x.get("tags",""),sources.get("topic",""))
+               for x in rows):
+            raise ValueError("HUMAN_TOP5_ANIMAL_METADATA_FALSE_POSITIVE")
         if (qa.get("file")!=FALLBACK_VIDEO or
             qa.get("publication_approved") is not False or
             qa.get("rights_verified") is not False or
