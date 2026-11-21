@@ -61,6 +61,17 @@ class MixkitOfficialAuditionTests(unittest.TestCase):
             self.assertEqual(r["restricted_ids_blocked"],["MK-36528"])
             self.assertFalse(r["publication_approved"])
 
+    def test_public_page_mismatch_reports_actionable_safe_diagnostic(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);manifest=sample_catalog(root/"manifest.json")
+            def fail(_):
+                raise ValueError("MIXKIT_OFFICIAL_PAGE_REDIRECT")
+            r=audit_mixkit(manifest,root/"out",reader=fail)
+            self.assertEqual(r["candidates"][0]["failure_code"],
+                             "MIXKIT_OFFICIAL_PAGE_REDIRECT")
+            self.assertEqual(r["status"],"NO_PREVIEW")
+            self.assertFalse(r["publication_approved"])
+
     def test_download_one_explicit_link_with_review_only_and_delete_raw_source(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);catalog=sample_catalog(root/"manifest.json")
