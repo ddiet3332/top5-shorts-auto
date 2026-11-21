@@ -254,6 +254,19 @@ jobs:
             output/dog/audition/*_preview.mp4
           if-no-files-found: ignore
           retention-days: 7
+      - name: Preserve all source-provider audition metadata in production evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p output/dog
+          for file in \
+            output/dog/pixabay_audition/DOG_PIXABAY_AUDITION_RESULTS.json \
+            output/dog/audition/DOG_AUDITION_RESULTS.json \
+            output/dog/commons_audition/DOG_COMMONS_AUDITION_RESULTS.json; do
+            if [[ -s "$file" ]]; then
+              cp "$file" "output/dog/$(basename "$file")"
+            fi
+          done
       - name: Render five original dog sources with an independent hook
         id: render
         timeout-minutes: 12
