@@ -203,35 +203,18 @@ def add_v36_action_clips(topic,items,output):
                 "reason":safe_failure_code(ex),
                 "selected":False})
     if any(r["title"]=="File:Katzensprung in Zeitlupe.webm" for r in rows):
-        path=Path(output)/"v36_pexels_two_cats.mp4"
-        try:
-            if not allowed_page(V36_PAIR_SOURCE):
-                raise ValueError("Pexels individual source validation failed")
-            info=download_single_pexels(V36_PAIR_SOURCE,path,
-                                         max_bytes=125*1024*1024)
-            if float(info["duration_sec"])<38.0:
-                raise ValueError("Audited interaction 31.4-37.4 absent")
-            replacement=challenger_row(V36_PAIR_SOURCE,path,info)
-            replacement.update({
-                "cut_start":31.4,"editorial_quality_heuristic":64.0,
-                "label":"상자 앞발 대결",
-                "caption":"상자 수비수, 앞발로 딱!ㅋㅋ",
-                "review_basis":"V36 original 30-40s 0.5s source frames; 31.4-37.4s",
-                "actual_rank2_interval_contact_sheet_reviewed":True})
-            rows=[replacement if z["title"]=="File:Katzensprung in Zeitlupe.webm"
-                  else z for z in rows]
-            audit["pair_added"]=True
-            audit["attempts"].append({
-                "replaced":"File:Katzensprung in Zeitlupe.webm",
-                "added":V36_PAIR_SOURCE["page_url"],
-                "start":31.4,"duration":6.0,
-                "candidate_evidence":"V36 source 30-40s contact sheet",
-                "license_metadata":"Pexels License only; rights and YPP not proven"})
-        except Exception as ex:
-            path.unlink(missing_ok=True)
-            audit["attempts"].append({
-                "added":V36_PAIR_SOURCE["page_url"],
-                "failed_type":type(ex).__name__,"selected":False})
+        # Direct V53 original 29-40s contact-sheet QA: a cat remains seated
+        # inside a cardboard box and a kitten walks beside it. No visually
+        # clear paw duel. This Pexels clip was only a wasteful V37 intermediate.
+        audit["attempts"].append({
+            "added":V36_PAIR_SOURCE["page_url"],
+            "status":"REJECTED_REAL_SOURCE_LOW_PAYOFF",
+            "reason_code":"V54_PAIR_SCENE_ACTION_NOT_VERIFIED",
+            "reviewed_source_sha256":"ed8c7ae221a7131da41cefeec6d2ad9564e77825fc528fc190ad0441c139989b",
+            "rejected_original_window":[31.4,37.4],
+            "review_basis":"V53 source 12 actual frames at 29-40s, no clear fight",
+            "download_skipped":True,"selected":False,
+            "rights_verified":False,"publication_approved":False})
     rows.sort(key=lambda r:(r["editorial_quality_heuristic"],r["title"]))
     if len(rows)!=5 or len({r["title"] for r in rows})!=5:
         raise RuntimeError("V36 five distinct sources required")
@@ -252,8 +235,10 @@ def apply_v37_story_and_door(topic,items,output):
     if topic["topic_id"]!="cat_surprises":
         return items,audit
     rows=[dict(row) for row in items]
-    pair="Pexels PX-17536779"
-    if any(row["title"]==pair for row in rows):
+    # V54: replace original Katzensprung directly with better reviewed
+    # door action. The 27MB Pexels pair clip had no clear fight payoff.
+    replaceable={"Pexels PX-17536779","File:Katzensprung in Zeitlupe.webm"}
+    if any(row["title"] in replaceable for row in rows):
         try:
             from v37_cat_audition import commons_download
             src={"id":"commons-door","provider":"commons",
@@ -282,7 +267,7 @@ def apply_v37_story_and_door(topic,items,output):
                  "provenance_independently_verified":False,
                  "source_audio_approved":False,
                  "requires_sharealike_attribution":True}
-            rows=[row if item["title"]==pair else item for item in rows]
+            rows=[row if item["title"] in replaceable else item for item in rows]
             audit["door_added"]=True
             audit["license_sharealike_acknowledged"]=True
         except Exception as ex:
