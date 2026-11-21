@@ -34,6 +34,33 @@ class ModelTextFailClosedTests(unittest.TestCase):
         flags=reliability_rejections(ball,"File:The Rube Goldberg Idea Machine.webm",
                                     {"adjacent_gray_change":[24.,49.]})
         self.assertIn("MODEL_STATIC_CLAIM_CONFLICTS_WITH_FRAME_CHANGES",flags)
+    def test_v41_real_500m_static_inventory_never_becomes_action_caption(self):
+        real={
+          5:("File:Arduino-blinkingLikeABouncingBall.ogv",
+              "The first frame shows a person working on a computer, the second shows a person working on a computer."),
+          4:("File:Elefanterna kinetic sculpture.webm",
+              "The first frame shows a window with a pink pig hanging from it. The second frame shows a pink pig hanging from a metal pole."),
+          3:("File:The Rube Goldberg Idea Machine.webm",
+              "The first frame shows a green object on a yellow surface, the second frame shows a red ball on a green object, and the third frame shows a purple funnel on a yellow surface."),
+          1:("File:2019 Purdue National Chain Reaction Competition Winner.webm",
+              "The first frame shows a person working on a machine. The second frame shows a person sitting on the floor."),
+        }
+        for rank,(title,description) in real.items():
+            with self.subTest(rank=rank):
+                flags=reliability_rejections(description,title,
+                    {"adjacent_gray_change":[12.,24.]})
+                self.assertIn("NO_CLEAR_TEMPORAL_ACTION_DESCRIBED_RECHECK",flags)
+
+    def test_overlay_text_in_korean_not_mistaken_for_source_action(self):
+        text="The first frame shows stars, while the second has text in Korean."
+        flags=reliability_rejections(text,"File:Aurora lights.webm",
+                                     {"adjacent_gray_change":[6.,7.]})
+        self.assertIn("UNVERIFIED_TEXT_OR_OCR_CLAIM",flags)
+        text2="A satellite image appears, followed by a text overlay with Korean text."
+        flags2=reliability_rejections(text2,"File:Lightning satellite.webm",
+                                      {"adjacent_gray_change":[5.,9.]})
+        self.assertIn("UNVERIFIED_TEXT_OR_OCR_CLAIM",flags2)
+
     def test_no_flags_still_cannot_certify_visual_truth(self):
         description="A small orange ball moves through a visible series of tracks."
         self.assertEqual(reliability_rejections(description,"File:Sample.webm",
