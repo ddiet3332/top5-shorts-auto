@@ -420,7 +420,7 @@ def select_dog_audition_sources(topic,candidates,output):
     commons=[]
     if candidates:
         try:
-            commons,_=select_sources(candidates,output)
+            commons,_=select_sources(candidates,output,topic=topic)
         except RuntimeError:
             # V30 requires five Commons items. Dog mode may have fewer.
             from top5 import download_video
@@ -692,7 +692,7 @@ def main():
         selected,attempts,hook_pool=select_dog_audition_sources(topic,candidates,output)
     else:
         if len(candidates)<5: raise RuntimeError("insufficient rights-metadata sources")
-        selected,attempts=select_sources(candidates,output,reserve_pool=hook_pool)
+        selected,attempts=select_sources(candidates,output,topic=topic,reserve_pool=hook_pool)
     final,audit=add_challenger(topic,selected,output)
     final,sofa_audit=add_sofa_challenger(topic,final,output)
     (output/"V35_SOFA_CHALLENGER_QA.json").write_text(json.dumps(
