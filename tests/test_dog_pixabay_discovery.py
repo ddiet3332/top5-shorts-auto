@@ -74,7 +74,8 @@ class PixabayDiscoveryTests(unittest.TestCase):
 
     def test_unrelated_trick_and_halloween_results_are_dropped(self):
         for tags in ("skateboarder, skateboarding, trick, jump",
-                     "skeleton, halloween, party, ghost, trick"):
+                     "skeleton, halloween, party, ghost, trick",
+                     "hotdog, picnic, sausage, food, eating"):
             hit={"id":321,"duration":10,"pageURL":"https://pixabay.com/videos/id-321/",
                  "tags":tags,"user":"creator",
                  "videos":{"medium":{"url":"https://cdn.pixabay.com/video/321.mp4"}}}
