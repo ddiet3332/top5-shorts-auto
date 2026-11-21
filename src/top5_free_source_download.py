@@ -84,7 +84,7 @@ def inspect(key,plan,out,fetch=fetch_hits,rejected=None,*,prepare=None,extra=(),
     download(video["url"],path,max_bytes=35*1024*1024)
     if probe(path)<5.2:raise ValueError("short_download")
     decode(path)
-    row={"id":ident,"provider":"pixabay","query":query,"page_url":hit.get("pageURL"),"tags":hit.get("tags"),"creator":creator,"duration_sec":probe(path),"file":path.name,"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"full_video_decode":True,"editorial_score":None,"rights_verified":False,"publication_approved":False,
+    row={"id":ident,"provider":"pixabay","query":query,"page_url":hit.get("pageURL"),"tags":hit.get("tags"),"creator":creator,"duration_sec":probe(path),"file":path.name,"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"full_video_decode":True,"editorial_score":None,"rights_verified":False,"publication_approved":False,"topic":selected["topic"],
          **evidence(video["url"],"Pixabay Content License","https://pixabay.com/service/license-summary/",False)}
     if prepare:prepare(path,row,rows)
     creator_counts[creator]+=1
@@ -94,7 +94,7 @@ def inspect(key,plan,out,fetch=fetch_hits,rejected=None,*,prepare=None,extra=(),
     failures.append({"id":ident,"reason":str(e) if isinstance(e,ValueError) else type(e).__name__});path.unlink(missing_ok=True)
  if prepare and len(rows)<5:
   supplement(extra,out,prepare,rows,failures,creator_counts,query_counts,selected["topic"],target)
- report={"topic":selected["topic"],"category":selected["category"],"status":"DOWNLOADED_5_TECHNICALLY_VALID_SOURCES_REVIEW_ONLY" if len(rows)>=5 else "BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES","downloaded_valid_sources":min(len(rows),5),"max_sources_per_creator":2,"creator_counts":dict(creator_counts),"query_counts":dict(query_counts),"rejected_source_ids":sorted(rejected),"skipped_creator_limit_or_missing":skipped_same_creator,"sources":rows[:5],"reserve_sources":rows[5:],"failures":failures[:20],"editorial_score":None,"rights_verified":False,"publication_approved":False,"final_video_created":False}
+ report={"topic":selected["topic"],"category":selected["category"],"status":"DOWNLOADED_5_TECHNICALLY_VALID_SOURCES_REVIEW_ONLY" if len(rows)>=5 else "BLOCKED_INSUFFICIENT_DOWNLOADED_SOURCES","downloaded_valid_sources":min(len(rows),5),"max_sources_per_creator":2,"creator_counts":dict(creator_counts),"query_counts":dict(query_counts),"rejected_source_ids":sorted(rejected),"skipped_creator_limit_or_missing":skipped_same_creator,"sources":rows[:5],"reserve_sources":rows[5:],"reviewed_weak_window_rejections":sum("SOURCE_REVIEWED_WEAK_WINDOW" in str(item.get("reason", "")) for item in failures),"failures":failures[:20],"editorial_score":None,"rights_verified":False,"publication_approved":False,"final_video_created":False}
  (out/"SOURCE_DOWNLOAD_QA.json").write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding="utf-8")
  return report
 
@@ -129,7 +129,7 @@ def supplement(candidates,out,prepare,rows,failures,creators,queries,topic,targe
    decode(path)
    row={"id":item["id"],"provider":provider,"page_url":page,"creator":creator,
         "duration_sec":duration,"file":path.name,"tags":title,"query":item["query"],
-        "sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"full_video_decode":True,
+        "sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"full_video_decode":True,"topic":topic,
         **evidence(url,item["license"],terms,bool(cc and cc[1]))}
    prepare(path,row,rows)
    creators[creator]+=1
