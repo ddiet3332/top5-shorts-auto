@@ -37,27 +37,40 @@
     },
     {
       "id": "PX-3042473",
-      "status": "HOLD_WEAK_MIRROR_PAYOFF",
+      "status": "HOLD_BOTH_WINDOWS_WEAK_COMEDY",
       "target": "rank2",
       "observations": "5-second preview from source 6-11s shows puppy repeatedly approaching and turning before mirror. It is visibly a dog but no substantial surprise for #2.",
       "visual_sample_reviewed": true,
       "full_source_video_reviewed": false,
       "rights_status": "UNVERIFIED",
-      "publication_approved": false
+      "publication_approved": false,
+      "alternate_window_source_sec": [
+        0,
+        5
+      ],
+      "alternate_observation": "Puppy looks at mirror, pivots, crouches and approaches reflection repeatedly in alternate source 0-5s; no unmistakable visual reversal stronger than current #2 ball catch.",
+      "alternate_nine_frame_reviewed": true
     },
     {
       "id": "PX-7678714",
-      "status": "RESELECT_SOURCE_WINDOW",
+      "status": "HOLD_BOTH_WINDOWS_WEAK_COMEDY",
       "target": "rank2",
       "observations": "Highest-motion source window 16-21s mostly shows collie walking toward camera and leaving frame, despite provider description claiming spin/jump. Need another nonoverlapping 5-second section.",
       "visual_sample_reviewed": true,
       "full_source_video_reviewed": false,
       "rights_status": "UNVERIFIED",
-      "publication_approved": false
+      "publication_approved": false,
+      "alternate_window_source_sec": [
+        6,
+        11
+      ],
+      "alternate_observation": "Dog on red background mainly stands, pivots and trots in source 6-11s. No clear spin-jump payoff in the nine sampled frames; original 16-21s window loses subject from frame.",
+      "alternate_nine_frame_reviewed": true
     }
   ],
   "evidence_runs": [
     44879229566,
-    44880047153
+    44880047153,
+    44880585842
   ]
 }
