@@ -25,6 +25,8 @@ class CommonsDiscoveryTests(unittest.TestCase):
         self.assertEqual(classify_title("File:Puppy surprise.webm"), "surprise")
         self.assertIsNone(classify_title("File:Cat jumping.webm"))
         self.assertIsNone(classify_title("File:Dog cartoon jumping.webm"))
+        self.assertIsNone(classify_title("File:Fractal and DogPlayingTetris rolling during CTWC 2023.webm"))
+        self.assertIsNone(classify_title("File:Environmental-Effects-on-Compulsive-Tail-Chasing-in-Dogs-pone.0041684.s004.ogv"))
 
     def test_dedup_and_rights_fail_closed(self):
         eligible = video()
