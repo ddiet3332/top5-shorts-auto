@@ -17,12 +17,16 @@ on:
     paths:
       - '.github/workflows/top5_v38_vlm_scene_audit.yml'
       - 'src/top5_smolvlm2_editorial.py'
+      - 'src/top5_vlm_reliability_gate.py'
+      - 'tests/test_top5_vlm_reliability_gate.py'
       - 'tests/test_top5_smolvlm2_editorial.py'
   push:
     branches: [main]
     paths:
       - '.github/workflows/top5_v38_vlm_scene_audit.yml'
       - 'src/top5_smolvlm2_editorial.py'
+      - 'src/top5_vlm_reliability_gate.py'
+      - 'tests/test_top5_vlm_reliability_gate.py'
       - 'tests/test_top5_smolvlm2_editorial.py'
 permissions:
   contents: read
@@ -42,7 +46,9 @@ jobs:
       - name: Install only unit-test dependencies (no external model)
         run: python -m pip install -q 'Pillow>=10,<13' 'numpy>=1.26,<3'
       - name: Test source digest binding, actual rank sampling, no fake creative or rights status
-        run: python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
+        run: |
+          python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
+          python -m unittest discover -s tests -p 'test_top5_vlm_reliability_gate.py' -v
   actual-five-rank-vlm:
     needs: safety-and-temporal-regressions
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
@@ -97,6 +103,12 @@ jobs:
         timeout-minutes: 29
         run: |
           /tmp/top5-vlm/bin/python src/top5_smolvlm2_editorial.py --source input --output output/v38 --max-ranks 5
+      - name: Detect repetition, invented text and source-event omissions in generated descriptions
+        if: success()
+        run: |
+          /tmp/top5-vlm/bin/python src/top5_vlm_reliability_gate.py \
+            --input output/v38/VLM_SCENE_DESCRIPTION_REVIEW.json \
+            --output output/v38/VLM_RELIABILITY_QA.json
       - name: Report only actual model-backed visual observations, not publishability
         if: always()
         run: |
