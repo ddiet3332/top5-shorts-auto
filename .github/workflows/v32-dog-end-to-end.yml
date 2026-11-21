@@ -36,6 +36,9 @@ on:
       - 'sample/dog_commons_editorial_rejections_v1.json'
       - 'sample/dog_curated_pexels_v1.json'
       - 'sample/dog_mixkit_license_screen_v1.json'
+      - 'tests/test_dog_rank5_hd_review.py'
+      - 'src/dog_rank5_hd_review.py'
+      - 'sample/dog_rank5_hd_review_v1.json'
       - 'sample/dog_incumbent_segment_review_v1.json'
       - 'tests/test_dog_mixkit_license_screen.py'
       - 'src/dog_mixkit_license_screen.py'
@@ -61,6 +64,9 @@ on:
       - 'sample/dog_commons_editorial_rejections_v1.json'
       - 'sample/dog_curated_pexels_v1.json'
       - 'sample/dog_mixkit_license_screen_v1.json'
+      - 'tests/test_dog_rank5_hd_review.py'
+      - 'src/dog_rank5_hd_review.py'
+      - 'sample/dog_rank5_hd_review_v1.json'
       - 'sample/dog_incumbent_segment_review_v1.json'
       - 'tests/test_dog_mixkit_license_screen.py'
       - 'src/dog_mixkit_license_screen.py'
@@ -314,6 +320,38 @@ jobs:
             output/dog/curated_pexels/*_frame*.jpg
           if-no-files-found: ignore
           retention-days: 14
+      - name: Restore original-source HD rank5 vertical review
+        id: rank5_hd_cache
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: output/dog/rank5_hd_review/
+          key: dog-rank5-original-hd-v1-${{ hashFiles('sample/dog_rank5_hd_review_v1.json','src/dog_rank5_hd_review.py') }}
+      - name: Create genuine original-source 1080x1920 rank5 review only
+        id: rank5_hd_create
+        if: github.event_name != 'pull_request' && steps.rank5_hd_cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        timeout-minutes: 6
+        run: |
+          python src/dog_rank5_hd_review.py \
+            --manifest sample/dog_rank5_hd_review_v1.json \
+            --output output/dog/rank5_hd_review
+      - name: Cache HD rank5 video only if decoded from the original
+        if: github.event_name != 'pull_request' && steps.rank5_hd_create.outputs.ready == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: output/dog/rank5_hd_review/
+          key: dog-rank5-original-hd-v1-${{ hashFiles('sample/dog_rank5_hd_review_v1.json','src/dog_rank5_hd_review.py') }}
+      - name: Archive HD rank5 vertical review video and technical evidence
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-rank5-original-hd-review-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/rank5_hd_review/DOG_RANK5_HD_AUDITION.json
+            output/dog/rank5_hd_review/*_REVIEW_1080x1920.mp4
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Screen Mixkit dog clips by per-video commercial license
         timeout-minutes: 1
         run: |
@@ -363,7 +401,8 @@ jobs:
             output/dog/pixabay_audition/DOG_PIXABAY_AUDITION_RESULTS.json \
             output/dog/audition/DOG_AUDITION_RESULTS.json \
             output/dog/commons_audition/DOG_COMMONS_AUDITION_RESULTS.json \
-            output/dog/curated_pexels/DOG_CURATED_PEXELS_AUDITION_RESULTS.json; do
+            output/dog/curated_pexels/DOG_CURATED_PEXELS_AUDITION_RESULTS.json \
+            output/dog/rank5_hd_review/DOG_RANK5_HD_AUDITION.json; do
             if [[ -s "$file" ]]; then
               cp "$file" "output/dog/$(basename "$file")"
             fi
