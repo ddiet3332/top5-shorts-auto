@@ -16,9 +16,9 @@ REGISTRY=ROOT/"review/top5_weak_source_windows.json"
 class ReviewedWeakSceneTests(unittest.TestCase):
     def test_actual_nature_and_object_cut_rejections_are_scoped(self):
         rows=json.loads(REGISTRY.read_text())["rejected_windows"]
-        self.assertEqual(len(rows),16)
-        self.assertEqual(len([x for x in rows if x['topic_id']=='nature_moments']),10)
-        self.assertEqual(len([x for x in rows if x['topic_id']=='objects_oddities']),6)
+        self.assertGreaterEqual(len(rows),18)  # V59+; append-only evidence registry
+        self.assertGreaterEqual(len([x for x in rows if x['topic_id']=='nature_moments']),12)
+        self.assertGreaterEqual(len([x for x in rows if x['topic_id']=='objects_oddities']),6)
         self.assertEqual({x["original_rank"] for x in rows if x["topic_id"] == "objects_oddities"}, {1, 2, 5})
         for row in rows:
             args=(row["topic_id"],row["title"],row["sha256"],row["start_sec"])
