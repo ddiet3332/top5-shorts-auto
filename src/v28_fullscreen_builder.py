@@ -166,12 +166,32 @@ def create_scene(source,start,seconds,destination,*,clear_rank_rail=False,
         f"pad=1080:{picture_height}:{left}+({available_width}-iw)/2:(oh-ih)/2:color=white,"
         "pad=1080:1920:0:306:color=white,"
         "drawbox=x=0:y=420:w=270:h=850:color=white@0.97:t=fill,"
-        f"setpts=(PTS-STARTPTS)/{playback_rate},fps=24,format=yuv420p[v]")
+        # Timestamp rounding near source EOF can drop 1-4 frames. Allow at
+        # most 0.20s of cloned final-source frame; never silently pad seconds.
+        f"setpts=(PTS-STARTPTS)/{playback_rate},fps=24,"
+        "tpad=stop_mode=clone:stop_duration=0.20,"
+        f"trim=end_frame={int(seconds*FPS)},setpts=N/(24*TB),format=yuv420p[v]")
+    expected_frames=int(seconds*FPS)
+    if seconds <= 0 or abs(expected_frames-seconds*FPS)>1e-6:
+        raise ValueError("Scene length must fit 24fps exact frame budget")
     run(["ffmpeg","-hide_banner","-v","error","-y","-ss",str(start),"-i",str(source),
          "-filter_complex",filtergraph,"-map","[v]",
-         "-frames:v",str(int(seconds*FPS)),"-an",
+         "-frames:v",str(expected_frames),"-fps_mode","cfr","-r","24","-an",
          "-c:v","libx264","-preset","veryfast","-crf","23",
          "-pix_fmt","yuv420p","-movflags","+faststart",str(destination)],timeout=250)
+    # Never claim 30 seconds from the AAC/container when video ends at 717/720.
+    try:
+        evidence=json.loads(subprocess.check_output(
+            ["ffprobe","-v","error","-select_streams","v:0",
+             "-show_entries","stream=nb_frames,duration,r_frame_rate",
+             "-of","json",str(destination)],text=True,timeout=30))
+        stream=evidence["streams"][0]
+        if (int(stream.get("nb_frames",0))!=expected_frames or
+            stream.get("r_frame_rate")!="24/1" or
+            abs(float(stream.get("duration",0))-seconds)>0.02):
+            raise ValueError("SCENE_FRAME_BUDGET_INVALID")
+    except (KeyError,IndexError,TypeError,OSError,subprocess.SubprocessError) as exc:
+        raise ValueError("SCENE_FRAME_EVIDENCE_MISSING") from exc
 def inspect_qa(file,output,captions):
     p=subprocess.run(["ffprobe","-v","error","-show_format","-show_streams",
        "-of","json",str(file)],capture_output=True,text=True,check=True,timeout=30)

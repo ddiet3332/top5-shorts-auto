@@ -51,6 +51,8 @@ on:
       - 'tests/test_top5_candidate_visual_gate.py'
       - 'src/top5_reviewed_sources.py'
       - 'src/top5_auto_v29.py'
+      - 'src/v28_fullscreen_builder.py'
+      - 'tests/test_v44_exact_frames.py'
       - 'sample/top5_auto_topics_v30.json'
 permissions:
   contents: read
@@ -66,11 +68,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: ./.github/actions/setup-video-tools
+        with:
+          fonts: 'true'
+      - name: Confirm actual media tools for real EOF/frame regressions
+        run: |
+          command -v ffmpeg
+          command -v ffprobe
+          ffmpeg -version | head -1
       - name: Install image inspection dependency for test runner
         run: python -m pip install --disable-pip-version-check 'Pillow>=10,<13' 'numpy>=1.26,<3'
       - name: Test all four channel families and publication hard gates
         run: |
           python -m unittest discover -s tests -p 'test_top5_universal_trial.py' -v
+          python -m unittest discover -s tests -p 'test_v44_exact_frames.py' -v
           python -m unittest discover -s tests -p 'test_top5_universal_stock_fallback.py' -v
           python -m unittest discover -s tests -p 'test_top5_scene_evidence.py' -v
           python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
