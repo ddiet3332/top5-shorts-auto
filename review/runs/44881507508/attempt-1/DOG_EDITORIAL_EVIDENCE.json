@@ -1,0 +1,278 @@
+{
+  "baseline_sha256": "23f626c8855f26953d8dab7a8688fbe00e89d040b51da19fee1525ee9cfdc9db",
+  "rendered_sha256": "75c891103f269be96fc88919d1f3a0ac1f31d7b4ccfec7b7c97a9a6bd4aa64b0",
+  "baseline_first_second_motion": null,
+  "first_second_motion": 51.553,
+  "objective_status": "PASS",
+  "editorial_status": "UNVERIFIED",
+  "findings": [],
+  "segments": [
+    {
+      "segment": "hook",
+      "action_label": "bag_exit",
+      "annotated_observation": "가방 안에서 고개를 내밀고 오른쪽으로 뛰어내림",
+      "source_page": "https://www.pexels.com/video/dog-jumping-out-of-a-bag-8473589/",
+      "source_sha256": "85e8e4ebbba9c3aecfb0badc5db502eceb03e03d088d31114a5668b763891d08",
+      "source_duration_sec": 7.92,
+      "source_window_sec": [
+        4.17,
+        5.77
+      ],
+      "render_window_sec": [
+        0,
+        2
+      ],
+      "sample_timestamps": {
+        "begin": 0,
+        "peak": 0.537,
+        "end": 1.958
+      },
+      "source_sample_timestamps": {
+        "begin": 4.17,
+        "peak": 4.6,
+        "end": 5.736
+      },
+      "payoff_relative_sec": 0.537,
+      "occupancy_at_peak": {
+        "visible_bbox_area_fraction": 0.0789,
+        "bbox_retained_fraction": 1.0,
+        "phone_width_px": 140.2,
+        "phone_height_px": 129.6
+      },
+      "bbox_basis": "manual source-frame box projected through actual crop",
+      "semantic_action": "UNVERIFIED",
+      "semantic_caption_match": "UNVERIFIED",
+      "semantic_distinctness": "UNVERIFIED",
+      "all_frames_crop_clipping": "UNVERIFIED"
+    },
+    {
+      "segment": "rank5",
+      "action_label": "yard_leap",
+      "annotated_observation": "낮게 웅크린 뒤 잔디에서 뒷발로 도약",
+      "source_page": "https://www.pexels.com/video/dog-playing-with-water-9006741/",
+      "source_sha256": "06e7d4e9b6c644a343baf4d13103e2e0cbf3e7882dfb29584cc4e5bd1caa32e6",
+      "source_duration_sec": 58.35,
+      "source_window_sec": [
+        1,
+        6.0
+      ],
+      "render_window_sec": [
+        2,
+        7
+      ],
+      "sample_timestamps": {
+        "begin": 2,
+        "peak": 5.0,
+        "end": 6.958
+      },
+      "source_sample_timestamps": {
+        "begin": 1.0,
+        "peak": 4.0,
+        "end": 5.958
+      },
+      "payoff_relative_sec": 3.0,
+      "occupancy_at_peak": {
+        "visible_bbox_area_fraction": 0.0678,
+        "bbox_retained_fraction": 1.0,
+        "phone_width_px": 103.0,
+        "phone_height_px": 151.6
+      },
+      "bbox_basis": "manual source-frame box projected through actual crop",
+      "semantic_action": "UNVERIFIED",
+      "semantic_caption_match": "UNVERIFIED",
+      "semantic_distinctness": "UNVERIFIED",
+      "all_frames_crop_clipping": "UNVERIFIED"
+    },
+    {
+      "segment": "rank4",
+      "action_label": "water_shake",
+      "annotated_observation": "서 있던 보더콜리가 몸을 크게 틀어 물방울이 퍼짐",
+      "source_page": "https://www.pexels.com/video/playful-dog-shaking-off-water-in-lake-33268466/",
+      "source_sha256": "ef00c6f0e2cf780ac683cc2f7d0fbd670cd7c87a607cfbeec60778dc08d594ff",
+      "source_duration_sec": 22.5,
+      "source_window_sec": [
+        3.5,
+        8.5
+      ],
+      "render_window_sec": [
+        7,
+        12
+      ],
+      "sample_timestamps": {
+        "begin": 7,
+        "peak": 10.0,
+        "end": 11.958
+      },
+      "source_sample_timestamps": {
+        "begin": 3.5,
+        "peak": 6.5,
+        "end": 8.458
+      },
+      "payoff_relative_sec": 3.0,
+      "occupancy_at_peak": {
+        "visible_bbox_area_fraction": 0.1148,
+        "bbox_retained_fraction": 1.0,
+        "phone_width_px": 208.0,
+        "phone_height_px": 127.2
+      },
+      "bbox_basis": "manual source-frame box projected through actual crop",
+      "semantic_action": "UNVERIFIED",
+      "semantic_caption_match": "UNVERIFIED",
+      "semantic_distinctness": "UNVERIFIED",
+      "all_frames_crop_clipping": "UNVERIFIED"
+    },
+    {
+      "segment": "rank3",
+      "action_label": "skate_dismount",
+      "annotated_observation": "퍼그가 보드 위에서 가까이 다가와 앞발부터 내려옴",
+      "source_page": "https://www.pexels.com/video/a-young-woman-skateboarding-with-her-dog-8646067/",
+      "source_sha256": "81e912c5ed4795f5d9a25e319983e4550cc15514b94f3f7f23286385ea03364b",
+      "source_duration_sec": 12.47,
+      "source_window_sec": [
+        8,
+        9.75
+      ],
+      "render_window_sec": [
+        12,
+        17
+      ],
+      "sample_timestamps": {
+        "begin": 12,
+        "peak": 15.571,
+        "end": 16.958
+      },
+      "source_sample_timestamps": {
+        "begin": 8.0,
+        "peak": 9.25,
+        "end": 9.735
+      },
+      "payoff_relative_sec": 3.571,
+      "occupancy_at_peak": {
+        "visible_bbox_area_fraction": 0.0761,
+        "bbox_retained_fraction": 1.0,
+        "phone_width_px": 92.5,
+        "phone_height_px": 189.7
+      },
+      "bbox_basis": "manual source-frame box projected through actual crop",
+      "semantic_action": "UNVERIFIED",
+      "semantic_caption_match": "UNVERIFIED",
+      "semantic_distinctness": "UNVERIFIED",
+      "all_frames_crop_clipping": "UNVERIFIED"
+    },
+    {
+      "segment": "rank2",
+      "action_label": "catch",
+      "annotated_observation": "앉았다가 몸을 일으켜 초록 공을 입으로 받음",
+      "source_page": "https://www.pexels.com/video/a-dog-playing-catch-7515923/",
+      "source_sha256": "452f84c8963e245972ca395f1980ec1a362dc38f26507ba7fd694f0ea1ebcc39",
+      "source_duration_sec": 22.13,
+      "source_window_sec": [
+        17,
+        22.0
+      ],
+      "render_window_sec": [
+        17,
+        22
+      ],
+      "sample_timestamps": {
+        "begin": 17,
+        "peak": 20.5,
+        "end": 21.958
+      },
+      "source_sample_timestamps": {
+        "begin": 17.0,
+        "peak": 20.5,
+        "end": 21.958
+      },
+      "payoff_relative_sec": 3.5,
+      "occupancy_at_peak": {
+        "visible_bbox_area_fraction": 0.2344,
+        "bbox_retained_fraction": 1.0,
+        "phone_width_px": 153.4,
+        "phone_height_px": 352.0
+      },
+      "bbox_basis": "manual source-frame box projected through actual crop",
+      "semantic_action": "UNVERIFIED",
+      "semantic_caption_match": "UNVERIFIED",
+      "semantic_distinctness": "UNVERIFIED",
+      "all_frames_crop_clipping": "UNVERIFIED"
+    },
+    {
+      "segment": "rank1",
+      "action_label": "back_trick",
+      "annotated_observation": "몸을 낮춘 사람 등 위로 뛰어올라 잠시 균형을 잡고 착지",
+      "source_page": "https://www.pexels.com/video/dog-jumping-on-woman-s-back-7628753/",
+      "source_sha256": "33e59c572f627f40d8959c439b90933908b6387dbbf09aae69a5df45a570c005",
+      "source_duration_sec": 12.8,
+      "source_window_sec": [
+        0.35,
+        5.35
+      ],
+      "render_window_sec": [
+        22,
+        27
+      ],
+      "sample_timestamps": {
+        "begin": 22,
+        "peak": 23.15,
+        "end": 26.958
+      },
+      "source_sample_timestamps": {
+        "begin": 0.35,
+        "peak": 1.5,
+        "end": 5.308
+      },
+      "payoff_relative_sec": 1.15,
+      "occupancy_at_peak": {
+        "visible_bbox_area_fraction": 0.081,
+        "bbox_retained_fraction": 1.0,
+        "phone_width_px": 129.6,
+        "phone_height_px": 144.0
+      },
+      "bbox_basis": "manual source-frame box projected through actual crop",
+      "semantic_action": "UNVERIFIED",
+      "semantic_caption_match": "UNVERIFIED",
+      "semantic_distinctness": "UNVERIFIED",
+      "all_frames_crop_clipping": "UNVERIFIED"
+    },
+    {
+      "segment": "outro",
+      "action_label": "tug",
+      "annotated_observation": "착지 이후 원형 장난감을 사람과 당김",
+      "source_page": "https://www.pexels.com/video/dog-jumping-on-woman-s-back-7628753/",
+      "source_sha256": "33e59c572f627f40d8959c439b90933908b6387dbbf09aae69a5df45a570c005",
+      "source_duration_sec": 12.8,
+      "source_window_sec": [
+        9.25,
+        12.25
+      ],
+      "render_window_sec": [
+        27,
+        30
+      ],
+      "sample_timestamps": {
+        "begin": 27,
+        "peak": 27.5,
+        "end": 29.958
+      },
+      "source_sample_timestamps": {
+        "begin": 9.25,
+        "peak": 9.75,
+        "end": 12.208
+      },
+      "payoff_relative_sec": 0.5,
+      "occupancy_at_peak": {
+        "visible_bbox_area_fraction": 0.1084,
+        "bbox_retained_fraction": 1.0,
+        "phone_width_px": 110.7,
+        "phone_height_px": 225.6
+      },
+      "bbox_basis": "manual source-frame box projected through actual crop",
+      "semantic_action": "UNVERIFIED",
+      "semantic_caption_match": "UNVERIFIED",
+      "semantic_distinctness": "UNVERIFIED",
+      "all_frames_crop_clipping": "UNVERIFIED"
+    }
+  ],
+  "publication_approved": false
+}

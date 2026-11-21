@@ -1,0 +1,84 @@
+{
+  "status": "PREVIEW_READY",
+  "provider": "pexels",
+  "method": "Official individual Pexels page download, no API key",
+  "candidates": [
+    {
+      "id": "PX-33567553",
+      "provider": "pexels",
+      "source_url": "https://www.pexels.com/video/playful-dog-with-colorful-toy-on-sofa-33567553/",
+      "creator": "Damir K",
+      "license_url": "https://www.pexels.com/license/",
+      "rank_target": "rank5",
+      "action_family_hypothesis": "toy_surprise",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED",
+      "preview_origin": "NEW_THIS_RUN",
+      "reviewed_frames": false,
+      "semantic_review": "UNVERIFIED",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "source_audio_approved": false,
+      "publication_approved": false,
+      "preview_file": "PX-33567553_preview.mp4",
+      "frame_files": [
+        "PX-33567553_frame0.jpg",
+        "PX-33567553_frame1.jpg",
+        "PX-33567553_frame2.jpg"
+      ],
+      "sha256": "44e2e371c42446a68abd500bf38db7db80e8474fb1592bc8dd70150ddb436b05",
+      "duration_sec": 38.88,
+      "preview_start_sec": 28.0,
+      "motion_proxy_not_comedy_score": 36.095,
+      "confirmed_funny_payoff": false,
+      "alternative_windows": [
+        {
+          "status": "PREVIEW_READY_REVIEW_REQUIRED",
+          "preview_file": "PX-33567553_alt_preview.mp4",
+          "frame_files": [
+            "PX-33567553_alt_frame0.jpg",
+            "PX-33567553_alt_frame1.jpg",
+            "PX-33567553_alt_frame2.jpg"
+          ],
+          "preview_start_sec": 4.0,
+          "motion_proxy_not_comedy_score": 35.823,
+          "reviewed_frames": false,
+          "semantic_review": "UNVERIFIED",
+          "publication_approved": false
+        }
+      ]
+    },
+    {
+      "id": "PX-28860202",
+      "provider": "pexels",
+      "source_url": "https://www.pexels.com/video/energetic-dog-leaping-into-lake-outdoors-28860202/",
+      "creator": "Luis Vargas",
+      "license_url": "https://www.pexels.com/license/",
+      "rank_target": "rank2",
+      "action_family_hypothesis": "lake_splash",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED",
+      "preview_origin": "NEW_THIS_RUN",
+      "reviewed_frames": false,
+      "semantic_review": "UNVERIFIED",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "source_audio_approved": false,
+      "publication_approved": false,
+      "preview_file": "PX-28860202_preview.mp4",
+      "frame_files": [
+        "PX-28860202_frame0.jpg",
+        "PX-28860202_frame1.jpg",
+        "PX-28860202_frame2.jpg"
+      ],
+      "sha256": "2b6097a5c19df33208b855fee985820bf01b0d214ee94cf415fcc15209b1ea81",
+      "duration_sec": 12.1,
+      "preview_start_sec": 2.0,
+      "motion_proxy_not_comedy_score": 12.852,
+      "confirmed_funny_payoff": false,
+      "alternative_windows": []
+    }
+  ],
+  "new_preview_count": 2,
+  "publication_approved": false,
+  "rights_status": "UNVERIFIED",
+  "next_action": "HUMAN_VISUAL_AND_RIGHTS_REVIEW"
+}
