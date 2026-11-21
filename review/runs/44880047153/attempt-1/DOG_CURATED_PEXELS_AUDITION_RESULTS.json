@@ -1,0 +1,67 @@
+{
+  "status": "PREVIEW_READY",
+  "provider": "pexels",
+  "method": "Official individual Pexels page download, no API key",
+  "candidates": [
+    {
+      "id": "PX-3042473",
+      "provider": "pexels",
+      "source_url": "https://www.pexels.com/video/a-dog-fights-with-his-reflection-in-the-mirror-3042473/",
+      "creator": "Magda Ehlers",
+      "license_url": "https://www.pexels.com/license/",
+      "rank_target": "rank2",
+      "action_family_hypothesis": "mirror_reaction",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED",
+      "preview_origin": "NEW_THIS_RUN",
+      "reviewed_frames": false,
+      "semantic_review": "UNVERIFIED",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "source_audio_approved": false,
+      "publication_approved": false,
+      "preview_file": "PX-3042473_preview.mp4",
+      "frame_files": [
+        "PX-3042473_frame0.jpg",
+        "PX-3042473_frame1.jpg",
+        "PX-3042473_frame2.jpg"
+      ],
+      "sha256": "b22391a755d149e3ed023c6d489da4c772872e7aaa6e31f87701d381e4ea0121",
+      "duration_sec": 17.0,
+      "preview_start_sec": 6.0,
+      "motion_proxy_not_comedy_score": 17.981,
+      "confirmed_funny_payoff": false
+    },
+    {
+      "id": "PX-7678714",
+      "provider": "pexels",
+      "source_url": "https://www.pexels.com/video/a-border-collie-catching-a-toy-7678714/",
+      "creator": "KoolShooters",
+      "license_url": "https://www.pexels.com/license/",
+      "rank_target": "rank2",
+      "action_family_hypothesis": "spin_jump",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED",
+      "preview_origin": "NEW_THIS_RUN",
+      "reviewed_frames": false,
+      "semantic_review": "UNVERIFIED",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "source_audio_approved": false,
+      "publication_approved": false,
+      "preview_file": "PX-7678714_preview.mp4",
+      "frame_files": [
+        "PX-7678714_frame0.jpg",
+        "PX-7678714_frame1.jpg",
+        "PX-7678714_frame2.jpg"
+      ],
+      "sha256": "4a34ec884367a01ab5cece2bc9031ca1642acc8b2278c3d98bdfdccaf932d5d4",
+      "duration_sec": 21.72,
+      "preview_start_sec": 16.0,
+      "motion_proxy_not_comedy_score": 19.375,
+      "confirmed_funny_payoff": false
+    }
+  ],
+  "new_preview_count": 2,
+  "publication_approved": false,
+  "rights_status": "UNVERIFIED",
+  "next_action": "HUMAN_VISUAL_AND_RIGHTS_REVIEW"
+}
