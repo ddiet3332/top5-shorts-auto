@@ -5,6 +5,7 @@ Never promotes a source to the ranked video or claims rights clearance.
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -20,7 +21,13 @@ def audition(discovery_path: Path, output: Path, *, max_items=2, downloader=None
     downloader = downloader or download_single_pexels
     previewer = previewer or make_five_second_preview
     results = []
-    for item in discovered.get("candidates", [])[:max_items]:
+    pool = discovered.get("candidates", [])
+    # Rotate the small review batch across scheduled runs rather than
+    # downloading the same first two candidates every 15 minutes.
+    run_id = os.environ.get("GITHUB_RUN_ID", "0")
+    offset = int(run_id) % len(pool) if pool and run_id.isdigit() else 0
+    selected = (pool[offset:] + pool[:offset])[:max_items]
+    for item in selected:
         sid = item.get("id", "")
         if not isinstance(sid, str) or not sid.startswith("PX-") or not sid[3:].isdigit():
             continue
