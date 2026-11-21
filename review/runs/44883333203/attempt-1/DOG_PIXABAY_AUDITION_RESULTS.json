@@ -1,0 +1,12 @@
+{
+  "status": "NO_PREVIEW",
+  "provider": "pixabay",
+  "candidates": [],
+  "new_preview_count": 0,
+  "cached_preview_count": 0,
+  "skipped_provisionally_rejected_ids": [
+    "PB-4740",
+    "PB-77534"
+  ],
+  "publication_approved": false
+}
