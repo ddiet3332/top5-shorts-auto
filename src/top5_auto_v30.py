@@ -293,7 +293,7 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
             # event/location groups have technically valid, visible cuts.
             category=(topic or {}).get("category")
             if category=="자연":
-                diversified=diverse_scene_selection(accepted,required=5)[0]
+                diversified=diverse_scene_selection(accepted,required=5,distinct_event_families_only=True)[0]
             elif category=="사물":
                 diversified=diverse_object_selection(accepted,required=5)[0]
             else:
@@ -310,7 +310,7 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
         # We have already inspected actual source windows above. A five-rank
         # nature video should not reuse three camera views of the same named
         # waterfall just to fill slots. Only explicit site names are compared.
-        distinct, duplicate_sites = diverse_scene_selection(accepted,required=5)
+        distinct, duplicate_sites = diverse_scene_selection(accepted,required=5,distinct_event_families_only=True)
         (Path(out)/"V30_SOURCE_SCENE_DIVERSITY.json").write_text(
             json.dumps({
                 "topic":(topic or {}).get("topic_id"),
@@ -320,15 +320,18 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 "duplicate_site_candidates":duplicate_sites,
                 "excluded_scene_candidates":duplicate_sites,
                 "selected_event_families":[nature_event_family(r["title"]) for r in distinct],
-                "method":"filename named-landmark and broad-event hints, not visual action recognition",
+                "distinct_event_family_count":len({nature_event_family(r["title"]) for r in distinct}),
+                "strict_one_nature_event_per_rank":True,
+                "unknown_nature_families_excluded":True,
+                "method":"strict filename event-class cap plus named-landmark hints; not actual action recognition",
                 "editorial_score":None,
                 "rights_verified":False,"publication_approved":False,
             },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
         if len(distinct)<5:
             (Path(out)/"V30_CANDIDATES.json").write_text(
                 json.dumps(attempts,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-            raise SourceShortage("DISTINCT_SCENE_SHORTAGE",
-                f"겹치지 않는 명칭의 자연 원본 구간 {len(distinct)}/5",attempts)
+            raise SourceShortage("SOURCE_SHORTAGE_NATURE_EVENT_DIVERSITY",
+                f"동일 현상 중복 없이 확인 가능한 자연 이벤트가 {len(distinct)}/5종입니다",attempts)
         accepted=distinct
     if (topic or {}).get("category")=="사물":
         # Three visually different files about the same domino trick are

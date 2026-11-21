@@ -169,8 +169,10 @@ class CandidateVisualGateTests(unittest.TestCase):
                     select_sources(candidates,root,
                                    topic={"topic_id":"nature_moments","category":"자연"})
             report=json.loads((root/"V30_SOURCE_SCENE_DIVERSITY.json").read_text())
-            self.assertEqual(report["distinct_named_site_count"],3)
-            self.assertEqual(len(report["duplicate_site_candidates"]),2)
+            self.assertEqual(report["distinct_named_site_count"],2)
+            self.assertEqual(len(report["duplicate_site_candidates"]),3)
+            self.assertTrue(report["strict_one_nature_event_per_rank"])
+            self.assertEqual(report["distinct_event_family_count"],2)
 
 
 if __name__=="__main__":

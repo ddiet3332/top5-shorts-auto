@@ -99,7 +99,8 @@ def nature_event_family(title: str) -> str | None:
     return None
 
 
-def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[list[dict], list[dict]]:
+def diverse_scene_selection(rows: list[dict], *, required: int = 5,
+                            distinct_event_families_only: bool = False) -> tuple[list[dict], list[dict]]:
     """Diversify five ranked scenes by BOTH named site and broad event type.
 
     First prefer distinct event families. Only when insufficient, accept a
@@ -111,12 +112,17 @@ def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[lis
     used_ids = set()
     used_sites = set()
     family_count = {}
-    for pass_no in (1, 2):
+    # Keep historic two-pass behavior for non-production callers.
+    # Production requires five distinct *known* event families, not
+    # two auroras + two geysers + one volcano as in V51.
+    for pass_no in ((1,) if distinct_event_families_only else (1, 2)):
         for index, row in enumerate(rows):
             if index in used_ids:
                 continue
             site = named_nature_site(row["title"])
             family = nature_event_family(row["title"])
+            if distinct_event_families_only and family is None:
+                continue
             if site and site in used_sites:
                 continue
             if family and family_count.get(family, 0) >= pass_no:
@@ -137,7 +143,9 @@ def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[lis
             continue
         site = named_nature_site(row["title"])
         family = nature_event_family(row["title"])
-        if site and site in used_sites:
+        if distinct_event_families_only and family is None:
+            reason = "UNKNOWN_NATURE_EVENT_FAMILY"
+        elif site and site in used_sites:
             reason = "REPEATED_NAMED_NATURE_SITE"
         elif family and family_count.get(family, 0) >= 1:
             reason = "REPEATED_NATURE_EVENT_FAMILY"
