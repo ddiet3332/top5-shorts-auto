@@ -33,7 +33,9 @@ concurrency:
   cancel-in-progress: true
 jobs:
   video-context-audit:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    # A config push has no actual upstream video; PR regression CI covers unit tests.
+    # Only a successful source workflow or an explicit manual run can start model QA.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 32
     steps:
