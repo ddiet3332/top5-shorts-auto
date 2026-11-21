@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_basis": "Actual selected-window review, not global-source bans; prior nature/objects V43–V45 plus V46 natural history run #44919422681. Topic+original SHA256+original cut start ±0.22s; no automatic semantic truth claim.",
+  "review_basis": "Actual selected-window review, not global-source bans; prior nature/objects V43–V45 plus V46 natural history run #44919422681. Topic+original SHA256+original cut start ±0.22s; no automatic semantic truth claim. V50 actual V49 auto83 found two low-payoff flood upper-rank cuts; no global source bans.",
   "source_video": "TOP5-auto-review-65",
   "technical_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44891297714",
   "rejected_windows": [
@@ -102,6 +102,24 @@
       "tolerance_sec": 0.22,
       "original_rank": 1,
       "review_reason": "Run #44919422681 all seven rank-one actual rendered frames show archival black-and-white neighborhood/street, with no clear dramatic flooding or surprise payoff from original 40–46s cut. Unsuitable as top rank without better scene verification; reject only this exact cut, not historical source itself."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Flood in Gurama Quarter.webm",
+      "sha256": "e9b7245a75e7d69ca28cd3e0d70661f03fbd2b7bf0b7c247a9abd5fbab9975a7",
+      "start_sec": 4.4,
+      "tolerance_sec": 0.22,
+      "original_rank": 2,
+      "review_reason": "Real V49 run #44921764653 35 rendered rank frames (15.30–20.70s) and 3 original selected-cut SHA-bound frames show shallow muddy runoff over rocks with nearly static framing and no distinct setup -> action -> payoff. Insufficient surprise for rank 2; reject this selected 4.4–10.4s cut only, not whole source."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Azraq flooding May 2023.webm",
+      "sha256": "9d5aaf5832663ed9179ff35551b366c97649dae509cfc626b2db1125250ce55e",
+      "start_sec": 2,
+      "tolerance_sec": 0.22,
+      "original_rank": 1,
+      "review_reason": "Real V49 run #44921764653 35 rendered rank frames (21.3–26.7s) and SHA-bound original trio show a roadside/road flooding becoming visible, but no clear first-place surprising payoff or story resolution; visually weaker than selected geyser and Tonga eruption. Reject exact 2–8s cut only, not all Azraq coverage."
     }
   ],
   "rights_verified": false,
@@ -134,6 +152,13 @@
       "topic_id": "nature_moments",
       "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44919422681",
       "review_basis": "Independent actual TOP5_STANDARD_35_FRAME_QA.jpg 7 ranked frames each, verified against V32 selected-source SHA and original start/end",
+      "rights_verified": false,
+      "publication_approved": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44921764653",
+      "review_basis": "Actual V49 auto83 35 ranked 1080x1920 composite frames and 15 SHA256-bound original frames inspected; weak upper ranks #2 and #1",
       "rights_verified": false,
       "publication_approved": false
     }
