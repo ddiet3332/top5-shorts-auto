@@ -151,6 +151,12 @@ def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[lis
 def object_event_family(title: str) -> str | None:
     """Coarse title-only object/mechanism labels, not actual scene understanding."""
     name=re.sub(r"(?i)^file:", "",str(title)).casefold()
+    # Real V44 run #44918160276 misread "Domino Roach 2024" as domino
+    # physics, although the decoded 35-frame ranked video shows a live roach.
+    # Animal keywords veto the object mechanism unless explicitly robotic.
+    if (re.search(r"\b(?:roach|cockroach|beetle|insect)\b",name)
+        and not re.search(r"\b(?:robot|robotic|animatronic)\b",name)):
+        return None
     for pattern, family in (
         (r"\bdomino(?:es)?\b", "domino"),
         (r"\barduino\b|\belectronic\b|\bcircuit\b", "electronics"),
