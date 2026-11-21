@@ -27,6 +27,7 @@ on:
       - 'tests/test_top5_object_diversity.py'
       - 'src/top5_standard_scene_review.py'
       - 'src/top5_smolvlm2_editorial.py'
+      - '.github/workflows/top5_v38_vlm_scene_audit.yml'
       - 'tests/test_top5_smolvlm2_editorial.py'
       - 'tests/test_top5_standard_scene_review.py'
       - 'tests/test_top5_candidate_visual_gate.py'
