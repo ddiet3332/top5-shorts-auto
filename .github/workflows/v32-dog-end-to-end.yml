@@ -35,6 +35,9 @@ on:
       - 'sample/dog_editorial_rejections_v1.json'
       - 'sample/dog_commons_editorial_rejections_v1.json'
       - 'sample/dog_curated_pexels_v1.json'
+      - 'sample/dog_mixkit_license_screen_v1.json'
+      - 'tests/test_dog_mixkit_license_screen.py'
+      - 'src/dog_mixkit_license_screen.py'
       - 'tests/test_dog_curated_pexels_audition.py'
       - 'src/dog_curated_pexels_audition.py'
       - 'src/top5_locked_design.py'
@@ -56,6 +59,9 @@ on:
       - 'sample/dog_editorial_rejections_v1.json'
       - 'sample/dog_commons_editorial_rejections_v1.json'
       - 'sample/dog_curated_pexels_v1.json'
+      - 'sample/dog_mixkit_license_screen_v1.json'
+      - 'tests/test_dog_mixkit_license_screen.py'
+      - 'src/dog_mixkit_license_screen.py'
       - 'tests/test_dog_curated_pexels_audition.py'
       - 'src/dog_curated_pexels_audition.py'
       - 'sample/dog_editorial_profile_v1.json'
@@ -306,6 +312,20 @@ jobs:
             output/dog/curated_pexels/*_frame*.jpg
           if-no-files-found: ignore
           retention-days: 14
+      - name: Screen Mixkit dog clips by per-video commercial license
+        timeout-minutes: 1
+        run: |
+          python src/dog_mixkit_license_screen.py \
+            --catalog sample/dog_mixkit_license_screen_v1.json \
+            --output output/dog/DOG_MIXKIT_LICENSE_SCREEN.json
+      - name: Archive Free-vs-Restricted Mixkit license decision evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-mixkit-license-screen-${{ github.run_id }}-${{ github.run_attempt }}
+          path: output/dog/DOG_MIXKIT_LICENSE_SCREEN.json
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Discover bounded free dog source candidates
         timeout-minutes: 2
         env:
@@ -415,6 +435,7 @@ jobs:
             output/dog/DOG_REPLACEMENT_READINESS.json
             output/dog/DOG_DISCOVERY_CANDIDATES.json
             output/dog/DOG_PIXABAY_CANDIDATES.json
+            output/dog/DOG_MIXKIT_LICENSE_SCREEN.json
             output/evidence/review/
           if-no-files-found: error
           retention-days: 30
