@@ -35,13 +35,22 @@ class GenericLabelSafetyTests(unittest.TestCase):
         from top5_auto_v30 import select_sources
         from pathlib import Path
 
+        # Five independent event types are now required for a nature TOP5:
+        # previously this test accidentally accepted five generic waterfall clips.
+        different_titles=[
+            "File:Waterfall View.webm",
+            "File:Lightning storm in Arizona.webm",
+            "File:Tonga Volcano Eruption.webm",
+            "File:Strokkur Geyser Eruption.webm",
+            "File:Aurora Borealis Timelapse.webm",
+        ]
         candidates=[
-            {"title": f"File:Waterfall View {i}.webm",
-             "source_page": f"https://commons.wikimedia.org/wiki/File:Waterfall_View_{i}.webm",
+            {"title": title,
+             "source_page": f"https://commons.wikimedia.org/wiki/scene_{i}",
              "author": f"creator-{i}", "license": "CC BY",
              "license_url": "https://creativecommons.org/licenses/by/4.0/",
              "title_score": 9.0, "discovery_rank": 15.0}
-            for i in range(5)]
+            for i,title in enumerate(different_titles)]
         def fake_download(row, path):
             Path(path).write_bytes((row["title"]+" content").encode())
         with TemporaryDirectory() as td:
@@ -56,7 +65,9 @@ class GenericLabelSafetyTests(unittest.TestCase):
             self.assertEqual(len(selected),5)
             self.assertEqual(len(attempts),5)
             self.assertTrue(all(row["caption"]=="장면 내용 검수 필요" for row in selected))
-            self.assertTrue(all(row["label"]=="폭포 관련 영상" for row in selected))
+            self.assertEqual(len({row["title"] for row in selected}),5)
+            self.assertEqual(next(row["label"] for row in selected if "Waterfall" in row["title"]),
+                             "폭포 관련 영상")
 
     def test_unfamiliar_human_topic_does_not_become_dog(self):
         self.assertEqual(provisional_topic_label({"category":"사람"},"File:Unknown.mp4"),
