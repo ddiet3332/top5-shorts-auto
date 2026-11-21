@@ -755,7 +755,11 @@ def main():
         final,[*hook_pool,*selected],[row["sha256"] for row in selected_evidence],output)
     save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
     reviewed_hook=REVIEWED_HOOK_STARTS.get(hook_audit["sha256"])==hook_source["hook_start"]
-    hook_caption="흰 고양이가 덮치자 둘이 데굴!" if reviewed_hook else "다음 행동을 맞혀 보세요"
+    if topic["topic_id"] not in ("cat_surprises", "dog_surprises"):
+        # Metadata is not visual evidence: use a conspicuous, honest preview label.
+        hook_caption = "오프닝 장면 검수 필요"
+    else:
+        hook_caption="흰 고양이가 덮치자 둘이 데굴!" if reviewed_hook else "다음 행동을 맞혀 보세요"
     video=assemble_video(topic,final,output,hook_source,
                          moving_ending=True,hook_caption=hook_caption,
                          hook_caption_y=(1455 if reviewed_hook else 1712) if mobile_captions else 1190,
