@@ -11,6 +11,7 @@ on:
       - 'src/top5_standard_scene_review.py'
       - 'tests/test_top5_standard_scene_review.py'
       - 'src/top5_candidate_visual_gate.py'
+      - 'tests/test_top5_object_diversity.py'
       - 'tests/test_top5_candidate_visual_gate.py'
       - 'sample/top5_auto_topics_v30.json'
       - 'review/top5_weak_source_windows.json'
@@ -38,6 +39,7 @@ on:
       - 'src/top5_standard_scene_review.py'
       - 'tests/test_top5_standard_scene_review.py'
       - 'src/top5_candidate_visual_gate.py'
+      - 'tests/test_top5_object_diversity.py'
       - 'tests/test_top5_candidate_visual_gate.py'
       - 'sample/top5_auto_topics_v30.json'
       - 'review/top5_weak_source_windows.json'
@@ -76,6 +78,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_top5_category_rotation.py' -v
           python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
           python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
+          python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
           python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
           python -m unittest discover -s tests -p 'test_top5_exact_frame_render.py' -v
           python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
