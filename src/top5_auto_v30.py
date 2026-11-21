@@ -21,7 +21,7 @@ from top5_auto_v29 import (
 )
 from top5_hook_selection import SourceShortage, choose_hook, identity
 from top5_candidate_visual_gate import (inspect_original_window,
-    named_nature_site, diverse_scene_selection)
+    named_nature_site, diverse_scene_selection, nature_event_family)
 
 BASE=Path(__file__).resolve().parents[1]
 CHECKED=BASE/"review/v29_checked_actions.json"
@@ -287,7 +287,12 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
         attempts.append(row)
         print("CANDIDATE",idx,row["title"],row["status"],flush=True)
         if len(accepted)>=9:
-            break
+            # Metadata ranking can oversample one event (e.g. four floods).
+            # Keep trying further originals while fewer than five distinct
+            # event/location groups have technically valid, visible cuts.
+            if ((topic or {}).get("category") != "자연" or
+                len(diverse_scene_selection(accepted,required=5)[0])>=5):
+                break
     if len(accepted)<5:
         out=Path(out)
         (out/"V30_CANDIDATES.json").write_text(
@@ -304,8 +309,11 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 "topic":(topic or {}).get("topic_id"),
                 "source_count_candidate":len(accepted),
                 "distinct_named_site_count":len(distinct),
+                "selected_distinct_scene_count":len(distinct),
                 "duplicate_site_candidates":duplicate_sites,
-                "method":"filename named-landmark hint, not visual action recognition",
+                "excluded_scene_candidates":duplicate_sites,
+                "selected_event_families":[nature_event_family(r["title"]) for r in distinct],
+                "method":"filename named-landmark and broad-event hints, not visual action recognition",
                 "editorial_score":None,
                 "rights_verified":False,"publication_approved":False,
             },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
