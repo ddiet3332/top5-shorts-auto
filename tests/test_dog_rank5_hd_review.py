@@ -58,7 +58,7 @@ class DogRank5OriginalHDTests(unittest.TestCase):
             render_vertical(Path("source.mp4"),Path("review.mp4"),start=2.0,seconds=5.0)
             params=run.call_args.args[0]
             vf=params[params.index("-vf")+1]
-            self.assertIn("tanh((t-3.2)*1.6)",vf)
+            self.assertIn("0.06*(1+tanh((t-3.85)*3.1))",vf)
             self.assertIn("crop=1080:1920",vf)
             self.assertIn("-an",params)
             self.assertIn("-t",params)
