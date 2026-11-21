@@ -14,7 +14,7 @@
     "rank_rail": "left semi-transparent black vertical panel with ranks 1위 through 5위 always visible",
     "rank_active": "active rank in yellow, other ranks in white; no arrow prefix",
     "caption": "bold white Korean text with thick black outline over the original video, around y=1000 in 1080x1920 reference frame; readable mobile size",
-    "layout": "no separate TOP5 header or large topic header; source video fills screen",
+    "layout": "full-bleed source video, opening gold TOP5 title during hook, left rank rail; no white canvas",
     "editable": [
       "source clips",
       "ranking order",
@@ -26,8 +26,10 @@
       "canvas and full-bleed layout",
       "left rank rail",
       "rank highlight palette",
-      "caption style and placement"
-    ]
+      "caption style and placement",
+      "opening TOP5 title style and timing"
+    ],
+    "opening_title": "Gold bold Korean topic TOP5 title with black outline during opening hook only"
   },
   "gate": "If implementation differs from reference, fail production rather than silently output V28.3 white-canvas style.",
   "approval": "User explicitly locked design on 2026-11-21 KST; changes require explicit user approval."
