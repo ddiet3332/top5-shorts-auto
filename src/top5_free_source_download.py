@@ -21,6 +21,14 @@ def obvious_topic_mismatch(tags, topic):
  """Conservative negative filter: reject obvious lexical false positives, not approve footage."""
  tags=str(tags or "").lower()
  topic=str(topic or "")
+ if any(key in topic for key in ("댄스", "체조", "곡예")):
+  # Pixabay dance search includes wildlife that happens to have 'dancing'
+  # in the tags (real production #44891628808 rank 1: flamingos).
+  # A human-skills episode must not silently turn into an animal TOP5.
+  # Excluding animal cues is intentionally conservative; mixed scenes need
+  # explicit frame review and should not enter an unreviewed human source set.
+  if re.search(r"\b(flamingos?|birds?|penguins?|dogs?|puppies|cats?|kitten|monkeys?|insects?|butterflies|fish|pets?|wildlife|animals?)\b",tags):
+   return True
  if "도미노" in topic:
   return not re.search(r"\bdomino(?:es|s)?\b",tags) or bool(re.search(r"\bjenga\b",tags))
  if "기계 움직임" in topic:
