@@ -1,12 +1,59 @@
 """Generate an evidence-based replacement readiness report without changing the render."""
 import argparse
 import json
+import math
 from pathlib import Path
 
 from dog_replacement_gate import decide_replacements
 
 
-def report(profile_path: Path, audition_path: Path, provider_reports=()) -> dict:
+
+RUBRIC = {
+    "visible_action":25,"comedic_surprise":30,"setup_payoff_timing":20,
+    "mobile_readability":15,"distinctness":10,
+}
+
+
+def incumbent_reviews(profile, review_path):
+    """Score only fully evidenced baseline segments; no invented scores."""
+    scores={"rank5":None,"rank2":None}
+    blockers=[]
+    if review_path is None or not Path(review_path).is_file():
+        return scores,["INCUMBENT_SEGMENT_REVIEW_MISSING"]
+    doc=json.loads(Path(review_path).read_text(encoding="utf-8"))
+    if (doc.get("schema_version")!=1 or
+        doc.get("review_kind")!="incumbent_rank_segment_scoring" or
+        doc.get("rubric_version")!="dog_rank_segment_v1" or
+        doc.get("publication_approved") is not False or
+        doc.get("max_points")!=RUBRIC):
+        raise ValueError("INVALID_INCUMBENT_SCORING_MANIFEST")
+    ranks=doc.get("ranks",{})
+    for rank in scores:
+        row=ranks.get(rank,{})
+        if row.get("source_id")!=profile.get("shots",{}).get(rank,{}).get("source_id"):
+            blockers.append(rank.upper()+"_SOURCE_ID_MISMATCH")
+            continue
+        if row.get("reviewed_frames") is not True:
+            blockers.append(rank.upper()+"_NOT_VISUALLY_SCORED")
+            continue
+        frames=row.get("frame_timestamps_sec",[])
+        notes=row.get("review_notes")
+        components=row.get("points")
+        if (not isinstance(frames,list) or len(frames)<3 or
+            any(not isinstance(t,(int,float)) or isinstance(t,bool) or
+                not math.isfinite(t) or t<0 for t in frames) or
+            not isinstance(notes,str) or len(notes.strip())<25 or
+            not isinstance(components,dict) or components.keys()!=RUBRIC.keys() or
+            any(not isinstance(v,(int,float)) or isinstance(v,bool) or
+                not math.isfinite(v) or v<0 or v>RUBRIC[k]
+                for k,v in components.items())):
+            blockers.append(rank.upper()+"_SCORE_EVIDENCE_INVALID")
+            continue
+        scores[rank]=sum(components.values())
+    return scores,blockers
+
+
+def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbent_review_path=None) -> dict:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     audition = json.loads(audition_path.read_text(encoding="utf-8"))
     fixed = {label: spec for label, spec in profile["shots"].items()
@@ -23,6 +70,7 @@ def report(profile_path: Path, audition_path: Path, provider_reports=()) -> dict
             candidates[row["rank_target"]].append(row)
         else:
             rejected.append({"id": row.get("id"), "reason": "NO_TARGET_RANK_OR_UNREVIEWED"})
+    reviewed_incumbents, baseline_blockers = incumbent_reviews(profile, incumbent_review_path)
     # Provider previews are only candidate discovery, never independent
     # rights clearance, verified comedy, or automatic rank assignments.
     provider_auditions = []
@@ -56,11 +104,14 @@ def report(profile_path: Path, audition_path: Path, provider_reports=()) -> dict
             provider_auditions.append({"provider":source.stem,
                                        "status":"INVALID_PROVIDER_AUDITION",
                                        "publication_approved":False})
-    decisions = decide_replacements(candidates, incumbent_scores={"rank5": None, "rank2": None},
+    decisions = decide_replacements(candidates, incumbent_scores=reviewed_incumbents,
                                     fixed_source_ids=used_ids, fixed_action_families=used_actions)
     return {
         "schema_version": 1,
         "design_lock": "TOP5_DESIGN_LOCK_V1",
+        "incumbent_review_scores": reviewed_incumbents,
+        "incumbent_review_blockers": baseline_blockers,
+        "incumbent_scores_are_only_from_verified_frame_review": True,
         "candidate_count": sum(map(len, candidates.values())),
         "provider_preview_count": len(provider_ready),
         "provider_preview_new_count": len(provider_new),
@@ -86,8 +137,9 @@ def main():
     p.add_argument("--audition", type=Path, default=Path("sample/dog_replacement_audition.json"))
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--provider-reports",type=Path,nargs="*",default=[])
+    p.add_argument("--incumbent-review",type=Path,default=Path("sample/dog_incumbent_segment_review_v1.json"))
     a = p.parse_args()
-    result = report(a.profile, a.audition, a.provider_reports)
+    result = report(a.profile, a.audition, a.provider_reports, a.incumbent_review)
     a.output.parent.mkdir(parents=True, exist_ok=True)
     a.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("DOG_REPLACEMENT_STATUS", result["next_action"], flush=True)
