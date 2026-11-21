@@ -1,0 +1,17 @@
+{
+  "run_id": 44873601477,
+  "run_attempt": 1,
+  "source_commit": "b28acbdd415cf2d0f92d38dd669bd5ae1cdad1f4",
+  "install_outcome": "success",
+  "render_outcome": "skipped",
+  "status": "MP4_NOT_CREATED",
+  "full_decode": "NOT_RUN_NO_MP4",
+  "contact_sheet": "NOT_RUN_NO_MP4",
+  "video_sha256": null,
+  "source_hashes_verified": false,
+  "distinct_rank_sources": 0,
+  "publication_approved": false,
+  "rights": "UNVERIFIED",
+  "audio_listening": "UNVERIFIED",
+  "reason": "RENDER_DID_NOT_CREATE_MP4"
+}
