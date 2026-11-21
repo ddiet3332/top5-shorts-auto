@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Second, generative video-language look at real TOP5 source-bound ranked cuts.
 
-A 256M English VLM sees 3 chronological real rendered MP4 frames per rank.
+A small English VLM sees 3 chronological real rendered MP4 frames per rank.
 Its descriptions are *unverified candidate evidence*, not human observation,
 scene-matched Korean captions, creative scores or rights clearance.
 The original final MP4 is never changed and YouTube publishing is disabled.
@@ -21,6 +21,8 @@ from top5_standard_scene_review import VIDEO, source_plan
 from top5_scene_evidence import sha256
 
 MODEL_ID = "HuggingFaceTB/SmolVLM2-256M-Video-Instruct"
+CHALLENGER_MODEL_ID = "HuggingFaceTB/SmolVLM2-500M-Video-Instruct"
+ALLOWED_MODEL_IDS = (MODEL_ID, CHALLENGER_MODEL_ID)
 MODEL_LICENSE = "Apache-2.0"
 PROMPT = (
     "These three frames are in chronological order from one short video, "
@@ -117,24 +119,26 @@ def describe_frames(model,processor,frames,*,max_new_tokens=108):
     return output[0].strip()
 
 
-def audit(root,out,*,max_ranks=5,captioner=None,frame_reader=extract_roi_frame):
+def audit(root,out,*,max_ranks=5,model_id=MODEL_ID,captioner=None,frame_reader=extract_roi_frame):
     root=Path(root)
     out=Path(out)
     out.mkdir(parents=True,exist_ok=True)
     video,topic,ranks,digest=checks_metadata(root)
     if not 1<=max_ranks<=5:
         raise ValueError("INVALID_RANK_LIMIT")
+    if model_id not in ALLOWED_MODEL_IDS:
+        raise ValueError("UNAPPROVED_MODEL_ID")
     if captioner is None:
         import torch
         from transformers import AutoProcessor,AutoModelForImageTextToText
         torch.set_num_threads(2)
-        processor=AutoProcessor.from_pretrained(MODEL_ID)
+        processor=AutoProcessor.from_pretrained(model_id)
         model=AutoModelForImageTextToText.from_pretrained(
-            MODEL_ID,torch_dtype=torch.float32).to("cpu").eval()
+            model_id,torch_dtype=torch.float32).to("cpu").eval()
         captioner=lambda images:describe_frames(model,processor,images)
     report={
         "schema_version":1,"chosen_topic":topic,
-        "rendered_video_sha256":digest,"model":MODEL_ID,
+        "rendered_video_sha256":digest,"model":model_id,
         "model_license":MODEL_LICENSE,
         "status":"VLM_DESCRIPTION_REVIEW_ONLY",
         "not_verified_observation":True,
@@ -178,7 +182,7 @@ def audit(root,out,*,max_ranks=5,captioner=None,frame_reader=extract_roi_frame):
     lines=[
         "# Three-frame per-rank video-language editorial hints",
         "",
-        f"Model: {MODEL_ID} (Apache 2.0) | Provenance topic: {topic}",
+        f"Model: {model_id} (Apache 2.0) | Provenance topic: {topic}",
         "",
         "**Unverified AI output. Do not present as witnessed action, fact or editorial approval.**",
         "",
@@ -202,8 +206,9 @@ def main():
     ap.add_argument("--source",type=Path,required=True)
     ap.add_argument("--output",type=Path,required=True)
     ap.add_argument("--max-ranks",type=int,default=5)
+    ap.add_argument("--model-id",choices=ALLOWED_MODEL_IDS,default=MODEL_ID)
     a=ap.parse_args()
-    rep=audit(a.source,a.output,max_ranks=a.max_ranks)
+    rep=audit(a.source,a.output,max_ranks=a.max_ranks,model_id=a.model_id)
     print(json.dumps({"topic":rep["chosen_topic"],
                       "ranks_analyzed":len(rep["rows"]),
                       "editorial_score":None,
