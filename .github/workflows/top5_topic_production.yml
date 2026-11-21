@@ -36,6 +36,9 @@ on:
       - 'sample/top5_auto_topics_v30.json'
       - 'review/top5_weak_source_windows.json'
       - 'tests/test_top5_reviewed_weak_windows.py'
+      - 'src/top5_reviewed_action_captions.py'
+      - 'review/top5_reviewed_action_stories.json'
+      - 'tests/test_top5_reviewed_action_captions.py'
       - 'src/topic_discovery_audit.py'
       - 'src/top5_all_source_license_audit.py'
       - 'review/top5_source_license_observations.json'
@@ -71,6 +74,7 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_auto_v30.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_reviewed_action_captions.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_standard_scene_review.py' -v
