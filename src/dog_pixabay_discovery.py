@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import urllib.parse
 import urllib.request
+import urllib.error
 
 API = "https://pixabay.com/api/videos/"
 QUERIES = ("funny dog", "playful puppy", "dog trick")
@@ -48,6 +49,8 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
                              "publication_approved":False,"status":"DISCOVERED_NOT_DOWNLOADED"})
                 if len(rows)>=max_results:
                     break
+        except urllib.error.HTTPError as exc:
+            errors.append({"query":query,"error":"HTTP_ERROR","http_status":exc.code})
         except (ValueError,OSError,TimeoutError,KeyError,TypeError) as exc:
             errors.append({"query":query,"error":type(exc).__name__})
         if len(rows)>=max_results:
