@@ -424,6 +424,18 @@ def assemble_video(topic,items,output,hook_source,*,moving_ending=False,hook_cap
              "-c:v","libx264","-preset","veryfast","-crf","23",
              "-r","24","-an",str(ending)],timeout=50)
     segment_files.append(ending)
+    # Verify all seven clips before concat; 30s AAC may conceal short video.
+    for segment,(name,seconds) in zip(segment_files,segments,strict=True):
+        evidence=json.loads(subprocess.check_output(
+            ["ffprobe","-v","error","-select_streams","v:0",
+             "-show_entries","stream=nb_frames,duration,r_frame_rate",
+             "-of","json",str(segment)],text=True,timeout=30))
+        streams=evidence.get("streams") or []
+        if (len(streams)!=1 or
+            int(streams[0].get("nb_frames",0))!=int(seconds*FPS) or
+            streams[0].get("r_frame_rate")!="24/1" or
+            abs(float(streams[0].get("duration",0))-seconds)>0.02):
+            raise RuntimeError(f"INVALID_SEGMENT_FRAMES: {name}")
     listing=work/"files.txt"
     listing.write_text("".join("file '"+str(x.resolve()).replace("'","'\\''")+
                   "'\n" for x in segment_files),encoding="utf-8")
@@ -446,7 +458,8 @@ def assemble_video(topic,items,output,hook_source,*,moving_ending=False,hook_cap
     run(["ffmpeg","-hide_banner","-v","error","-y","-i",str(combined),
          "-i",str(audio),"-vf",f"ass={subtitles.as_posix()}",
          "-map","0:v:0","-map","1:a:0",
-         "-c:v","libx264","-preset","veryfast","-crf","22","-r","24",
+         "-c:v","libx264","-preset","veryfast","-crf","22",
+         "-fps_mode","cfr","-r","24","-frames:v",str(30*FPS),
          "-c:a","aac","-b:a","160k","-ar","48000",
          "-af","loudnorm=I=-21:TP=-2.2:LRA=7",
          "-t","30","-movflags","+faststart",str(final)],timeout=420)
@@ -462,6 +475,9 @@ def technical_qa(video,output,topic,items):
         or aa[0]["codec_name"]!="aac"
         or (vv[0]["width"],vv[0]["height"])!=(W,H)
         or vv[0]["r_frame_rate"]!="24/1"
+        or int(vv[0].get("nb_frames",0))!=30*FPS
+        or not 29.99<float(vv[0].get("duration",0))<30.01
+        or not 29.9<float(aa[0].get("duration",0))<30.12
         or not 29.94<float(info["format"]["duration"])<30.12):
         raise RuntimeError("Full 30 second H264/AAC format gate failed")
     run(["ffmpeg","-hide_banner","-v","error","-xerror",
@@ -476,6 +492,8 @@ def technical_qa(video,output,topic,items):
     qa={"video":video.name,"topic":topic["topic_id"],
         "duration_seconds":float(info["format"]["duration"]),
         "resolution":"1080x1920","fps":24,
+        "video_frames":int(vv[0]["nb_frames"]),"video_stream_duration":float(vv[0]["duration"]),
+        "audio_stream_duration":float(aa[0]["duration"]),"exact_720_frames":True,
         "video_codec":"h264","audio_codec":"aac","full_decode":"PASS",
         "source_count":len(items),"topic_selection_automated":True,
         "source_selection_automated":True,"render_automated":True,
