@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -66,6 +67,41 @@ def collect_visual_sources(out):
         raise ValueError("DUPLICATE_SOURCE_SHA")
     return rows
 
+def provisional_provider_metadata(output):
+    """Existing renderer credits are untrusted hints, never licence evidence."""
+    output=Path(output)
+    result={}
+    file=output/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md"
+    if file.is_file():
+        body=file.read_text(encoding="utf-8",errors="replace")
+        for match in re.finditer(r"(?ms)^## ([1-5])위:[^\n]*\n(.*?)(?=^## |\Z)",body):
+            rank=int(match.group(1))
+            block=match.group(2)
+            vals={}
+            for field,key in (("Source","source_page"),("Credited author","creator"),
+                              ("Source licence","license"),("Licence URL","license_url")):
+                hit=re.search(r"(?m)^- "+re.escape(field)+r": (.+)$",block)
+                vals[key]=hit.group(1).strip() if hit else None
+            if (all(vals.values()) and str(vals["source_page"]).startswith("https://")):
+                result[f"rank_{rank}"]=vals
+    hook_file=output/"SOURCE_CREDITS_REVIEW.md"
+    if hook_file.is_file():
+        body=hook_file.read_text(encoding="utf-8",errors="replace")
+        match=re.search(r"(?ms)^## 시작 훅\s*\n(.*?)(?=^## |\Z)",body)
+        if match:
+            block=match.group(1)
+            url=re.search(r"(?m)^- 원본 · (https://\S+)",block)
+            creator=re.search(r"(?m)^- 제작자 · (.+)$",block)
+            lic=re.search(r"(?m)^- 표시 라이선스 · (.+?) \(?(https?://\S+)\)?\s*$",block)
+            if url and creator and lic:
+                result["hook_0_2sec"]={
+                    "source_page":url.group(1).strip(),
+                    "creator":creator.group(1).strip(),
+                    "license":lic.group(1).strip(),
+                    "license_url":lic.group(2).rstrip(")")}
+    return result
+
+
 def audit(output,observations=DEFAULT_OBSERVATIONS):
     output=Path(output)
     sources=collect_visual_sources(output)
@@ -81,6 +117,7 @@ def audit(output,observations=DEFAULT_OBSERVATIONS):
         if x["sha256"] in index:
             raise ValueError("DUPLICATE_LICENSE_OBSERVATION_SHA")
         index[x["sha256"]]=x
+    provisional=provisional_provider_metadata(output)
     result=[]
     for source in sources:
         match=index.get(source["sha256"])
@@ -93,13 +130,24 @@ def audit(output,observations=DEFAULT_OBSERVATIONS):
             match.get("publication_approved") is False and
             all(isinstance(match.get(key),str) and match[key].strip()
                 for key in ("creator","license","license_url")))
+        hint=provisional.get(source["role"],{})
+        hinted=bool(not good and hint.get("source_page")==source["source_page"]
+            and all(isinstance(hint.get(k),str) and hint[k].strip()
+                    for k in ("creator","license","license_url")))
+        label=match["license"] if good else hint["license"] if hinted else None
         result.append({**source,
             "source_page_metadata_observed":good,
-            "creator":match["creator"] if good else None,
-            "license":match["license"] if good else None,
-            "license_url":match["license_url"] if good else None,
-            "attribution_required":match["attribution_required"] if good else None,
-            "share_alike_review_required":match["share_alike_review_required"] if good else None,
+            "upstream_provider_metadata_present_unverified":hinted,
+            "licence_data_status":("SOURCE_PAGE_OBSERVED" if good else
+                                    "UPSTREAM_METADATA_UNVERIFIED" if hinted else
+                                    "SOURCE_METADATA_MISSING"),
+            "creator":match["creator"] if good else hint["creator"] if hinted else None,
+            "license":label,
+            "license_url":match["license_url"] if good else hint["license_url"] if hinted else None,
+            "attribution_required":match["attribution_required"] if good else
+                                    None,
+            "share_alike_review_required":match["share_alike_review_required"] if good else
+                                    "BY-SA" in label.upper() if hinted else None,
             "rights_independently_verified":False,
             "publication_approved":False})
     unknown=[r["role"] for r in result if not r["source_page_metadata_observed"]]
@@ -112,6 +160,8 @@ def audit(output,observations=DEFAULT_OBSERVATIONS):
       "unique_visual_source_count":len(sources),
       "source_page_metadata_observed_count":len(sources)-len(unknown),
       "unobserved_source_roles":unknown,
+      "upstream_provider_metadata_unverified_count":sum(
+           r["upstream_provider_metadata_present_unverified"] for r in result),
       "share_alike_legal_review_roles":share_alike,
       "items":result,
       "source_rights_independently_verified":False,
@@ -134,6 +184,12 @@ def audit(output,observations=DEFAULT_OBSERVATIONS):
             credits.extend([f"- {role}: {row['creator']} | {row['source_page']}",
                             f"  라이선스: {row['license']} ({row['license_url']})",
                             "  변경: 구간 발췌·화면 재배치·창작 자막·효과음 추가"])
+        elif row["upstream_provider_metadata_present_unverified"]:
+            credits.extend([
+                f"- {role}: {row['creator']} [제공처 메타데이터·원저작권 미확인]",
+                f"  원본: {row['source_page']}",
+                f"  표시 라이선스(미검증): {row['license']} ({row['license_url']})",
+                "  확인: 원본 페이지·저작자·제3자 권리 독립 검수 필요 — 게시 보류"])
         else:
             credits.extend([f"- {role}: 출처 메타데이터 미확인 — 게시 금지",
                             f"  원본: {row['source_page']}"])

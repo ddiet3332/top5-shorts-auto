@@ -323,14 +323,19 @@ def v37_rights_and_description(items,output,audit):
             f"- Licence URL: {row['license_url']}",
             "- Adaptation: 4-6s crop, aspect-preserving composition, original captions, synthesized audio and comparison ranking",
             "- Rights, third-party release, reused-content YPP: not independently cleared.",""])
-    notes.extend([
-       "## ShareAlike when the door opening scene is used",
-       "For the CC BY-SA 4.0 original by Astropulse, identify the original source, author, terms and changed use in the YouTube description. Because it is adapted, any adapted contribution must be offered under compatible CC BY-SA terms. Review compliance before publication.",
-       "- https://creativecommons.org/licenses/by-sa/4.0/",
-       "- https://commons.wikimedia.org/wiki/File:Cat_opening_door.webm",
-       "",
-       "Publication: BLOCKED until applicable legal and YPP considerations have been reviewed; provider labels are not an independent audit."
-    ])
+    # Do not warn about a specific cat-door source in unrelated nature,
+    # human or object TOP5 edits. Each actually selected BY-SA item
+    # requires source-bound legal review; the independent hook has a
+    # separate six-source postrender audit.
+    share_alike=[r for r in items if "BY-SA" in str(r.get("license","")).upper()]
+    if share_alike:
+        notes.extend(["## ShareAlike obligations for selected ranked footage"])
+        for row in share_alike:
+            notes.extend([f"- Original: {row['source_page']}",
+                          f"- Creator: {row['author']}",
+                          f"- Listed terms: {row['license']} ({row['license_url']})"])
+        notes.extend(["Review whether editing/compilation forms Adapted Material and satisfy the applicable compatible-license conditions before publishing.",""])
+    notes.extend(["Publication: BLOCKED until applicable legal and YPP considerations have been reviewed; provider labels are not an independent audit."])
     (Path(output)/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md").write_text("\n".join(notes)+"\n",encoding="utf-8")
     (Path(output)/"V37_STORY_AND_RIGHTS_QA.json").write_text(
         json.dumps({"publish":False,"rights_independently_verified":False,
