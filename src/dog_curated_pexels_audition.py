@@ -109,6 +109,39 @@ def audition(catalog, output, *, max_assets=MAX_ASSETS, downloader=None, preview
                 "motion_proxy_not_comedy_score":window.get("motion"),
                 "confirmed_funny_payoff":False,
             })
+            # The highest-motion excerpt can simply feature a dog exiting the
+            # frame. Archive the second nonoverlapping window for REAL review.
+            # Do not assert either window is funny or fit for rank replacement.
+            row["alternative_windows"] = []
+            if len(windows)>1:
+                second=windows[1]
+                alt_start=max(0.0,min(float(second["start"]),duration-5.15))
+                if abs(alt_start-start)>=4.5:
+                    alt=output/(sid+"_alt_preview.mp4")
+                    alt_stills=[output/(sid+f"_alt_frame{i}.jpg") for i in range(3)]
+                    try:
+                        previewer(raw,alt_start,alt)
+                        if not alt.is_file() or alt.stat().st_size<2000:
+                            raise ValueError("INVALID_ALTERNATE_PREVIEW")
+                        for position,frame in zip((alt_start+0.5,alt_start+2.5,alt_start+4.5),alt_stills):
+                            image_maker(raw,min(duration-0.2,position),frame)
+                            if not frame.is_file() or not frame.stat().st_size:
+                                raise ValueError("INVALID_ALTERNATE_FRAME")
+                        row["alternative_windows"].append({
+                            "status":"PREVIEW_READY_REVIEW_REQUIRED",
+                            "preview_file":alt.name,
+                            "frame_files":[p.name for p in alt_stills],
+                            "preview_start_sec":round(alt_start,2),
+                            "motion_proxy_not_comedy_score":second.get("motion"),
+                            "reviewed_frames":False,"semantic_review":"UNVERIFIED",
+                            "publication_approved":False
+                        })
+                    except Exception as alt_exc:
+                        alt.unlink(missing_ok=True)
+                        for frame in alt_stills:
+                            frame.unlink(missing_ok=True)
+                        row["alternative_window_failure_type"]=type(alt_exc).__name__
+
         except (OSError,RuntimeError,ValueError,TimeoutError,Exception) as exc:
             # Contain all upstream and FFmpeg failures: rights gate remains closed.
             row["status"]="AUDITION_FAILED"
@@ -155,7 +188,17 @@ def resume(catalog, output):
         if (row.get("status")=="PREVIEW_READY_REVIEW_REQUIRED"
                 and clip.is_file() and clip.stat().st_size >= 2000
                 and row.get("preview_file")==clip.name):
+            extra=[]
+            for alt in row.get("alternative_windows",[]):
+                candidate=output/(item["id"]+"_alt_preview.mp4")
+                if (isinstance(alt,dict) and
+                        alt.get("preview_file")==candidate.name and
+                        candidate.is_file() and candidate.stat().st_size>=2000):
+                    extra.append({**alt,"reviewed_frames":False,
+                                  "semantic_review":"UNVERIFIED",
+                                  "publication_approved":False})
             rows.append({**_safe_row(item),**row,"preview_origin":"CACHED_PREVIOUS_RUN",
+                         "alternative_windows":extra,
                          "reviewed_frames":False,"semantic_review":"UNVERIFIED",
                          "rights_status":"UNVERIFIED","editorial_score":None,
                          "publication_approved":False})
