@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "scope": "rank5_rank2_replacement_only",
+  "review_status": "PROVISIONAL_FRAME_SAMPLE_ONLY",
+  "evidence_run_id": 44875406633,
+  "rejections": [
+    {
+      "id": "PB-4740",
+      "source_url": "https://pixabay.com/videos/id-4740/",
+      "reason": "Beach dog digs sand; frames show movement but no strong setup-payoff surprise for replacing rank 5 or 2",
+      "frame_samples_sec": [
+        0.6,
+        2.4,
+        4.5
+      ],
+      "rights_status": "UNVERIFIED"
+    },
+    {
+      "id": "PB-77534",
+      "source_url": "https://pixabay.com/videos/id-77534/",
+      "reason": "Small dog interacts with human in grass; frames lack standout comic reversal for replacing rank 5 or 2",
+      "frame_samples_sec": [
+        0.6,
+        2.4,
+        4.5
+      ],
+      "rights_status": "UNVERIFIED"
+    }
+  ],
+  "publication_approved": false
+}

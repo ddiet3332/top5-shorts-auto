@@ -96,6 +96,33 @@ class PixabayAuditionTests(unittest.TestCase):
             self.assertEqual(len(result["candidates"]),4)
             self.assertFalse(result["publication_approved"])
 
+    def test_provisionally_rejected_clip_is_skipped_for_rank_replacement(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            discovery=root/"discovery.json"
+            rejection=root/"rejections.json"
+            discovery.write_text(json.dumps({"candidates":[
+                {"id":"PB-4740","provider":"pixabay","creator":"A"},
+                {"id":"PB-987","provider":"pixabay","creator":"B"}]}))
+            rejection.write_text(json.dumps({"schema_version":1,
+                "scope":"rank5_rank2_replacement_only",
+                "rejections":[{"id":"PB-4740"}]}))
+            fetched=[]
+            def fake_download(video_id,key,path,*,media_url):
+                fetched.append(video_id)
+                path.write_bytes(b"test media")
+                return {"duration_sec":8}
+            with patch.dict(os.environ,{"GITHUB_RUN_ID":"0"}):
+                result=audition_pixabay(discovery,root/"out","fake-key",
+                    media_index={"PB-4740":"https://cdn.pixabay.com/4740.mp4",
+                                 "PB-987":"https://cdn.pixabay.com/987.mp4"},
+                    rejection_file=rejection,downloader=fake_download,
+                    previewer=lambda _src,_start,target: target.write_bytes(b"preview"))
+            self.assertEqual(fetched,[987])
+            self.assertEqual(result["skipped_provisionally_rejected_ids"],["PB-4740"])
+            self.assertEqual(result["status"],"PREVIEW_READY")
+            self.assertFalse(result["publication_approved"])
+
     def test_rejects_untrusted_video_url(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(ValueError):
