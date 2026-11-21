@@ -123,6 +123,83 @@ class PixabayAuditionTests(unittest.TestCase):
             self.assertEqual(result["status"],"PREVIEW_READY")
             self.assertFalse(result["publication_approved"])
 
+    def test_cached_preview_survives_next_run_without_api_or_download(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            discovered=root/"candidates.json"
+            discovered.write_text(json.dumps({"candidates":[
+                {"id":"PB-998","provider":"pixabay","creator":"A"}]}))
+            output=root/"audition"
+            def get_video(video_id,key,path,*,media_url):
+                path.write_bytes(b"original video")
+                return {"duration_sec":12}
+            with patch.dict(os.environ,{"GITHUB_RUN_ID":"0"}):
+                first=audition_pixabay(discovered,output,"fake-key",
+                    media_index={"PB-998":"https://cdn.pixabay.com/video/998.mp4"},
+                    downloader=get_video,
+                    previewer=lambda src,start,dst:dst.write_bytes(b"preview data"))
+            self.assertEqual(first["new_preview_count"],1)
+            self.assertEqual(first["cached_preview_count"],0)
+            self.assertEqual(first["candidates"][0]["preview_origin"],"NEW_THIS_RUN")
+            with patch.dict(os.environ,{"GITHUB_RUN_ID":"1"}):
+                second=audition_pixabay(discovered,output,"fake-key",
+                    media_index={},
+                    downloader=lambda *args,**kwargs:self.fail("must not download cached video"))
+            self.assertEqual(second["new_preview_count"],0)
+            self.assertEqual(second["cached_preview_count"],1)
+            self.assertEqual(second["candidates"][0]["id"],"PB-998")
+            self.assertEqual(second["candidates"][0]["preview_origin"],"CACHED_PREVIOUS_RUN")
+            self.assertFalse(second["publication_approved"])
+            self.assertTrue((output/"PB-998_preview.mp4").exists())
+
+    def test_cache_rotation_keeps_earlier_unreviewed_clip(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            discovered=root/"candidates.json"
+            discovered.write_text(json.dumps({"candidates":[
+                {"id":"PB-111","provider":"pixabay","creator":"A"},
+                {"id":"PB-222","provider":"pixabay","creator":"B"}]}))
+            output=root/"audition"
+            saved=[]
+            def download(video_id,key,path,*,media_url):
+                saved.append(video_id)
+                path.write_bytes(b"original")
+                return {"duration_sec":12}
+            previews=lambda src,start,target: target.write_bytes(b"preview")
+            with patch.dict(os.environ,{"GITHUB_RUN_ID":"0"}):
+                first=audition_pixabay(discovered,output,"mock",max_items=1,
+                    media_index={"PB-111":"https://cdn.pixabay.com/111.mp4"},
+                    downloader=download,previewer=previews)
+                second=audition_pixabay(discovered,output,"mock",max_items=1,
+                    media_index={"PB-222":"https://cdn.pixabay.com/222.mp4"},
+                    downloader=download,previewer=previews)
+            self.assertEqual(saved,[111,222])
+            self.assertEqual(second["new_preview_count"],1)
+            self.assertEqual(second["cached_preview_count"],1)
+            self.assertEqual({x["id"] for x in second["candidates"]},{"PB-111","PB-222"})
+            self.assertFalse(second["publication_approved"])
+
+    def test_rejected_cached_preview_is_not_carried_forward(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            output=root/"out"
+            output.mkdir()
+            (output/"PB-4740_preview.mp4").write_bytes(b"old")
+            (output/"DOG_PIXABAY_AUDITION_RESULTS.json").write_text(json.dumps({
+                "provider":"pixabay","candidates":[{"id":"PB-4740",
+                "preview_file":"PB-4740_preview.mp4",
+                "status":"PREVIEW_READY_REVIEW_REQUIRED"}]}))
+            rejected=root/"rejections.json"
+            rejected.write_text(json.dumps({"scope":"rank5_rank2_replacement_only",
+                "schema_version":1,"rejections":[{"id":"PB-4740"}]}))
+            discovery=root/"candidates.json"
+            discovery.write_text(json.dumps({"candidates":[]}))
+            result=audition_pixabay(discovery,output,"mock",
+                media_index={},rejection_file=rejected)
+            self.assertEqual(result["cached_preview_count"],0)
+            self.assertEqual(result["status"],"NO_PREVIEW")
+            self.assertFalse((output/"PB-4740_preview.mp4").exists())
+
     def test_rejects_untrusted_video_url(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(ValueError):
