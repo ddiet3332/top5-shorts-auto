@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "review_target": "rank5_rank2_upgrade_only",
+  "evidence_runs": [
+    44874810971,
+    44876187415
+  ],
+  "publication_approved": false,
+  "rights_status": "UNVERIFIED",
+  "rejections": [
+    {
+      "id": "CM-9533251149e3",
+      "source_title": "File:Fractal and DogPlayingTetris rolling during CTWC 2023.webm",
+      "reason_code": "NOT_A_DOG_SCENE",
+      "reason": "Game competition footage, not actual dog action; verified from preview frames",
+      "review_basis": "5s editorial preview frames from run 44874810971"
+    },
+    {
+      "id": "CM-3135e3cc3b80",
+      "source_title": "File:Environmental-Effects-on-Compulsive-Tail-Chasing-in-Dogs-pone.0041684.s004.ogv",
+      "reason_code": "COMEDY_MISMATCH",
+      "reason": "Research video of repetitive tail chasing, not suitable as lighthearted comedy",
+      "review_basis": "5s editorial preview frames from run 44874810971"
+    },
+    {
+      "id": "CM-a41ba1199869",
+      "source_title": "File:Puppiesplaying-tokyoarea-jan7-2020.webm",
+      "reason_code": "WEAK_COMEDIC_PAYOFF",
+      "reason": "Two puppies playing in pet bed; cute but no clear visual surprise suitable for ranking replacement",
+      "review_basis": "5s preview frames from run 44876187415, source window 5-10s"
+    }
+  ]
+}

@@ -33,6 +33,7 @@ on:
       - 'src/v28_fullscreen_builder.py'
       - 'sample/top5_dog_source_catalog.json'
       - 'sample/dog_editorial_rejections_v1.json'
+      - 'sample/dog_commons_editorial_rejections_v1.json'
       - 'src/top5_locked_design.py'
       - 'sample/top5_design_lock_v1.json'
       - 'sample/dog_editorial_profile_v1.json'
@@ -50,6 +51,7 @@ on:
       - 'src/top5_reviewed_*.py'
       - 'sample/top5_dog_source_catalog.json'
       - 'sample/dog_editorial_rejections_v1.json'
+      - 'sample/dog_commons_editorial_rejections_v1.json'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
       - 'tests/test_dog_run_evidence.py'
@@ -286,7 +288,12 @@ jobs:
       - name: Record fail-closed editorial replacement readiness
         if: steps.render.outcome == 'success'
         run: |
-          python src/dog_replacement_report.py --output output/dog/DOG_REPLACEMENT_READINESS.json
+          python src/dog_replacement_report.py \
+            --output output/dog/DOG_REPLACEMENT_READINESS.json \
+            --provider-reports \
+              output/dog/DOG_PIXABAY_AUDITION_RESULTS.json \
+              output/dog/DOG_COMMONS_AUDITION_RESULTS.json \
+              output/dog/DOG_AUDITION_RESULTS.json
       - name: Measure the rendered audio stream
         timeout-minutes: 2
         run: |
