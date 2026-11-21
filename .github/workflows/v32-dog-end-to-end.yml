@@ -39,6 +39,8 @@ on:
       - 'tests/test_dog_rank5_hd_review.py'
       - 'src/dog_rank5_hd_review.py'
       - 'sample/dog_rank5_hd_review_v1.json'
+      - 'tests/test_dog_mixkit_official_audition.py'
+      - 'src/dog_mixkit_official_audition.py'
       - 'sample/dog_incumbent_segment_review_v1.json'
       - 'tests/test_dog_mixkit_license_screen.py'
       - 'src/dog_mixkit_license_screen.py'
@@ -67,6 +69,8 @@ on:
       - 'tests/test_dog_rank5_hd_review.py'
       - 'src/dog_rank5_hd_review.py'
       - 'sample/dog_rank5_hd_review_v1.json'
+      - 'tests/test_dog_mixkit_official_audition.py'
+      - 'src/dog_mixkit_official_audition.py'
       - 'sample/dog_incumbent_segment_review_v1.json'
       - 'tests/test_dog_mixkit_license_screen.py'
       - 'src/dog_mixkit_license_screen.py'
@@ -358,6 +362,25 @@ jobs:
           python src/dog_mixkit_license_screen.py \
             --catalog sample/dog_mixkit_license_screen_v1.json \
             --output output/dog/DOG_MIXKIT_LICENSE_SCREEN.json
+      - name: Attempt official explicit Free Mixkit video download links
+        if: github.event_name != 'pull_request' && steps.commons_gate.outputs.enabled == 'true'
+        timeout-minutes: 4
+        continue-on-error: true
+        run: |
+          python src/dog_mixkit_official_audition.py \
+            --catalog sample/dog_mixkit_license_screen_v1.json \
+            --output output/dog/mixkit_audition
+      - name: Archive Mixkit official download and visual review evidence
+        if: always() && github.event_name != 'pull_request' && steps.commons_gate.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-mixkit-official-preview-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/mixkit_audition/DOG_MIXKIT_OFFICIAL_AUDITION.json
+            output/dog/mixkit_audition/*_preview.mp4
+            output/dog/mixkit_audition/*_frame*.jpg
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Archive Free-vs-Restricted Mixkit license decision evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -402,7 +425,8 @@ jobs:
             output/dog/audition/DOG_AUDITION_RESULTS.json \
             output/dog/commons_audition/DOG_COMMONS_AUDITION_RESULTS.json \
             output/dog/curated_pexels/DOG_CURATED_PEXELS_AUDITION_RESULTS.json \
-            output/dog/rank5_hd_review/DOG_RANK5_HD_AUDITION.json; do
+            output/dog/rank5_hd_review/DOG_RANK5_HD_AUDITION.json \
+            output/dog/mixkit_audition/DOG_MIXKIT_OFFICIAL_AUDITION.json; do
             if [[ -s "$file" ]]; then
               cp "$file" "output/dog/$(basename "$file")"
             fi
@@ -427,7 +451,8 @@ jobs:
               output/dog/DOG_PIXABAY_AUDITION_RESULTS.json \
               output/dog/DOG_COMMONS_AUDITION_RESULTS.json \
               output/dog/DOG_AUDITION_RESULTS.json \
-              output/dog/DOG_CURATED_PEXELS_AUDITION_RESULTS.json
+              output/dog/DOG_CURATED_PEXELS_AUDITION_RESULTS.json \
+              output/dog/DOG_MIXKIT_OFFICIAL_AUDITION.json
       - name: Measure the rendered audio stream
         timeout-minutes: 2
         run: |
