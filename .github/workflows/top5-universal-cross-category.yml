@@ -46,6 +46,7 @@ on:
       - 'review/top5_weak_source_windows.json'
       - 'tests/test_top5_reviewed_weak_windows.py'
       - 'src/top5_auto_v30.py'
+      - 'tests/test_top5_object_diversity.py'
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_candidate_visual_gate.py'
       - 'src/top5_reviewed_sources.py'
@@ -74,6 +75,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_top5_scene_evidence.py' -v
           python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
           python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
+          python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
   cross-topic-real-mp4:
     needs: check-universal-contract
     if: github.event_name != 'pull_request'
