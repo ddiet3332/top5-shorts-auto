@@ -125,6 +125,54 @@ def apply_curated_cut_shift(title,start,duration):
         raise ValueError("Unreasonable editorial cut adjustment")
     return round(max(0.0,min(float(start)+shift,float(duration)-6.08)),2)
 
+def provisional_topic_label(topic, title):
+    """Conservative metadata label only; not proof the selected frames show it.
+
+    Avoid V29's animal-action tokens leaking into unrelated categories:
+    waterfall -> 'fall' -> accidental mishap, lightning 'roll' -> rotation.
+    A review-only label MUST NOT be mistaken for verified scene captions.
+    """
+    category = topic.get("category")
+    value = str(title).casefold()
+    if category == "자연":
+        for needle, label in (
+            ("waterfall", "폭포 관련 영상"),
+            ("cascad", "폭포 관련 영상"),
+            ("lightning", "번개 관련 영상"),
+            ("volcano", "화산 관련 영상"),
+            ("eruption", "분출 관련 영상"),
+            ("storm", "폭풍 관련 영상"),
+            ("wave", "파도 관련 영상"),
+            ("cloud", "구름 관련 영상"),
+        ):
+            if needle in value:
+                return label
+        return "자연 장면 검수 필요"
+    if category == "사물":
+        for needle, label in (
+            ("arduino", "전자장치 시연"),
+            ("domino", "도미노 관련 영상"),
+            ("marble", "구슬 관련 영상"),
+            ("pendulum", "진자 관련 영상"),
+            ("machine", "기계 관련 영상"),
+        ):
+            if needle in value:
+                return label
+        return "사물 장면 검수 필요"
+    if category == "사람":
+        for needle, label in (
+            ("gymnast", "체조 관련 영상"),
+            ("acrobat", "곡예 관련 영상"),
+            ("dance", "춤 관련 영상"),
+            ("skate", "스케이트 관련 영상"),
+        ):
+            if needle in value:
+                return label
+        return "사람 장면 검수 필요"
+    # Existing reviewed cat/dog editorial workflow remains unchanged.
+    return story_label(title)
+
+
 def select_sources(candidates,out,*,with_hook=False,reserve_pool=None):
     library=Path(out)/"originals"
     library.mkdir(parents=True,exist_ok=True)
@@ -163,8 +211,12 @@ def select_sources(candidates,out,*,with_hook=False,reserve_pool=None):
             else:
                 # Not a semantic funny score; only prioritizes candidate review.
                 quality=min(58.0,30.0+min(20.0,motion*.32)+min(8.,src["title_score"]))
-                label,reaction=PROMOTED.get(
-                    src["title"],(story_label(src["title"]),"이 장면을 놓치지 마세요!"))
+                if topic.get("category") in ("자연", "사물", "사람"):
+                    label = provisional_topic_label(topic, src["title"])
+                    reaction = "장면 내용 검수 필요"
+                else:
+                    label,reaction=PROMOTED.get(
+                        src["title"],(story_label(src["title"]),"이 장면을 놓치지 마세요!"))
                 status="metadata_and_motion_only_UNVERIFIED"
             accepted.append({**src,"local_path":str(target),
                 "cut_start":round(at,2),"duration_sec":round(dur,2),
