@@ -3,9 +3,10 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
-from dog_rank5_hd_review import read_manifest, create_review
+from dog_rank5_hd_review import read_manifest, create_review, render_vertical
 
 
 def spec():
@@ -51,6 +52,17 @@ class DogRank5OriginalHDTests(unittest.TestCase):
             self.assertTrue((out/result["review_video_file"]).is_file())
             self.assertEqual(json.loads((out/"DOG_RANK5_HD_AUDITION.json").read_text())["status"],
                              "HD_REVIEW_READY")
+
+    def test_source_crop_tracks_dog_right_in_late_frames(self):
+        with patch("dog_rank5_hd_review.subprocess.run") as run:
+            render_vertical(Path("source.mp4"),Path("review.mp4"),start=2.0,seconds=5.0)
+            params=run.call_args.args[0]
+            vf=params[params.index("-vf")+1]
+            self.assertIn("tanh((t-3.2)*1.6)",vf)
+            self.assertIn("crop=1080:1920",vf)
+            self.assertIn("-an",params)
+            self.assertIn("-t",params)
+            self.assertEqual(params[params.index("-t")+1],"5.0")
 
     def test_rejects_arbitrary_page_and_preauthorization(self):
         with tempfile.TemporaryDirectory() as temp:

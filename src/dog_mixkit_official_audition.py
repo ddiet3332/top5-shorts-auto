@@ -21,6 +21,21 @@ from dog_mixkit_license_screen import screen_catalog
 MAX_PAGE_BYTES = 768 * 1024
 MAX_VIDEO_BYTES = 45 * 1024 * 1024
 OFFICIAL_HOSTS = {"mixkit.co","assets.mixkit.co","videos.mixkit.co","cdn.mixkit.co"}
+SAFE_MIXKIT_REASONS = {
+    "MIXKIT_OFFICIAL_PAGE_REDIRECT",
+    "MIXKIT_NOT_HTML",
+    "MIXKIT_HTML_TOO_LARGE",
+    "FREE_LICENSE_PAGE_NOT_CONFIRMED",
+    "UNTRUSTED_MEDIA_DOWNLOAD_URL",
+    "UNTRUSTED_MIXKIT_MEDIA_REDIRECT",
+    "NOT_VIDEO_RESPONSE",
+    "MEDIA_SIZE_CAP",
+    "MEDIA_TOO_SMALL",
+    "MIXKIT_SOURCE_DURATION_INVALID",
+    "MIXKIT_PREVIEW_INVALID",
+    "MIXKIT_FRAME_INVALID",
+}
+
 
 
 class DirectLinks(HTMLParser):
@@ -175,7 +190,8 @@ def audit_mixkit(catalog,output,*,reader=None,downloader=None,probe=None,preview
                             "preview_start_sec":round(start,2)})
         except Exception as exc:
             row["status"]="MIXKIT_FETCH_OR_REVIEW_FAILED"
-            row["failure_code"]=safe_failure_code(exc)
+            safe_code = str(exc) if isinstance(exc, ValueError) and str(exc) in SAFE_MIXKIT_REASONS else None
+            row["failure_code"]=safe_code or safe_failure_code(exc)
             row["failure_type"]=type(exc).__name__
             preview.unlink(missing_ok=True)
             for frame in frames:
