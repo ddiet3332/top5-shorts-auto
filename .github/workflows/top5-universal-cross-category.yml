@@ -17,6 +17,8 @@ on:
     paths:
       - '.github/workflows/top5-universal-cross-category.yml'
       - 'src/top5_universal_trial.py'
+      - 'src/top5_scene_evidence.py'
+      - 'tests/test_top5_scene_evidence.py'
       - 'src/top5_universal_stock_fallback.py'
       - 'src/top5_production_review.py'
       - 'tests/test_top5_exact_frame_render.py'
@@ -30,6 +32,8 @@ on:
     paths:
       - '.github/workflows/top5-universal-cross-category.yml'
       - 'src/top5_universal_trial.py'
+      - 'src/top5_scene_evidence.py'
+      - 'tests/test_top5_scene_evidence.py'
       - 'src/top5_universal_stock_fallback.py'
       - 'src/top5_production_review.py'
       - 'tests/test_top5_exact_frame_render.py'
@@ -57,10 +61,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install image inspection dependency for test runner
+        run: python -m pip install --disable-pip-version-check 'Pillow>=10,<13'
       - name: Test all four channel families and publication hard gates
         run: |
           python -m unittest discover -s tests -p 'test_top5_universal_trial.py' -v
           python -m unittest discover -s tests -p 'test_top5_universal_stock_fallback.py' -v
+          python -m unittest discover -s tests -p 'test_top5_scene_evidence.py' -v
   cross-topic-real-mp4:
     needs: check-universal-contract
     if: github.event_name != 'pull_request'
@@ -91,6 +98,11 @@ jobs:
         run: |
           python src/top5_universal_trial.py --topic "${{ matrix.topic }}" \
             --output "output/universal/${{ matrix.topic }}"
+      - name: Generate 35 actual ranked video frames and independent editorial warnings
+        if: steps.trial.outcome == 'success'
+        timeout-minutes: 7
+        run: |
+          python src/top5_scene_evidence.py --topic "${{ matrix.topic }}" --output "output/universal/${{ matrix.topic }}"
       - name: Report real cross-topic status including source shortages
         if: always()
         run: |
@@ -124,6 +136,7 @@ jobs:
             output/universal/${{ matrix.topic }}/*.mp4
             output/universal/${{ matrix.topic }}/*.json
             output/universal/${{ matrix.topic }}/*.jpg
+            output/universal/${{ matrix.topic }}/*.md
             output/universal/${{ matrix.topic }}/*.txt
             output/universal/${{ matrix.topic }}/stock_fallback/*.json
             output/universal/${{ matrix.topic }}/stock_fallback/*.txt
