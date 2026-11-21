@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_basis": "Source-bound selected-cut review, not blanket source bans: nature run #44891297714 (7 frame samples per rank), object run #44913886508 (35 final rank frames + 15 SHA-verified original frames) and V41 real 500M untrusted-description QA #44914424579. No whole-source rights or monetization approval.",
+  "review_basis": "Scoped real MP4 frame-review rejection: 2026-11-21 nature run #44891297714, objects run #44913886508 and V41 #44914424579, V43 objects universal cross-topic #44917082072; SHA+topic+start match; no global source bans and no rights clearance.",
   "source_video": "TOP5-auto-review-65",
   "technical_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44891297714",
   "rejected_windows": [
@@ -48,6 +48,24 @@
       "tolerance_sec": 0.22,
       "original_rank": 1,
       "review_reason": "Selected 35-41s machine-wide shots/person do not make a clear visible setup-action-payoff chain reaction in 7 rendered rank samples and 3 original source samples; unacceptable first-place surprise proof. Reject this exact six-second section, not the original full experiment."
+    },
+    {
+      "topic_id": "objects_oddities",
+      "title": "File:Bouncing Ball.webm",
+      "sha256": "0aed92a1d1fb670cd085eeeff73256c1462db76d2a77dffeddd3b8843e9e285c",
+      "start_sec": 17,
+      "tolerance_sec": 0.22,
+      "original_rank": 5,
+      "review_reason": "V43 run #44917082072 actual 30s MP4 7-frame per-rank review at output 2.24-5.74s shows a metal globe/static apparatus with no legible changing ball action or visible surprising payoff. Remove only selected original 17-21s; other original windows remain eligible."
+    },
+    {
+      "topic_id": "objects_oddities",
+      "title": "File:Domino collapse at PAX 2009.ogv",
+      "sha256": "34949cf278c26e390729005f3f812df4ab66bd25851227654bb7166ff415a621",
+      "start_sec": 0,
+      "tolerance_sec": 0.22,
+      "original_rank": 2,
+      "review_reason": "V43 run #44917082072 actual 30s MP4 7-frame per-rank review at output 15.36-20.62s shows a sports hall, upright track and spectators rather than a discernible domino collapse. Reject this selected 0-6s cut, not whole source or unseen later action."
     }
   ],
   "rights_verified": false,
@@ -61,6 +79,13 @@
       "topic_id": "objects_oddities",
       "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44913886508",
       "vlm_run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44914424579"
+    },
+    {
+      "topic_id": "objects_oddities",
+      "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44917082072",
+      "source_qa": "7 frames across each selected rank in actual 30-second MP4",
+      "rights_verified": false,
+      "publication_approved": false
     }
   ]
 }
