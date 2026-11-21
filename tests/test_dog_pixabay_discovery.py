@@ -59,6 +59,23 @@ class PixabayDiscoveryTests(unittest.TestCase):
         self.assertEqual(result["candidates"][0]["rights_status"],"UNVERIFIED")
         self.assertFalse(result["publication_approved"])
         self.assertNotIn("video_url",result["candidates"][0])
+    def test_media_urls_are_transient_not_in_discovery_evidence(self):
+        hit={"id":345,"duration":10,"pageURL":"https://pixabay.com/videos/dog-345/",
+             "user":"creator","tags":"happy dog, playful",
+             "videos":{"medium":{"url":"https://cdn.pixabay.com/video/345.mp4","width":720,"height":1280}}}
+        media={}
+        result=discover_pixabay("mock",fetch=lambda url:{"hits":[hit]},transient_media=media)
+        self.assertEqual(media,{"PB-345":"https://cdn.pixabay.com/video/345.mp4"})
+        self.assertEqual(len(result["candidates"]),1)
+        self.assertNotIn("video_url",result["candidates"][0])
+        self.assertNotIn("cdn.pixabay.com",str(result))
+        self.assertEqual(result["candidates"][0]["tags_from_provider"],"happy dog, playful")
+
+    def test_obvious_green_screen_source_is_not_treated_as_real_dog(self):
+        hit={"id":345,"duration":10,"pageURL":"https://pixabay.com/videos/dog-345/",
+             "user":"GreenScreenFX","videos":{"medium":{"url":"https://cdn.pixabay.com/test.mp4"}}}
+        self.assertEqual(discover_pixabay("mock",fetch=lambda _:{"hits":[hit]})["candidates"],[])
+
     def test_reject_bad_page_and_exclusion(self):
         hit={"id":123,"duration":9,"pageURL":"https://evil.example/video",
              "videos":{"medium":{"url":"https://evil.example/file.mp4"}}}
