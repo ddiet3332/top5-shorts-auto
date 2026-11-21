@@ -23,6 +23,8 @@ on:
       - 'src/top5_auto_v29.py'
       - 'src/v28_fullscreen_builder.py'
       - 'src/top5_auto_v30.py'
+      - 'review/top5_weak_source_windows.json'
+      - 'tests/test_top5_reviewed_weak_windows.py'
       - 'src/topic_discovery_audit.py'
       - 'tests/test_topic_discovery_audit.py'
       - 'src/v12_sources.py'
@@ -52,6 +54,7 @@ jobs:
         run: |
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_auto_v32.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_auto_v30.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
       - name: Audition real dog footage using proven V37 cat source pipeline

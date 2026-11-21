@@ -10,6 +10,7 @@ import json
 import re
 import math
 import os
+import hashlib
 from pathlib import Path
 from collections import Counter
 
@@ -191,6 +192,25 @@ def provisional_topic_label(topic, title):
     return story_label(title)
 
 
+def reviewed_weak_window(topic_id, title, source_sha256, cut_start,
+                         registry_path=BASE / "review/top5_weak_source_windows.json"):
+    """Reject only the previously reviewed source BYTES and selected time window.
+
+    A similar source title or different cut is *not* visual evidence.
+    Return a reviewer reason only for an exact source/time/topic match.
+    """
+    registry=Path(registry_path)
+    if not registry.is_file():
+        return None
+    for row in json.loads(registry.read_text(encoding="utf-8")).get("rejected_windows", []):
+        if (row["topic_id"] == topic_id and
+            row["title"] == title and
+            row["sha256"] == source_sha256 and
+            abs(float(row["start_sec"])-float(cut_start)) <= float(row["tolerance_sec"])):
+            return row["review_reason"]
+    return None
+
+
 def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None):
     library=Path(out)/"originals"
     library.mkdir(parents=True,exist_ok=True)
@@ -218,6 +238,10 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
             at,motion=motion_highlight(target,dur,seconds=5)
             at=max(0.0,min(float(at),dur-6.08))
             at=apply_curated_cut_shift(src["title"],at,dur)
+            weak=reviewed_weak_window((topic or {}).get("topic_id"),src["title"],
+                                      hashlib.sha256(target.read_bytes()).hexdigest(),at)
+            if weak:
+                raise ValueError("REVIEWED_WEAK_SOURCE_WINDOW: "+weak[:85])
             if motion<0.1:
                 raise ValueError("near-static motion")
             reviewed=evidence.get(src["title"])

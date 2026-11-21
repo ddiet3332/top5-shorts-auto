@@ -8,6 +8,8 @@ on:
       - 'tests/test_topic_discovery_audit.py'
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
+      - 'review/top5_weak_source_windows.json'
+      - 'tests/test_top5_reviewed_weak_windows.py'
       - 'src/top5_auto_v29.py'
       - 'src/top5_auto_v32.py'
       - 'src/top5_artifact_resolver.py'
@@ -27,6 +29,8 @@ on:
       - 'tests/test_topic_discovery_audit.py'
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
+      - 'review/top5_weak_source_windows.json'
+      - 'tests/test_top5_reviewed_weak_windows.py'
       - 'src/top5_auto_v29.py'
       - 'src/top5_auto_v32.py'
       - 'src/top5_artifact_resolver.py'
@@ -58,6 +62,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           python -m unittest discover -s tests -p 'test_top5_generic_label_safety.py' -v
           python -m unittest discover -s tests -p 'test_top5_category_rotation.py' -v
+          python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
           python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
           python -m unittest discover -s tests -p 'test_top5_exact_frame_render.py' -v
           python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
