@@ -206,7 +206,17 @@
       "object",
       "physics",
       "pendulum",
-      "ball"
+      "ball",
+      "kinetic",
+      "robot",
+      "mechanism",
+      "gear",
+      "magnet",
+      "spring",
+      "chain",
+      "electronic",
+      "bottle",
+      "gyro"
     ],
     "actions": [
       "fall",
@@ -216,12 +226,29 @@
       "run",
       "chain",
       "move",
-      "spin"
+      "spin",
+      "swing",
+      "rotate",
+      "balance",
+      "flip",
+      "collide",
+      "slide",
+      "catch"
     ],
     "search": [
       "domino chain reaction",
       "marble machine",
-      "bouncing ball"
+      "bouncing ball",
+      "marble run machine",
+      "Rube Goldberg machine",
+      "pendulum demonstration",
+      "Newton cradle",
+      "kinetic sculpture",
+      "spinning top toy",
+      "robot arm motion",
+      "magnet chain reaction",
+      "bottle flip trick",
+      "bouncing ball slow motion"
     ],
     "seeds": []
   },
