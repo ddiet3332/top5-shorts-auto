@@ -12,6 +12,7 @@ on:
       - 'src/dog_replacement_report.py'
       - 'src/dog_source_discovery.py'
       - 'src/dog_pixabay_discovery.py'
+      - 'src/dog_pixabay_audition.py'
       - 'src/dog_source_audition.py'
       - 'tests/test_dog_replacement_gate.py'
       - 'tests/test_dog_replacement_report.py'
@@ -116,6 +117,27 @@ jobs:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
           python src/dog_pixabay_discovery.py --output output/dog/DOG_PIXABAY_CANDIDATES.json
+      - name: Generate bounded Pixabay review previews
+        if: github.event_name != 'pull_request'
+        timeout-minutes: 5
+        continue-on-error: true
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+        run: |
+          python src/dog_pixabay_audition.py \\
+            --discovery output/dog/DOG_PIXABAY_CANDIDATES.json \\
+            --output output/dog/pixabay_audition
+      - name: Archive Pixabay review previews
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-pixabay-previews-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/DOG_PIXABAY_CANDIDATES.json
+            output/dog/pixabay_audition/DOG_PIXABAY_AUDITION_RESULTS.json
+            output/dog/pixabay_audition/*_preview.mp4
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Discover bounded free dog source candidates
         timeout-minutes: 2
         env:
