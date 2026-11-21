@@ -697,6 +697,11 @@ def main():
     from top5_feedback_repair import load_and_apply
     final,feedback_report=load_and_apply(
         final,"review/feedback/dog_latest.json",output/"FEEDBACK_REPAIR_APPLIED.json")
+    # V57: rank preference is bound to all five exact source hashes, source
+    # URLs and original cut times observed in the actual V56 35-frame video.
+    # Other topics and changed source batches retain their original order.
+    from top5_nature_rank_repair import apply_rank_repair
+    final,rank_repair_audit=apply_rank_repair(topic,final,output)
     # V50: only SHA+source-URL+cut+rank-matched observations may replace
     # temporary source-metadata captions. An unseen new source keeps the
     # unverified label. Never infer rights or a creative 85pt pass.
@@ -751,8 +756,10 @@ def main():
     save_license_and_status(topic,final,recommendations,attempts,output,hook_source)
     reviewed_hook=REVIEWED_HOOK_STARTS.get(hook_audit["sha256"])==hook_source["hook_start"]
     if topic["topic_id"] not in ("cat_surprises", "dog_surprises"):
-        # Metadata is not visual evidence: use a conspicuous, honest preview label.
-        hook_caption = "오프닝 장면 검수 필요"
+        # Factual topic hook copy (not an assertion of an observed action).
+        # The hook's actual visual content still requires separate frame QA.
+        hook_caption = ("자연이 만든 놀라운 장면 TOP5!" if topic["topic_id"]=="nature_moments"
+                        else "TOP5 첫 장면을 확인하세요")
     else:
         hook_caption="흰 고양이가 덮치자 둘이 데굴!" if reviewed_hook else "다음 행동을 맞혀 보세요"
     video=assemble_video(topic,final,output,hook_source,
