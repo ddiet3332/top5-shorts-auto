@@ -120,6 +120,15 @@
       "tolerance_sec": 0.22,
       "original_rank": 1,
       "review_reason": "Real V49 run #44921764653 35 rendered rank frames (21.3–26.7s) and SHA-bound original trio show a roadside/road flooding becoming visible, but no clear first-place surprising payoff or story resolution; visually weaker than selected geyser and Tonga eruption. Reject exact 2–8s cut only, not all Azraq coverage."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:2017 Changsha Xiangjiang River floods.webm",
+      "sha256": "728727fbfe7200a2e6f76cfe42ea14b275da9b1e1737e8b72851560284a9a657",
+      "start_sec": 1,
+      "tolerance_sec": 0.22,
+      "original_rank": 4,
+      "review_reason": "V50 universal cross-category real nature run #44922860609 actual seven rank-four frames at 6.30–10.70s: almost identical hazy flooded-river landscape, no distinct action, clear change, or viewer payoff. Reject exact 1–6s window only; original source not globally blocked."
     }
   ],
   "rights_verified": false,
@@ -159,6 +168,13 @@
       "topic_id": "nature_moments",
       "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44921764653",
       "review_basis": "Actual V49 auto83 35 ranked 1080x1920 composite frames and 15 SHA256-bound original frames inspected; weak upper ranks #2 and #1",
+      "rights_verified": false,
+      "publication_approved": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44922860609",
+      "review_basis": "Universal real-render 35-frame nature contact sheet with near-static rank4 Changsha flooding cut; V51 rejects only exact SHA+time",
       "rights_verified": false,
       "publication_approved": false
     }
