@@ -191,7 +191,7 @@ def provisional_topic_label(topic, title):
     return story_label(title)
 
 
-def select_sources(candidates,out,*,with_hook=False,reserve_pool=None):
+def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None):
     library=Path(out)/"originals"
     library.mkdir(parents=True,exist_ok=True)
     evidence=checked_scenes()
@@ -229,7 +229,7 @@ def select_sources(candidates,out,*,with_hook=False,reserve_pool=None):
             else:
                 # Not a semantic funny score; only prioritizes candidate review.
                 quality=min(58.0,30.0+min(20.0,motion*.32)+min(8.,src["title_score"]))
-                if topic.get("category") in ("자연", "사물", "사람"):
+                if (topic or {}).get("category") in ("자연", "사물", "사람"):
                     label = provisional_topic_label(topic, src["title"])
                     reaction = "장면 내용 검수 필요"
                 else:
@@ -330,7 +330,7 @@ def main():
     (out/"V30_TOPICS.json").write_text(json.dumps(standings,ensure_ascii=False,
                           indent=2)+"\n",encoding="utf-8")
     try:
-        items,attempts,hook_source=select_sources(candidates,out,with_hook=True)
+        items,attempts,hook_source=select_sources(candidates,out,with_hook=True,topic=topic)
     except SourceShortage as exc:
         (out/"SOURCE_ATTEMPTS.json").write_text(json.dumps(
             [{"topic_id":topic["topic_id"],"reason_code":exc.code,"candidates":exc.attempts}],
