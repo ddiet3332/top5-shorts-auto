@@ -12,7 +12,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from top5_candidate_visual_gate import (
     FRAME_BYTES, raw_grayscale_luminance, inspect_original_window,
-    named_nature_site, diverse_scene_selection)
+    named_nature_site, diverse_scene_selection, nature_event_family)
 from top5_auto_v30 import select_sources
 from top5_hook_selection import SourceShortage
 
@@ -60,6 +60,36 @@ class CandidateVisualGateTests(unittest.TestCase):
         self.assertEqual(len(chosen),5)
         self.assertEqual(len(dupes),1)
         self.assertEqual(dupes[0]["site_key"],"waterfall:kawaida")
+
+    def test_four_floods_must_not_take_three_of_five_nature_ranks(self):
+        # Regression from REAL auto production run #44898701888:
+        # 3 flood clips were ranks 1, 2 and 3 even with 5 distinct files.
+        titles=[
+            "File:1938 flood at Atwood.webm",
+            "File:Azraq flooding May 2023.webm",
+            "File:Flood in Gurama Quarter.webm",
+            "File:2017 Changsha Xiangjiang River floods.webm",
+            "File:Tonga Volcano Eruption.webm",
+            "File:Strokkur geyser eruption in Iceland.webm",
+            "File:Lightning Storm Moves Across the USA.webm",
+            "File:Blue Shafts - Aurora Borealis close to Berlin.webm",
+        ]
+        chosen,excluded=diverse_scene_selection([{"title":t} for t in titles])
+        self.assertEqual(len(chosen),5)
+        families=[nature_event_family(x["title"]) for x in chosen]
+        self.assertEqual(set(families),{"flood","volcano","geyser","lightning","aurora"})
+        self.assertEqual(families.count("flood"),1)
+        self.assertTrue(any(x["reason_code"]=="REPEATED_NATURE_EVENT_FAMILY"
+                            for x in excluded))
+        self.assertEqual(nature_event_family("File:Azraq flooding May 2023.webm"),"flood")
+
+    def test_three_flood_episodes_cannot_be_used_to_fake_five_distinct_events(self):
+        titles=[{"title":f"File:Area {i} flooding.webm"} for i in range(5)]
+        chosen,excluded=diverse_scene_selection(titles)
+        self.assertEqual(len(chosen),2)
+        self.assertEqual(len(excluded),3)
+        self.assertTrue(all(x["reason_code"]=="REPEATED_NATURE_EVENT_FAMILY"
+                            for x in excluded))
 
     @unittest.skipUnless(shutil.which("ffmpeg"),"FFmpeg not installed")
     def test_actual_generated_short_dark_and_bright_video_windows(self):
