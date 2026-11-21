@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "reviewed_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44928716051",
+  "original_topic": "nature_moments",
+  "scope": "Only five exact source bytes, original URLs and original cut offsets from the verified V56 video. This is an editor's relative-strength preference, not a 100-point score or copyright/YPP clearance.",
+  "observed_original_ranks": [
+    5,
+    4,
+    3,
+    2,
+    1
+  ],
+  "ranked_sources": [
+    {
+      "observed_rank": 5,
+      "preferred_rank": 4,
+      "sha256": "8154f19f4c593f7af6021a919a079a8b4ef741d3d09fb7726033b4d157a6b7dc",
+      "title": "File:Side view video of Kawaida Waterfall cascading, Cianda, Kiambu County.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Side_view_video_of_Kawaida_Waterfall_cascading%2C_Cianda%2C_Kiambu_County.webm",
+      "cut_start": 2,
+      "comment": "Continuous waterfall stream; 35-frame V56 evidence no strong surprise, not a top-three payoff"
+    },
+    {
+      "observed_rank": 4,
+      "preferred_rank": 3,
+      "sha256": "61b617f219e8d297ff112d2b9e14af19c1af544195d7ba79551ee79ebb709f5f",
+      "title": "File:Time-lapse of Aurora Borealis in Norway.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Time-lapse_of_Aurora_Borealis_in_Norway.webm",
+      "cut_start": 33,
+      "comment": "Clear green aurora curtains in V56, visual change but weaker than active geyser and Tonga"
+    },
+    {
+      "observed_rank": 3,
+      "preferred_rank": 1,
+      "sha256": "df4242d9200662ba4a093b55e62951e128b53c29be8074b0f52e872e823b199d",
+      "title": "File:Tonga Volcano Eruption 2022-01-15 0320Z to 0610Z Himawari-8 visible.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tonga_Volcano_Eruption_2022-01-15_0320Z_to_0610Z_Himawari-8_visible.webm",
+      "cut_start": 1.92,
+      "comment": "Verified 4sec satellite timelapse of expanding eruption cloud is most visually consequential; V51 bounded slow to fit rank1 6s"
+    },
+    {
+      "observed_rank": 2,
+      "preferred_rank": 2,
+      "sha256": "024d5492313585a719784bb3ddb05e743b6510d3e1540ce6f47218792514d4db",
+      "title": "File:Old Faithful Geyser Eruption selection 2019.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Old_Faithful_Geyser_Eruption_selection_2019.webm",
+      "cut_start": 4,
+      "comment": "Visible tall geyser plume and upward action in V56 ranked 35 frames; stronger than flood, rank2 retained"
+    },
+    {
+      "observed_rank": 1,
+      "preferred_rank": 5,
+      "sha256": "e81e2fe53870c48f2b0f58cd7043dfd3458344f8f93f81e7d1efa0b1398f7964",
+      "title": "File:2022-01-11 Garonne River Overflow 5472.webm",
+      "source_page": "https://commons.wikimedia.org/wiki/File:2022-01-11_Garonne_River_Overflow_5472.webm",
+      "cut_start": 6,
+      "comment": "Brown swollen river, no visible setup-change-payoff in sampled V56 rank1 and outro; demote to rank5 not claim a comedy payoff"
+    }
+  ],
+  "publication_approved": false,
+  "source_rights_verified": false,
+  "youtube_monetization_verified": false,
+  "editorial_score_100": null
+}
