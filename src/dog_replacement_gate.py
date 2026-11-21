@@ -6,6 +6,8 @@ records must carry independent review evidence before an upgrade is eligible.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
+import re
 from typing import Any
 
 WEAK_RANKS = {"rank5": "PX-9006741", "rank2": "PX-7515923"}
@@ -37,7 +39,7 @@ def evaluate_candidate(rank: str, candidate: dict[str, Any],
         return Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "DUPLICATE_SOURCE_OR_ACTION")
     if not candidate["source_url"].startswith("https://") or not candidate["license_url"].startswith("https://"):
         return Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "INVALID_SOURCE_PROVENANCE")
-    if len(str(candidate["sha256"])) != 64:
+    if not re.fullmatch(r"[0-9a-fA-F]{64}", str(candidate["sha256"])):
         return Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "MISSING_VERIFIED_HASH")
     if candidate["semantic_review"] != "PASS" or candidate["reviewed_frames"] is not True:
         return Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "EDITORIAL_REVIEW_REQUIRED")
@@ -50,6 +52,8 @@ def evaluate_candidate(rank: str, candidate: dict[str, Any],
         score = float(candidate["editorial_score"])
     except (TypeError, ValueError):
         return Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "INVALID_TIMING_OR_SCORE")
+    if not all(math.isfinite(v) for v in (start, payoff, duration, score)):
+        return Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "NONFINITE_TIMING_OR_SCORE")
     if not (0 <= start <= payoff < start + 5 <= duration):
         return Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "PAYOFF_OUTSIDE_FIVE_SECONDS")
     if not (0 <= score <= 100) or incumbent_score is None or score <= incumbent_score:
@@ -65,9 +69,17 @@ def decide_replacements(candidates: dict[str, list[dict[str, Any]]],
     ids = set(fixed_source_ids)
     actions = set(fixed_action_families)
     decisions = []
+    def priority(candidate):
+        try:
+            score = float(candidate.get("editorial_score") or 0)
+            if not math.isfinite(score):
+                score = -1
+        except (TypeError, ValueError, OverflowError):
+            score = -1
+        return (-score, str(candidate.get("id", "")))
+
     for rank in ("rank5", "rank2"):
-        pool = sorted(candidates.get(rank, []),
-                      key=lambda c: (-float(c.get("editorial_score") or 0), str(c.get("id", ""))))
+        pool = sorted(candidates.get(rank, []), key=priority)
         selected = Decision(rank, "NO_UPGRADE", WEAK_RANKS[rank], "EDITORIAL_SOURCE_SHORTAGE")
         for candidate in pool:
             result = evaluate_candidate(rank, candidate, used_ids=ids,
