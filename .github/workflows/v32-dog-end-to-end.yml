@@ -8,6 +8,14 @@ on:
       - 'requirements-dog-review.txt'
       - 'src/dog_run_evidence.py'
       - 'src/dog_editorial_evidence.py'
+      - 'src/dog_replacement_gate.py'
+      - 'src/dog_replacement_report.py'
+      - 'tests/test_dog_replacement_gate.py'
+      - 'tests/test_dog_replacement_report.py'
+      - 'src/dog_replacement_gate.py'
+      - 'src/dog_replacement_report.py'
+      - 'tests/test_dog_replacement_gate.py'
+      - 'tests/test_dog_replacement_report.py'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
       - 'scripts/persist_dog_evidence.sh'
@@ -103,7 +111,7 @@ jobs:
           fi
           python src/top5_reviewed_render.py --topic dog_surprises --output output/dog "${args[@]}"
       - name: Record fail-closed editorial replacement readiness
-        if: always()
+        if: steps.render.outcome == 'success'
         run: |
           python src/dog_replacement_report.py --output output/dog/DOG_REPLACEMENT_READINESS.json
       - name: Measure the rendered audio stream
