@@ -21,7 +21,8 @@ from top5_auto_v29 import (
 )
 from top5_hook_selection import SourceShortage, choose_hook, identity
 from top5_candidate_visual_gate import (inspect_original_window,
-    named_nature_site, diverse_scene_selection, nature_event_family)
+    named_nature_site, diverse_scene_selection, nature_event_family,
+    object_event_family, diverse_object_selection)
 
 BASE=Path(__file__).resolve().parents[1]
 CHECKED=BASE/"review/v29_checked_actions.json"
@@ -220,7 +221,7 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
     accepted=[]
     attempts=[]
     seen=set()
-    for idx,src in enumerate(candidates[:MAX_DOWNLOADS],1):
+    for idx,src in enumerate(candidates[:23 if (topic or {}).get("category")=="사물" else MAX_DOWNLOADS],1):
         suffix=Path(src["title"]).suffix.lower()
         if suffix not in (".webm",".mp4",".ogv"):
             attempts.append({"title":src["title"],"status":"REJECTED","reason_code":"UNSUPPORTED_CONTAINER"})
@@ -290,8 +291,14 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
             # Metadata ranking can oversample one event (e.g. four floods).
             # Keep trying further originals while fewer than five distinct
             # event/location groups have technically valid, visible cuts.
-            if ((topic or {}).get("category") != "자연" or
-                len(diverse_scene_selection(accepted,required=5)[0])>=5):
+            category=(topic or {}).get("category")
+            if category=="자연":
+                diversified=diverse_scene_selection(accepted,required=5)[0]
+            elif category=="사물":
+                diversified=diverse_object_selection(accepted,required=5)[0]
+            else:
+                diversified=accepted
+            if len(diversified)>=5:
                 break
     if len(accepted)<5:
         out=Path(out)
@@ -322,6 +329,28 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 json.dumps(attempts,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
             raise SourceShortage("DISTINCT_SCENE_SHORTAGE",
                 f"겹치지 않는 명칭의 자연 원본 구간 {len(distinct)}/5",attempts)
+        accepted=distinct
+    if (topic or {}).get("category")=="사물":
+        # Three visually different files about the same domino trick are
+        # not three distinct TOP5 event types. File-title proxy alone is
+        # never allowed to assert observed humor or content semantics.
+        distinct, repeated_objects=diverse_object_selection(accepted,required=5)
+        (Path(out)/"V30_SOURCE_SCENE_DIVERSITY.json").write_text(
+            json.dumps({
+                "topic":(topic or {}).get("topic_id"),
+                "source_count_candidate":len(accepted),
+                "selected_distinct_scene_count":len(distinct),
+                "selected_event_families":[object_event_family(r["title"]) for r in distinct],
+                "excluded_scene_candidates":repeated_objects,
+                "method":"Coarse filename object-mechanism classes; not AI visual scene validation",
+                "editorial_score":None,"rights_verified":False,
+                "publication_approved":False,
+            },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+        if len(distinct)<5:
+            (Path(out)/"V30_CANDIDATES.json").write_text(
+                json.dumps(attempts,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+            raise SourceShortage("DISTINCT_OBJECT_EVENT_SHORTAGE",
+                f"구별되는 사물·기계 장면이 {len(distinct)}/5개뿐입니다",attempts)
         accepted=distinct
     used=[]
     author_count=Counter()
