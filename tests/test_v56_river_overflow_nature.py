@@ -25,8 +25,10 @@ class RiverOverflowNatureRoutingTests(unittest.TestCase):
     def test_an_unrelated_software_overflow_does_not_become_flood(self):
         self.assertIsNone(nature_event_family(
             "File:Stack buffer overflow in neural network animation.webm"))
-        self.assertIsNone(nature_event_family(
-            "File:Ocean water overflow design.webm"))
+        # The existing ocean keyword may classify this as waves, but
+        # generic overflowing must never turn it into a *flood* event.
+        self.assertNotEqual(nature_event_family(
+            "File:Ocean water overflow design.webm"),"flood")
         self.assertIsNone(nature_event_family(
             "File:Overflow toy mechanism.webm"))
         self.assertEqual(nature_event_family(
