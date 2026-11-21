@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "evidence_run_id": 44879229566,
+  "context": "Sampled 9 frames of each 5s MP4; no claim of complete semantic, copyright, sound or monetization clearance",
+  "publication_approved": false,
+  "rights_status": "UNVERIFIED",
+  "target": "rank5_rank2_editorial_improvement",
+  "candidates": [
+    {
+      "id": "PX-31807439",
+      "status": "REJECTED_WEAK_PAYOFF",
+      "target": "rank5",
+      "observations": "White dog is low to the ground on ice. Birds move more than dog across the 0-5s preview; no strong reversal.",
+      "visual_sample_reviewed": true,
+      "full_source_video_reviewed": false,
+      "publication_approved": false
+    },
+    {
+      "id": "PX-5263686",
+      "status": "CONDITIONAL_RANK5_CANDIDATE",
+      "target": "rank5",
+      "observations": "Jack Russell shifts from upright to rolling onto back against solid pink background, then rises. Visible payoff. Landscape original must be tightly reframed; risk of crop clipping at opening/end. Crop tests derived from 360x600 preview are low-resolution approximations.",
+      "visual_sample_reviewed": true,
+      "full_source_video_reviewed": false,
+      "rights_status": "UNVERIFIED",
+      "score": null,
+      "publication_approved": false
+    },
+    {
+      "id": "PX-10607242",
+      "status": "REJECTED_DOG_NOT_MAIN_ACTION",
+      "target": "rank2",
+      "observations": "Woman on sled dominates selected 10-15s source excerpt; dog is not clearly featured in 5s preview.",
+      "visual_sample_reviewed": true,
+      "full_source_video_reviewed": false,
+      "publication_approved": false
+    }
+  ]
+}
