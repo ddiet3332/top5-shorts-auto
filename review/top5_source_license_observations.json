@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "reviewed_utc_date": "2026-11-21",
+  "scope": "Individual source-page metadata observations for exact V47 original source hashes and URLs, not owner consent or YPP approval",
+  "sources": [
+    {
+      "sha256": "61cd98f25dabe5259dde508fb2677e8c23afab1d9a74a58a3fd680ee0c2e6e07",
+      "source_page": "https://www.pexels.com/es-es/video/animal-mascota-jugando-gato-15135238/",
+      "creator": "Timo Volz",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "attribution_required": false,
+      "share_alike_review_required": false,
+      "source_page_license_observed": true,
+      "owner_authorization_independently_verified": false,
+      "third_party_rights_verified": false,
+      "youtube_reused_content_verified": false,
+      "publication_approved": false
+    },
+    {
+      "sha256": "a7fec4a995d907f7e2d18a5010887034d323059474599046ab91d19f13f41968",
+      "source_page": "https://www.pexels.com/video/playful-cat-rolling-on-urban-sidewalk-40826295/",
+      "creator": "Zeynep Coşkun",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "attribution_required": false,
+      "share_alike_review_required": false,
+      "source_page_license_observed": true,
+      "owner_authorization_independently_verified": false,
+      "third_party_rights_verified": false,
+      "youtube_reused_content_verified": false,
+      "publication_approved": false
+    },
+    {
+      "sha256": "e5824e2c9ba6cb04cc84e4a624509c1fd43941617b34fd88e69751f199208f81",
+      "source_page": "https://www.pexels.com/video/playful-cat-under-sofa-with-toy-ball-34689563/",
+      "creator": "nilay ortanca",
+      "license": "Pexels License",
+      "license_url": "https://www.pexels.com/license/",
+      "attribution_required": false,
+      "share_alike_review_required": false,
+      "source_page_license_observed": true,
+      "owner_authorization_independently_verified": false,
+      "third_party_rights_verified": false,
+      "youtube_reused_content_verified": false,
+      "publication_approved": false
+    },
+    {
+      "sha256": "1a1f420559b306574ba8a04aee0175c38c2e20815b1bd46a45aae86d17f3ad53",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Cat_opening_door.webm",
+      "creator": "Astropulse",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "attribution_required": true,
+      "share_alike_review_required": true,
+      "source_page_license_observed": true,
+      "owner_authorization_independently_verified": false,
+      "third_party_rights_verified": false,
+      "youtube_reused_content_verified": false,
+      "publication_approved": false
+    },
+    {
+      "sha256": "a3c3a070ed28764ae2306b123e2e6c5a36cc680ae4a596f94dc0a54e89571bc8",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Salto_-_Cat_Jump.webm",
+      "creator": "Record 124",
+      "license": "CC BY 3.0",
+      "license_url": "https://creativecommons.org/licenses/by/3.0/",
+      "attribution_required": true,
+      "share_alike_review_required": false,
+      "source_page_license_observed": true,
+      "owner_authorization_independently_verified": false,
+      "third_party_rights_verified": false,
+      "youtube_reused_content_verified": false,
+      "publication_approved": false
+    },
+    {
+      "sha256": "78103e4630f8c096f1836dd83b1a0e04e5dbb46f781e8692e2eee5823275c1cf",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Larry_the_cat_and_Chlo%C3%A9_playing_(100111224612).webm",
+      "creator": "Trougnouf",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution_required": true,
+      "share_alike_review_required": false,
+      "source_page_license_observed": true,
+      "owner_authorization_independently_verified": false,
+      "third_party_rights_verified": false,
+      "youtube_reused_content_verified": false,
+      "publication_approved": false
+    }
+  ]
+}
