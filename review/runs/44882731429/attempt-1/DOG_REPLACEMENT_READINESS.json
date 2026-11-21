@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "design_lock": "TOP5_DESIGN_LOCK_V1",
+  "incumbent_review_scores": {
+    "rank5": 55,
+    "rank2": 72
+  },
+  "incumbent_review_blockers": [],
+  "incumbent_scores_are_only_from_verified_frame_review": true,
+  "candidate_count": 0,
+  "provider_preview_count": 2,
+  "provider_preview_new_count": 0,
+  "provider_preview_cached_count": 2,
+  "provider_preview_ids_pending_review": [
+    "PX-33567553",
+    "PX-28860202"
+  ],
+  "provider_auditions": [
+    {
+      "provider": "pexels",
+      "id": "PX-33567553",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED",
+      "preview_origin": "CACHED_PREVIOUS_RUN",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    },
+    {
+      "provider": "pexels",
+      "id": "PX-28860202",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED",
+      "preview_origin": "CACHED_PREVIOUS_RUN",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    },
+    {
+      "provider": "mixkit",
+      "id": "MK-101230",
+      "status": "MIXKIT_FETCH_OR_REVIEW_FAILED",
+      "preview_origin": "NEW_THIS_RUN",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    },
+    {
+      "provider": "mixkit",
+      "id": "MK-1549",
+      "status": "MIXKIT_FETCH_OR_REVIEW_FAILED",
+      "preview_origin": "NEW_THIS_RUN",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    },
+    {
+      "provider": "mixkit",
+      "id": "MK-101245",
+      "status": "MIXKIT_FETCH_OR_REVIEW_FAILED",
+      "preview_origin": "NEW_THIS_RUN",
+      "rights_status": "UNVERIFIED",
+      "editorial_score": null,
+      "publication_approved": false
+    }
+  ],
+  "provider_preview_score_is_not_automatic": true,
+  "decisions": [
+    {
+      "rank": "rank5",
+      "status": "NO_UPGRADE",
+      "source_id": "PX-9006741",
+      "reason": "EDITORIAL_SOURCE_SHORTAGE"
+    },
+    {
+      "rank": "rank2",
+      "status": "NO_UPGRADE",
+      "source_id": "PX-7515923",
+      "reason": "EDITORIAL_SOURCE_SHORTAGE"
+    }
+  ],
+  "unassigned_auditions": [
+    {
+      "id": "PX-10914657",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-20218496",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-32536736",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-4107672",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-7683157",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-8465792",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-9606805",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    },
+    {
+      "id": "PX-5669753",
+      "reason": "NO_TARGET_RANK_OR_UNREVIEWED"
+    }
+  ],
+  "publication_approved": false,
+  "editorial_score": null,
+  "next_action": "REVIEW_PENDING_PREVIEWS"
+}
