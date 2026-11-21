@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "repository": "ddiet3332/top5-shorts-auto",
+  "run_id": 44861450804,
+  "run_number": 8,
+  "build_result": "failure",
+  "review_status": "NO_VERIFIED_PREVIEW_RESULT",
+  "artifact_name": "TOP5-v19-review-8",
+  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44861450804#artifacts",
+  "candidate_page_count": 0,
+  "preview_file_count": 0,
+  "all_rights_approved": false,
+  "publication_approved": false,
+  "candidates": [],
+  "notice": "Pexels, Mixkit, and Pixabay footage is not automatically CC. No auto-publishing."
+}

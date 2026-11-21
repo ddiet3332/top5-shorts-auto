@@ -1,87 +1,16 @@
 {
   "schema_version": 1,
   "repository": "ddiet3332/top5-shorts-auto",
-  "run_id": 43671060842,
-  "run_number": 7,
-  "build_result": "success",
-  "review_status": "AWAITING_HUMAN_EDITORIAL_AND_RIGHTS_REVIEW",
-  "artifact_name": "TOP5-v19-review-7",
-  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/43671060842#artifacts",
-  "candidate_page_count": 7,
-  "preview_file_count": 5,
+  "run_id": 44861450804,
+  "run_number": 8,
+  "build_result": "failure",
+  "review_status": "NO_VERIFIED_PREVIEW_RESULT",
+  "artifact_name": "TOP5-v19-review-8",
+  "artifact_web_page": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44861450804#artifacts",
+  "candidate_page_count": 0,
+  "preview_file_count": 0,
   "all_rights_approved": false,
   "publication_approved": false,
-  "candidates": [
-    {
-      "id": "PX-7680667",
-      "provider": "pexels",
-      "title": "스핑크스 고양이 의자 점프",
-      "page_url": "https://www.pexels.com/video/a-sphynx-cat-jumping-on-a-stool-7680667/",
-      "license_label": "Pexels License",
-      "video_preview_status": "VIDEO_READY_FOR_HUMAN_REVIEW",
-      "preview_count": 1,
-      "publication_approved": false
-    },
-    {
-      "id": "PX-6187151",
-      "provider": "pexels",
-      "title": "야외에서 장난감을 쫓는 검은 고양이",
-      "page_url": "https://www.pexels.com/video/video-of-a-cat-catching-the-white-cloth-6187151/",
-      "license_label": "Pexels License",
-      "video_preview_status": "VIDEO_READY_FOR_HUMAN_REVIEW",
-      "preview_count": 2,
-      "publication_approved": false
-    },
-    {
-      "id": "PX-17462877",
-      "provider": "pexels",
-      "title": "실내에서 레이저를 쫓는 줄무늬 고양이",
-      "page_url": "https://www.pexels.com/video/cat-17462877/",
-      "license_label": "Pexels License",
-      "video_preview_status": "VIDEO_READY_FOR_HUMAN_REVIEW",
-      "preview_count": 2,
-      "publication_approved": false
-    },
-    {
-      "id": "PX-7691993",
-      "provider": "pexels",
-      "title": "야외 나무상자를 탐색하는 고양이",
-      "page_url": "https://www.pexels.com/video/cat-jumping-from-a-box-7691993/",
-      "license_label": "Pexels License",
-      "video_preview_status": "PAGE_LINK_ONLY",
-      "preview_count": 0,
-      "publication_approved": false
-    },
-    {
-      "id": "MK-22732",
-      "provider": "mixkit",
-      "title": "잔디에서 갑자기 움직이는 고양이",
-      "page_url": "https://mixkit.co/free-stock-video/white-cat-lying-among-the-grasses-seen-up-close-22732/",
-      "license_label": "Mixkit Stock Video Free License",
-      "video_preview_status": "PAGE_LINK_ONLY",
-      "preview_count": 0,
-      "publication_approved": false
-    },
-    {
-      "id": "MK-1779",
-      "provider": "mixkit",
-      "title": "빨대로 장난치는 고양이",
-      "page_url": "https://mixkit.co/free-stock-video/pet-owner-playing-with-a-cute-cat-1779/",
-      "license_label": "Mixkit Stock Video Free License",
-      "video_preview_status": "PAGE_LINK_ONLY",
-      "preview_count": 0,
-      "publication_approved": false
-    },
-    {
-      "id": "PB-305341",
-      "provider": "pixabay",
-      "title": "상자 점프 실패라고 표시된 고양이",
-      "page_url": "https://pixabay.com/videos/funny-cat-cat-fail-cat-jumping-305341/",
-      "license_label": "Pixabay Content License",
-      "video_preview_status": "PAGE_LINK_ONLY",
-      "preview_count": 0,
-      "publication_approved": false
-    }
-  ],
+  "candidates": [],
   "notice": "Pexels, Mixkit, and Pixabay footage is not automatically CC. No auto-publishing."
 }
