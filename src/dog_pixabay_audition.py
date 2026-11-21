@@ -75,13 +75,28 @@ def download_pixabay(video_id, api_key, destination, *, max_bytes=35*1024*1024, 
         raise ValueError("UNSUPPORTED_DURATION")
     return {"duration_sec":duration,"size_bytes":size}
 
-def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None,previewer=None,media_index=None):
+def load_provisional_rejections(path):
+    """Exclude only weak rank5/rank2 audition subjects, not other future uses."""
+    path=Path(path)
+    if not path.is_file():
+        return set()
+    data=json.loads(path.read_text(encoding="utf-8"))
+    if data.get("scope")!="rank5_rank2_replacement_only" or data.get("schema_version")!=1:
+        raise ValueError("INVALID_REJECTION_CATALOG")
+    return {row["id"] for row in data.get("rejections",[])
+            if isinstance(row,dict) and isinstance(row.get("id"),str)
+            and row["id"].startswith("PB-") and row["id"][3:].isdigit()}
+
+
+def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None,previewer=None,media_index=None,rejection_file=Path("sample/dog_editorial_rejections_v1.json")):
     if not 0<=max_items<=6:
         raise ValueError("MAX_ITEMS_EXCEEDED")
     output=Path(output)
     output.mkdir(parents=True,exist_ok=True)
     payload=json.loads(Path(discovery_path).read_text(encoding="utf-8"))
-    pool=[r for r in payload.get("candidates",[]) if r.get("provider")=="pixabay"]
+    rejected=load_provisional_rejections(rejection_file)
+    pool=[r for r in payload.get("candidates",[])
+          if r.get("provider")=="pixabay" and r.get("id") not in rejected]
     run=os.environ.get("GITHUB_RUN_ID","0")
     offset=int(run)%len(pool) if pool and run.isdigit() else 0
     rotated=pool[offset:]+pool[:offset]
@@ -136,7 +151,9 @@ def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None
             raw.unlink(missing_ok=True)
         rows.append(row)
     result={"status":"PREVIEW_READY" if any(r["status"]=="PREVIEW_READY_REVIEW_REQUIRED" for r in rows)
-            else "NO_PREVIEW","provider":"pixabay","candidates":rows,"publication_approved":False}
+            else "NO_PREVIEW","provider":"pixabay","candidates":rows,
+            "skipped_provisionally_rejected_ids":sorted(rejected),
+            "publication_approved":False}
     (output/"DOG_PIXABAY_AUDITION_RESULTS.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     return result
 
@@ -145,10 +162,11 @@ def main():
     parser.add_argument("--discovery",type=Path,required=True)
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("--media-index",type=Path)
+    parser.add_argument("--rejection-file",type=Path,default=Path("sample/dog_editorial_rejections_v1.json"))
     args=parser.parse_args()
     media_index=json.loads(args.media_index.read_text(encoding="utf-8")) if args.media_index else None
     result=audition_pixabay(args.discovery,args.output,os.environ.get("PIXABAY_API_KEY",""),
-                           media_index=media_index)
+                           media_index=media_index,rejection_file=args.rejection_file)
     print("PIXABAY_AUDITION",result["status"],len(result["candidates"]))
 
 if __name__=="__main__":
