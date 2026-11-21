@@ -28,14 +28,15 @@ class V36EditorialTests(unittest.TestCase):
         self.assertEqual(len(result),5)
         self.assertEqual(result[0]["title"],"Pexels PX-15135238")
         self.assertAlmostEqual(result[0]["cut_start"],2.625)
-        self.assertEqual(result[3]["title"],"Pexels PX-17536779")
-        self.assertAlmostEqual(result[3]["cut_start"],31.4)
+        self.assertEqual(result[3]["title"],"File:Katzensprung in Zeitlupe.webm")
         self.assertFalse(result[0]["publication_approved"])
-        self.assertFalse(result[3]["rights_verified"])
+        self.assertEqual(audit["attempts"][-1]["reason_code"],
+                         "V54_PAIR_SCENE_ACTION_NOT_VERIFIED")
+        self.assertTrue(audit["attempts"][-1]["download_skipped"])
         self.assertFalse(audit["publication_approved"])
         self.assertFalse(audit["youtube_reused_content_approved"])
         self.assertTrue(audit["box_added"])
-        self.assertTrue(audit["pair_added"])
+        self.assertFalse(audit["pair_added"])
 
     def test_unrelated_topic_not_modified(self):
         items=baseline()
