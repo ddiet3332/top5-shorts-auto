@@ -140,6 +140,7 @@ jobs:
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as out:
               out.write('### Pixabay dog source diagnostic\n\n')
               out.write(f"- Discovery: **{result['status']}**; candidates: **{len(result['candidates'])}**\n")
+              out.write(f"- Discovery cache: **{result.get('cache_status', 'DISABLED')}** (24-hour reuse)\n")
               for issue in result.get('errors',[]):
                   out.write(f"- `{issue.get('query','')}`: `{issue.get('error','')}` HTTP `{issue.get('http_status','unknown')}`\n")
               codes={item.get('http_status') for item in result.get('errors',[])}
@@ -160,7 +161,8 @@ jobs:
           path: output/dog/pixabay-cache/
           key: pixabay-dog-discovery-v2-${{ github.run_id }}
       - name: Generate bounded Pixabay review previews
-        if: github.event_name != 'pull_request'
+        # Lookups by ID also call the API: only audition on a fresh discovery, not every 15-minute run.
+        if: github.event_name != 'pull_request' && steps.pixabay_discovery.outputs.fetched == 'true'
         timeout-minutes: 5
         continue-on-error: true
         env:
