@@ -10,7 +10,7 @@ import time
 API = "https://pixabay.com/api/videos/"
 QUERIES = ("funny dog", "playful puppy", "dog trick")
 
-def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, excluded_ids=()):
+def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, excluded_ids=(), transient_media=None):
     if not api_key:
         return {"status":"NO_API_KEY","provider":"pixabay","candidates":[],"publication_approved":False}
     if not 3 <= per_page <= 20 or not 1 <= max_results <= 36:
@@ -44,13 +44,27 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
                                if isinstance(videos.get(k),dict) and videos[k].get("url")),None)
                 if not chosen:
                     continue
+                media_url = chosen["url"]
+                if not isinstance(media_url,str):
+                    continue
+                media_host = urllib.parse.urlsplit(media_url)
+                if media_host.scheme != "https" or not media_host.hostname or not (
+                        media_host.hostname == "pixabay.com" or media_host.hostname.endswith(".pixabay.com")):
+                    continue
+                tags = str(hit.get("tags", ""))[:240]
+                if any(term in (tags + " " + str(hit.get("user", ""))).lower()
+                       for term in ("greenscreen", "green screen", "cartoon", "animation")):
+                    continue
                 rows.append({"id":f"PB-{vid}","provider":"pixabay","source_url":page,
                              "creator":str(hit.get("user",""))[:120],
                              "license_url":"https://pixabay.com/service/license-summary/",
                              "duration_sec":duration,"width":chosen.get("width"),"height":chosen.get("height"),
+                             "tags_from_provider":tags,
                              "discovery_query":query,"editorial_score":None,"semantic_review":"UNVERIFIED",
                              "reviewed_frames":False,"rights_status":"UNVERIFIED",
                              "publication_approved":False,"status":"DISCOVERED_NOT_DOWNLOADED"})
+                if transient_media is not None:
+                    transient_media[f"PB-{vid}"] = media_url  # ephemeral only; never in artifacts/cache
                 if len(rows)>=max_results:
                     break
         except urllib.error.HTTPError as exc:
@@ -99,6 +113,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--output",required=True,type=Path)
     parser.add_argument("--cache-file",type=Path)
+    parser.add_argument("--media-index",type=Path)
     parser.add_argument("--force-refresh",action="store_true")
     args=parser.parse_args()
     excluded=set()
@@ -112,11 +127,15 @@ def main():
                     if sid.startswith("PB-") and sid[3:].isdigit():
                         excluded.add(sid[3:])
     api_key=os.environ.get("PIXABAY_API_KEY","")
+    ephemeral_media = {}
     if args.cache_file:
         result=cached_pixabay(api_key,args.cache_file,force=args.force_refresh,
-               discover=lambda key: discover_pixabay(key,excluded_ids=excluded))
+               discover=lambda key: discover_pixabay(key,excluded_ids=excluded,transient_media=ephemeral_media))
     else:
-        result=discover_pixabay(api_key,excluded_ids=excluded)
+        result=discover_pixabay(api_key,excluded_ids=excluded,transient_media=ephemeral_media)
+    if args.media_index:
+        args.media_index.parent.mkdir(parents=True,exist_ok=True)
+        args.media_index.write_text(json.dumps(ephemeral_media,ensure_ascii=False),encoding="utf-8")
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("PIXABAY_DISCOVERY",result["status"],"count",len(result["candidates"]),
