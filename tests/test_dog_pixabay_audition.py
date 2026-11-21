@@ -31,6 +31,18 @@ class PixabayAuditionTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 download_pixabay(123,"fake",Path(temp)/"file.mp4",fetch=lambda url:{"hits":[{
                     "id":123,"videos":{"medium":{"url":"https://evil.example/video.mp4"}}}]})
+    def test_rejects_non_video_content_type(self):
+        from unittest.mock import Mock
+        class FakeResponse:
+            headers={"Content-Type":"text/html"}
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+            def geturl(self): return "https://cdn.pixabay.com/video.mp4"
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError,"NOT_VIDEO_RESPONSE"):
+                download_pixabay(123,"fake",Path(temp)/"file.mp4",
+                    fetch=lambda url:{"hits":[{"id":123,"videos":{"medium":{"url":"https://cdn.pixabay.com/video.mp4"}}}]},
+                    opener=lambda request,timeout:FakeResponse())
     def test_no_api_key_does_not_promote(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp)
