@@ -10,8 +10,10 @@ on:
       - 'src/dog_editorial_evidence.py'
       - 'src/dog_replacement_gate.py'
       - 'src/dog_replacement_report.py'
+      - 'src/dog_source_discovery.py'
       - 'tests/test_dog_replacement_gate.py'
       - 'tests/test_dog_replacement_report.py'
+      - 'tests/test_dog_source_discovery.py'
       - 'sample/dog_editorial_profile_v1.json'
       - 'sample/dog_replacement_audition.json'
       - 'scripts/persist_dog_evidence.sh'
@@ -95,6 +97,12 @@ jobs:
           run-id: '44825600263'
           github-token: ${{ github.token }}
           path: output/fixture
+      - name: Discover bounded free dog source candidates
+        timeout-minutes: 2
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          python src/dog_source_discovery.py --output output/dog/DOG_DISCOVERY_CANDIDATES.json
       - name: Render five original dog sources with an independent hook
         id: render
         timeout-minutes: 12
@@ -156,6 +164,7 @@ jobs:
             output/dog/work/captions.ass
             output/dog/V32_TECHNICAL_QA.json
             output/dog/DOG_REPLACEMENT_READINESS.json
+            output/dog/DOG_DISCOVERY_CANDIDATES.json
             output/evidence/review/
           if-no-files-found: error
           retention-days: 30
