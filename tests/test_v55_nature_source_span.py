@@ -29,7 +29,8 @@ class BroaderNatureSourceScreeningTests(unittest.TestCase):
         }
 
     def patches(self,weak):
-        def fake_download(row,path):
+        def fake_download(_downloader,row,path):
+            # The wrapper receives the underlying downloader, source and path.
             Path(path).write_bytes(row["title"].encode("utf-8"))
         return (
             patch("top5_auto_v30.download_with_bounded_retry",side_effect=fake_download),
