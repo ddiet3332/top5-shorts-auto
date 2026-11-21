@@ -28,6 +28,7 @@ def validate_inputs(base,rank5,rank5_report):
     meta=json.loads(Path(rank5_report).read_text(encoding="utf-8"))
     if (meta.get("id")!=RANK5_ID or meta.get("status")!="HD_REVIEW_READY"
         or meta.get("rank")!="rank5" or meta.get("render_from_original") is not True
+        or meta.get("original_matches_prior_download") is not True
         or meta.get("source_audio_copied") is not False
         or meta.get("rights_status")!="UNVERIFIED"
         or meta.get("publication_approved") is not False
