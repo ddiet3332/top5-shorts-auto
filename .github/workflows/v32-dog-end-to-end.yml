@@ -38,7 +38,7 @@ on:
       - 'tests/test_dog_editorial_evidence.py'
   workflow_dispatch:
   schedule:
-    - cron: '17 * * * *'
+    - cron: '*/15 * * * *'
 permissions:
   contents: read
 concurrency:
