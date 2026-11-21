@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "review_kind": "incumbent_rank_segment_scoring",
+  "rubric_version": "dog_rank_segment_v1",
+  "max_points": {
+    "visible_action": 25,
+    "comedic_surprise": 30,
+    "setup_payoff_timing": 20,
+    "mobile_readability": 15,
+    "distinctness": 10
+  },
+  "note": "Only set reviewed_frames:true and breakdown points after actually watching and verifying the exact original clip or its derived five-second rank segment. Score only after real review; no automatic promotion or rights clearance.",
+  "publication_approved": false,
+  "ranks": {
+    "rank5": {
+      "source_id": "PX-9006741",
+      "reviewed_frames": false,
+      "frame_timestamps_sec": [],
+      "review_notes": null,
+      "points": null
+    },
+    "rank2": {
+      "source_id": "PX-7515923",
+      "reviewed_frames": false,
+      "frame_timestamps_sec": [],
+      "review_notes": null,
+      "points": null
+    }
+  }
+}
