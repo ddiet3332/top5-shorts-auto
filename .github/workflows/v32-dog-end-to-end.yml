@@ -113,12 +113,26 @@ jobs:
           run-id: '44825600263'
           github-token: ${{ github.token }}
           path: output/fixture
+      - name: Restore shared 24-hour Pixabay discovery metadata
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: output/dog/pixabay-cache/
+          key: pixabay-dog-discovery-v2-${{ github.run_id }}
+          restore-keys: |
+            pixabay-dog-discovery-v2-
       - name: Discover Pixabay dog candidates using existing repository secret
+        id: pixabay_discovery
         timeout-minutes: 2
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
-          python src/dog_pixabay_discovery.py --output output/dog/DOG_PIXABAY_CANDIDATES.json
+          args=(--output output/dog/DOG_PIXABAY_CANDIDATES.json --cache-file output/dog/pixabay-cache/discovery.json)
+          # Manual dispatch can test a repaired API key immediately; scheduled/push runs respect the 24h cache.
+          if [[ "$GITHUB_EVENT_NAME" == 'workflow_dispatch' ]]; then
+            args+=(--force-refresh)
+          fi
+          python src/dog_pixabay_discovery.py "${args[@]}"
           python - <<'PY'
           import json, os
           from pathlib import Path
@@ -139,6 +153,12 @@ jobs:
                   out.write('- Next action: check Pixabay service health and retry later.\n')
               out.write('- API credentials and raw response bodies are not shown.\n')
           PY
+      - name: Persist refreshed Pixabay discovery metadata for 24h reuse
+        if: github.event_name != 'pull_request' && steps.pixabay_discovery.outputs.fetched == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: output/dog/pixabay-cache/
+          key: pixabay-dog-discovery-v2-${{ github.run_id }}
       - name: Generate bounded Pixabay review previews
         if: github.event_name != 'pull_request'
         timeout-minutes: 5
