@@ -75,7 +75,7 @@ permissions:
   contents: read
 concurrency:
   group: dog-review-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
