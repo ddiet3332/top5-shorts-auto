@@ -74,6 +74,36 @@ class VerifiedCutCaptionsTests(unittest.TestCase):
             self.assertEqual(qa["unmatched_caption_ranks"],[5,4])
             self.assertEqual(selected[1]["caption"],"장면 내용 검수 필요")
 
+    def test_rank_reordering_preserves_source_grounded_story_and_bounds_video_seconds(self):
+        # Real V50 nature: aurora moved from original rank5 ->3,
+        # geyser 4->2 and Tonga eruption 3->1. Clip bytes and start unchanged.
+        with tempfile.TemporaryDirectory() as x:
+            root=Path(x);rows,registry=make_base(root)
+            order=[rows[0],rows[3],rows[4],rows[1],rows[2]]
+            selected,qa=apply_reviewed_captions({"topic_id":"nature_moments"},order,root,registry)
+            self.assertEqual(qa["sample_grounded_caption_ranks"],[5,4,3,2,1])
+            self.assertEqual(selected[3]["reviewed_source_original_rank"],4)
+            self.assertEqual(selected[4]["reviewed_source_original_rank"],3)
+            self.assertAlmostEqual(selected[3]["playback_rate"],5/6)
+            self.assertAlmostEqual(selected[4]["playback_rate"],4/6)
+            self.assertAlmostEqual(
+                (selected[3]["rendered_rank_slot_seconds"]*
+                 selected[3]["playback_rate"]),5.0)
+            self.assertAlmostEqual(
+                (selected[4]["rendered_rank_slot_seconds"]*
+                 selected[4]["playback_rate"]),4.0)
+            self.assertGreater(
+                selected[4]["caption_sequence"][1][0],1.1)
+            self.assertIsNone(qa["editorial_score_100"])
+            self.assertFalse(qa["publication_approved"])
+
+    def test_incompatible_preexisting_source_speed_cannot_be_overridden(self):
+        with tempfile.TemporaryDirectory() as x:
+            root=Path(x);rows,registry=make_base(root)
+            rows[0]["playback_rate"]=.8
+            with self.assertRaisesRegex(ValueError,"EXISTING_SPEED"):
+                apply_reviewed_captions({"topic_id":"nature_moments"},rows,root,registry)
+
     def test_reviews_cannot_grant_rights_or_verified_85_score(self):
         with tempfile.TemporaryDirectory() as x:
             root=Path(x);rows,registry=make_base(root)
