@@ -131,6 +131,14 @@ jobs:
           key: pixabay-dog-discovery-v3-${{ github.run_id }}
           restore-keys: |
             pixabay-dog-discovery-v3-
+      - name: Restore Pixabay editorial preview queue
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: output/dog/pixabay_audition/
+          key: pixabay-dog-review-queue-v1-${{ github.run_id }}
+          restore-keys: |
+            pixabay-dog-review-queue-v1-
       - name: Discover Pixabay dog candidates using existing repository secret
         id: pixabay_discovery
         timeout-minutes: 2
@@ -173,7 +181,8 @@ jobs:
           path: output/dog/pixabay-cache/
           key: pixabay-dog-discovery-v3-${{ github.run_id }}
       - name: Generate bounded Pixabay review previews
-        # Lookups by ID also call the API: only audition on a fresh discovery, not every 15-minute run.
+        id: pixabay_audition
+        # Direct media URLs are transient, so only new searches can download new video.
         if: github.event_name != 'pull_request' && steps.pixabay_discovery.outputs.fetched == 'true'
         timeout-minutes: 5
         continue-on-error: true
@@ -184,6 +193,12 @@ jobs:
             --discovery output/dog/DOG_PIXABAY_CANDIDATES.json \
             --media-index "$RUNNER_TEMP/pixabay-media-index.json" \
             --output output/dog/pixabay_audition
+      - name: Cache Pixabay audition previews for reuse on 15-minute builds
+        if: github.event_name != 'pull_request' && steps.pixabay_discovery.outputs.fetched == 'true' && steps.pixabay_audition.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: output/dog/pixabay_audition/
+          key: pixabay-dog-review-queue-v1-${{ github.run_id }}
       - name: Archive Pixabay review previews
         if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
