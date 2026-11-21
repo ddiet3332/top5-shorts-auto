@@ -15,6 +15,7 @@ from top5_remediation import plan as plan_remediation
 from top5_review_checks import CUE_TIMES, motion, overlay_checks, soundtrack_checks
 from top5_source_contact_sheet import frame
 from top5_topic_relevance_gate import topic_metadata_match
+from top5_v60_weak_generic_window_gate import reviewed_weak_generic_window, REASON as WEAK_WINDOW_CODE
 from v25_audio_remaster import create_soundtrack
 
 VIDEO = "TOP5_REVIEW_1080x1920.mp4"
@@ -85,6 +86,9 @@ def prepare_source(path, source, accepted):
            for row in accepted):
         raise ValueError("원본 파일 또는 출처가 중복됩니다")
     start = select_start(path, source["duration_sec"], optimize_motion=True)
+    weak = reviewed_weak_generic_window(source.get("topic"), source, start)
+    if weak:
+        raise ValueError(WEAK_WINDOW_CODE + ": " + weak[:150])
     metrics = motion(path, start, 6)
     if metrics["peak_change"] < 0.8:
         raise ValueError("SOURCE_LOW_MOTION")
@@ -238,6 +242,8 @@ def source_issue(row, directory, selected, peers):
     path = directory / row["file"]
     if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != row["sha256"]:
         return "SOURCE_INTEGRITY"
+    if reviewed_weak_generic_window(selected.get("topic"), row):
+        return WEAK_WINDOW_CODE
     metadata = row.get("tags") or row.get("title") or ""
     query = row.get("query")
     if obvious_topic_mismatch(metadata, selected["topic"]) or (
