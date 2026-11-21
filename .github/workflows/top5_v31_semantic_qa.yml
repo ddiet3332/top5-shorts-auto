@@ -23,6 +23,7 @@ on:
       - '.github/workflows/top5_v31_semantic_qa.yml'
       - 'src/v31_semantic_qa.py'
       - 'tests/test_v31_semantic_qa.py'
+      - 'tests/test_v31_topic_repair.py'
       - 'src/top5_artifact_resolver.py'
       - 'tests/test_top5_artifact_resolver.py'
 permissions:
@@ -60,6 +61,7 @@ jobs:
       - name: Run deterministic semantic-veto and multi-topic artifact tests
         run: |
           /tmp/v31_env/bin/python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
+          /tmp/v31_env/bin/python -m unittest discover -s tests -p 'test_v31_topic_repair.py' -v
           /tmp/v31_env/bin/python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
       - name: Download exact previously rendered V30 MP4 and ranking metadata
         env:
@@ -83,6 +85,33 @@ jobs:
           fi
           test -s input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
           test -s input/SOURCE_SELECTION_REVIEW.json
+          # Use the upstream workflow's topic decision, not stock filenames.
+          /tmp/v31_env/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          options=[
+              Path("input/topic_run/TOPIC_RECOMMENDATIONS_V32.json"),
+              Path("input/TOPIC_RECOMMENDATIONS_V32.json"),
+              Path("input/topic_run/TOPIC_RECOMMENDATIONS.json"),
+              Path("input/TOPIC_RECOMMENDATIONS.json"),
+          ]
+          allowed={"cat_surprises","dog_surprises","human_moments",
+                   "nature_moments","objects_oddities"}
+          for original in options:
+              if original.is_file():
+                  data=json.loads(original.read_text(encoding="utf-8"))
+                  if data.get("chosen_topic") not in allowed:
+                      raise ValueError("UNSUPPORTED_UPSTREAM_RENDER_TOPIC")
+                  target=Path("input/V31_TOPIC_CONTEXT.json")
+                  target.write_text(json.dumps(
+                      {"chosen_topic":data["chosen_topic"],
+                       "from_source_name":original.name},indent=2)+"\\n",
+                      encoding="utf-8")
+                  print("Model topic bound to upstream render:",data["chosen_topic"])
+                  break
+          else:
+              raise SystemExit("MISSING_UPSTREAM_RENDER_TOPIC_METADATA")
+          PY
       - name: Model-backed eight-frame video-text comparison for all 5 ranks
         env:
           HF_HUB_DISABLE_XET: '1'
@@ -93,6 +122,7 @@ jobs:
           /tmp/v31_env/bin/python src/v31_semantic_qa.py \
             --video input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
             --selection input/SOURCE_SELECTION_REVIEW.json \
+            --topic-file input/V31_TOPIC_CONTEXT.json \
             --output output/v31_semantic
       - name: Evaluate semantic rejection gates without inventing an editorial score
         if: success()
@@ -103,7 +133,11 @@ jobs:
           p=Path('output/v31_semantic/V31_SEMANTIC_QA.json')
           d=json.loads(p.read_text(encoding='utf-8'))
           mismatches=[r['rank'] for r in d['ranks'] if r['verdict']['flag']=='POSSIBLE_CAPTION_SCENE_MISMATCH']
+          repair=json.loads(Path('output/v31_semantic/TOP5_EDITORIAL_REPAIR_WORKLIST.json').read_text(encoding='utf-8'))
           report={'publication_approved':False,'editorial_score_100':None,
+                  'render_topic_verified':d.get('topic_bound_to_actual_render',False),
+                  'per_rank_edit_recommendations':repair['items'],
+                  'unready_caption_ranks':[x['rank'] for x in repair['items'] if not x['caption_ready_to_render']],
                   'semantic_mismatch_ranks':mismatches,
                   'automatic_improvement_required':bool(mismatches),
                   'automatic_replacement_executed':False,
@@ -118,6 +152,7 @@ jobs:
           name: TOP5-V31-semantic-advisory-${{ github.run_number }}
           path: |
             output/v31_semantic/V31_SEMANTIC_QA.json
+            output/v31_semantic/TOP5_EDITORIAL_REPAIR_WORKLIST.json
             output/v31_semantic/AUTO_IMPROVEMENT_GATE.json
             output/v31_semantic/V31_SEMANTIC_QA.md
             output/v31_semantic/V31_40_FRAME_STORYBOARD.jpg
