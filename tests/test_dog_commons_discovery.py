@@ -43,6 +43,16 @@ class CommonsDiscoveryTests(unittest.TestCase):
         self.assertEqual(result["candidates"][0]["rights_status"], "UNVERIFIED")
         self.assertIn("download_url", result["candidates"][0])
 
+    def test_dog_category_supports_action_only_filenames(self):
+        category_row = video("File:Unexpected leap over a couch.webm")
+        result = discover_commons(search=lambda term, per_query: [],
+            categories=lambda term, per_query: [category_row],
+            max_results=10)
+        self.assertEqual(result["status"], "CANDIDATES_FOUND")
+        self.assertEqual(result["candidates"][0]["action_family_from_title"], "surprise")
+        self.assertEqual(result["candidates"][0]["dog_subject_basis"], "Wikimedia category metadata")
+        self.assertEqual(result["candidates"][0]["rights_status"], "UNVERIFIED")
+
     def test_fail_closed_if_search_down(self):
         def fail(*args, **kwargs):
             raise RuntimeError("network down")
