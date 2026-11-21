@@ -22,6 +22,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Install editing dependencies needed by gate imports
+        run: python -m pip install --disable-pip-version-check -r requirements-video.txt
       - name: Compile production and gate scripts
         run: python -m compileall -q src/top5_auto_v32.py src/top5_publication_gate.py src/top5_watchdog_decision.py src/top5_remediation.py
       - name: Quality and watchdog gate tests
