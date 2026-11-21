@@ -6,7 +6,7 @@ on:
         description: "Choose the subject; no code edits required"
         required: true
         type: choice
-        default: dog_surprises
+        default: auto
         options:
           - dog_surprises
           - cat_surprises
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      TOPIC: ${{ github.event.inputs.topic || 'dog_surprises' }}
+      TOPIC: ${{ github.event.inputs.topic || 'auto' }}
     steps:
       - uses: actions/checkout@v4
       - name: Install open-source editing dependencies
