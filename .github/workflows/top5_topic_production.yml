@@ -37,7 +37,9 @@ on:
       - 'review/top5_weak_source_windows.json'
       - 'tests/test_top5_reviewed_weak_windows.py'
       - 'src/topic_discovery_audit.py'
+      - 'src/top5_topic_recovery.py'
       - 'tests/test_topic_discovery_audit.py'
+      - 'tests/test_top5_topic_recovery.py'
       - 'src/v12_sources.py'
       - 'src/v37_dog_audition.py'
 permissions:
@@ -73,6 +75,7 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_recovery.py' -v
       - name: Audit discovery and save failure evidence
         run: /tmp/top5-topic/bin/python src/topic_discovery_audit.py --topic "$TOPIC" --output output/topic_run/DISCOVERY_AUDIT.json
       - name: Run dog-only visual source audition only if dog topic was actually selected
@@ -87,11 +90,11 @@ jobs:
         run: |
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v19_multisource_review.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v17_source_collection.py' -v
-      - name: Produce exactly the topic selected by the discovery audit
+      - name: Produce verified selected topic; auto-only retry on actual source shortage
         run: |
-          RESOLVED_TOPIC=$(/tmp/top5-topic/bin/python -c "import json; print(json.load(open('output/topic_run/DISCOVERY_AUDIT.json'))['topic'])")
-          test -n "$RESOLVED_TOPIC"
-          /tmp/top5-topic/bin/python src/top5_auto_v32.py --topic "$RESOLVED_TOPIC" --output output/topic_run
+          /tmp/top5-topic/bin/python src/top5_topic_recovery.py \
+            --audit output/topic_run/DISCOVERY_AUDIT.json \
+            --output-root output/topic_run
       - name: Full audio and video decode check
         run: ffmpeg -hide_banner -v error -xerror -i output/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
       - name: Inspect 35 real ranked MP4 frames and 3 opening hook samples
