@@ -57,7 +57,7 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
                 tags = str(hit.get("tags", ""))[:240]
                 # Pixabay's full-text query can return non-dog "trick" footage.
                 # Tags are only a metadata filter; they do not verify video semantics.
-                if not re.search(r"(?<!\\w)(?:dog|dogs|puppy|puppies|canine|doggy|pup)(?!\\w)",
+                if not re.search(r"(?<!\w)(?:dog|dogs|puppy|puppies|canine|doggy|pup)(?!\w)",
                                  tags.casefold()):
                     continue
                 if any(term in (tags + " " + str(hit.get("user", ""))).lower()
