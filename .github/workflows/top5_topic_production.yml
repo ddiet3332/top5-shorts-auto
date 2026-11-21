@@ -23,6 +23,8 @@ on:
       - 'src/top5_auto_v29.py'
       - 'src/v28_fullscreen_builder.py'
       - 'src/top5_auto_v30.py'
+      - 'src/top5_provider_failure_gate.py'
+      - 'tests/test_v53_provider_errors.py'
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_object_diversity.py'
       - 'src/top5_standard_scene_review.py'
@@ -85,6 +87,7 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_recovery.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v53_provider_errors.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_all_source_license_audit.py' -v
       - name: Audit discovery and save failure evidence
         run: /tmp/top5-topic/bin/python src/topic_discovery_audit.py --topic "$TOPIC" --output output/topic_run/DISCOVERY_AUDIT.json
@@ -123,6 +126,9 @@ jobs:
             output/dog_audition/*.jpg
             output/topic_run/*.mp4
             output/topic_run/*.json
+            output/topic_run/topic_attempts/*/V46_RENDER_STDOUT_STDERR.txt
+            output/topic_run/topic_attempts/*/V30_CANDIDATES.json
+            output/topic_run/topic_attempts/*/V30_SOURCE_SCENE_DIVERSITY.json
             output/topic_run/*.md
             output/topic_run/*.jpg
             output/topic_run/V40_ORIGINAL_SOURCE_FRAMES/*.jpg
