@@ -28,6 +28,23 @@ class ObjectEditorialDiversityTests(unittest.TestCase):
         self.assertEqual(len(duplicate),1)
         self.assertEqual(duplicate[0]["reason_code"],"REPEATED_OBJECT_EVENT_FAMILY")
 
+    def test_real_domino_roach_is_insect_not_physics_category(self):
+        # V44 actual object rank 1 footage visibly shows an insect in leaf litter.
+        # "Domino" in its name is a roach variety, NOT dominoes toppling.
+        self.assertIsNone(object_event_family("File:Domino Roach 2024.webm"))
+        self.assertIsNone(object_event_family("File:Beetle roach video.webm"))
+        self.assertEqual(object_event_family("File:Robotic cockroach mechanism.webm"),"machine")
+        chosen, rejected=diverse_object_selection([
+            {"title":"File:Domino Roach 2024.webm"},
+            {"title":"File:Domino Stop Motion.webm"},
+            {"title":"File:Arduino circuit.webm"},
+            {"title":"File:Bouncing Ball.webm"},
+            {"title":"File:Newton's Cradle.webm"},
+        ])
+        self.assertEqual(len(chosen),4)
+        self.assertEqual(rejected[0]["reason_code"],"UNKNOWN_OBJECT_EVENT_TYPE")
+        self.assertNotIn("File:Domino Roach 2024.webm",[r["title"] for r in chosen])
+
     def test_five_distinct_physics_demonstrations_keep_separate_ranks(self):
         labels=[
             "File:Bouncing Ball.webm","File:Arduino circuit blinking.ogv",
