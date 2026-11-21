@@ -101,6 +101,7 @@ class BroaderNatureSourceScreeningTests(unittest.TestCase):
             qa=json.loads((Path(td)/"V30_SOURCE_SCREENING_SPAN_QA.json").read_text())
             self.assertEqual(qa["attempted_candidate_count"],3)
             self.assertTrue(qa["provider_circuit_breaker_tripped"])
+            self.assertFalse(qa["provisional_selection_stopped_early"])
             self.assertEqual(qa["provider_error_candidate_count"],3)
             self.assertEqual(qa["uninspected_metadata_candidates"],19)
             self.assertFalse(qa["publication_approved"])

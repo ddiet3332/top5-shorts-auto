@@ -83,6 +83,12 @@ def nature_event_family(title: str) -> str | None:
     for pattern, family in (
         (r"\bgeyser\b", "geyser"),
         (r"\bvolcan(?:o|ic)\b|\beruption\b", "volcano"),
+        # Actual V55 #44927994610 found a visibly screened Garonne
+        # River Overflow source but classified its phenomenon as unknown,
+        # leaving four of five metadata event families. Treat only
+        # explicitly named river/stream overflow as a *flood metadata hint*,
+        # never a semantic action or copyright approval.
+        (r"\b(?:rivers?|streams?)\s+overflow(?:s|ing|ed)?\b", "flood"),
         (r"\bflood(?:ing|s|ed)?\b", "flood"),
         (r"\bwaterfalls?\b|\bcascade\b", "waterfall"),
         (r"\blightning\b|\bthunder(?:storm)?\b", "lightning"),

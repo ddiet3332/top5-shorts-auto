@@ -14,6 +14,7 @@ on:
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
       - 'tests/test_v55_nature_source_span.py'
+      - 'tests/test_v56_river_overflow_nature.py'
       - 'src/top5_provider_failure_gate.py'
       - 'tests/test_v53_provider_errors.py'
       - 'src/top5_standard_scene_review.py'
@@ -58,6 +59,7 @@ on:
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
       - 'tests/test_v55_nature_source_span.py'
+      - 'tests/test_v56_river_overflow_nature.py'
       - 'src/top5_provider_failure_gate.py'
       - 'tests/test_v53_provider_errors.py'
       - 'src/top5_standard_scene_review.py'
@@ -116,6 +118,7 @@ jobs:
           python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
           python -m unittest discover -s tests -p 'test_v52_nature_event_diversity.py' -v
           python -m unittest discover -s tests -p 'test_v55_nature_source_span.py' -v
+          python -m unittest discover -s tests -p 'test_v56_river_overflow_nature.py' -v
           python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
           python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
           python -m unittest discover -s tests -p 'test_top5_exact_frame_render.py' -v

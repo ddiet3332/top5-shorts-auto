@@ -332,7 +332,8 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 if nature_event_family(x["title"])})
         if category=="자연" else [])
     stopped_after_provisional_success=(
-        len(attempts)<min(len(candidates),candidate_limit))
+        len(attempts)<min(len(candidates),candidate_limit)
+        and len(accepted)>=9 and provider_failure_streak<3)
     span_report={
         "schema_version":1,
         "topic_id":(topic or {}).get("topic_id"),
