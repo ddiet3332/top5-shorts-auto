@@ -1,0 +1,20 @@
+{
+  "status": "SOURCE_SHORTAGE",
+  "provider": "pixabay",
+  "candidates": [],
+  "errors": [
+    {
+      "query": "funny dog",
+      "error": "HTTPError"
+    },
+    {
+      "query": "playful puppy",
+      "error": "HTTPError"
+    },
+    {
+      "query": "dog trick",
+      "error": "HTTPError"
+    }
+  ],
+  "publication_approved": false
+}
