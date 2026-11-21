@@ -1,0 +1,25 @@
+{
+  "id": "PX-5263686",
+  "rank": "rank5",
+  "provider": "pexels",
+  "crop_approach": "DELAYED_GENTLE_RIGHT_PAN_AFTER_3_4S",
+  "source_url": "https://www.pexels.com/video/cute-dog-rolling-on-his-back-5263686/",
+  "source_original_sha256": "dfacbc6cc5522107bc21cd6711c9c5b07fd527959313fd0fa6469ee81c327b9b",
+  "original_matches_prior_download": true,
+  "review_video_file": "PX-5263686_RANK5_ORIGINAL_PORTRAIT_REVIEW_1080x1920.mp4",
+  "render_from_original": true,
+  "reviewed_frames": false,
+  "rights_status": "UNVERIFIED",
+  "source_audio_copied": false,
+  "publication_approved": false,
+  "technical_review": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 24,
+    "duration_sec": 5.0,
+    "codec": "h264",
+    "full_decode": "PASS",
+    "file_bytes": 1692400
+  },
+  "status": "HD_REVIEW_READY"
+}
