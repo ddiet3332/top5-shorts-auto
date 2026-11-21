@@ -12,7 +12,7 @@ class PixabayDiscoveryTests(unittest.TestCase):
             raise urllib.error.HTTPError("https://pixabay.com/api/videos/", 403, "Forbidden", {}, None)
         result=discover_pixabay("mock",fetch=fail)
         self.assertEqual(result["status"],"API_REQUEST_FAILED")
-        self.assertEqual(len(result["errors"]),3)
+        self.assertEqual(len(result["errors"]),1)  # 403 must stop further API requests
         self.assertTrue(all(item["http_status"]==403 for item in result["errors"]))
         self.assertFalse(result["publication_approved"])
 
