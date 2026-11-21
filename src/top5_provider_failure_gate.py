@@ -12,8 +12,10 @@ RETRIABLE_HTTP=(429,500,502,503,504)
 DEFAULT_DELAYS=(2.0,5.0)
 
 def provider_error_code(exc):
-    if isinstance(exc,urllib.error.HTTPError) and exc.code in RETRIABLE_HTTP:
-        return f"PROVIDER_HTTP_{exc.code}"
+    if isinstance(exc,urllib.error.HTTPError):
+        # HTTPError inherits URLError. Treat permanent 403/404 as permanent,
+        # not as a transient provider outage.
+        return f"PROVIDER_HTTP_{exc.code}" if exc.code in RETRIABLE_HTTP else None
     if isinstance(exc,urllib.error.URLError):
         return "PROVIDER_NETWORK_UNAVAILABLE"
     if isinstance(exc,(TimeoutError,ConnectionResetError,ConnectionAbortedError)):
