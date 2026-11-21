@@ -139,7 +139,7 @@ def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[lis
         family = nature_event_family(row["title"])
         if site and site in used_sites:
             reason = "REPEATED_NAMED_NATURE_SITE"
-        elif family and family_count.get(family, 0) >= 2:
+        elif family and family_count.get(family, 0) >= 1:
             reason = "REPEATED_NATURE_EVENT_FAMILY"
         else:
             reason = "LOWER_PRIORITY_OR_SAME_EVENT_REVIEW"
