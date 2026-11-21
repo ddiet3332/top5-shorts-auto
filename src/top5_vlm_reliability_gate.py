@@ -50,7 +50,7 @@ def reliability_rejections(description, source_title, motion):
     # what actually changed or moved. This is a REVIEW VETO only; an action
     # verb cannot prove that an action *really* appears in the video.
     explicit_temporal_motion = re.search(
-        r"(?i)\\b(?:moves?|moving|rolls?|rolling|bounces?|bouncing|"
+        r"(?i)\b(?:moves?|moving|rolls?|rolling|bounces?|bouncing|"
         r"spins?|spinning|rotat(?:es|ing|ed)|falls?|falling|topples?|"
         r"tips?|tipping|drops?|dropping|slides?|sliding|swings?|"
         r"swinging|sways?|swaying|flashes?|flashing|erupts?|"
@@ -58,7 +58,7 @@ def reliability_rejections(description, source_title, motion):
         r"collapses?|collapsing|flows?|flowing|turns?|turning|"
         r"opens?|opening|closes?|closing|jumps?|jumping|"
         r"walks?|walking|runs?|running|pushes?|pushing|"
-        r"pulls?|pulling|changes?|changing|expands?|expanding)\\b",
+        r"pulls?|pulling|changes?|changing|expands?|expanding)\b",
         s,
     )
     if explicit_temporal_motion is None:
