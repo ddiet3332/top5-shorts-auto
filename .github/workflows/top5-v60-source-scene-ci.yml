@@ -1,0 +1,38 @@
+name: TOP5 V60 exact-source scene review CI
+
+on:
+  pull_request:
+    paths:
+      - "src/top5_v60_weak_generic_window_gate.py"
+      - "src/top5_free_source_download.py"
+      - "src/top5_production_review.py"
+      - "review/top5_v60_weak_generic_windows.json"
+      - "tests/test_v60_generic_weak_window_gate.py"
+      - ".github/workflows/top5-v60-source-scene-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/top5_v60_weak_generic_window_gate.py"
+      - "src/top5_free_source_download.py"
+      - "src/top5_production_review.py"
+      - "review/top5_v60_weak_generic_windows.json"
+      - "tests/test_v60_generic_weak_window_gate.py"
+      - ".github/workflows/top5-v60-source-scene-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-source-window-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install video Python dependencies
+        run: python -m pip install -r requirements-video.txt
+      - name: Run real-evidence V60 regression tests
+        run: python -m unittest discover -s tests -p 'test_v60_generic_weak_window_gate.py' -v
