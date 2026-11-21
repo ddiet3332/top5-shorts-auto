@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_basis": "Actual selected-window review, not global-source bans; prior nature/objects V43–V45 plus V46 natural history run #44919422681. Topic+original SHA256+original cut start ±0.22s; no automatic semantic truth claim. V50 actual V49 auto83 found two low-payoff flood upper-rank cuts; no global source bans.",
+  "review_basis": "Actual selected-window review, not global-source bans; prior nature/objects V43–V45 plus V46 natural history run #44919422681. Topic+original SHA256+original cut start ±0.22s; no automatic semantic truth claim. V50 actual V49 auto83 found two low-payoff flood upper-rank cuts; no global source bans. V59 V58 actual main auto92 35-frame composite + original 15-frame storyboard reviewed; two exact weak V58 windows added. Never blanket-ban titles or licensing.",
   "source_video": "TOP5-auto-review-65",
   "technical_run": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44891297714",
   "rejected_windows": [
@@ -147,6 +147,24 @@
       "tolerance_sec": 0.22,
       "original_rank": 4,
       "review_reason": "V51 35 rendered rank-four frames run #44923855198 show very similar plume shape across full 5s rather than a new surprising eruption, while a dynamic Strokkur geyser occupies rank two; weak redundant event. Exclude only 0–5s source cut, not the entire Yellowstone footage."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:2022-01-11 Garonne River Overflow 5472.webm",
+      "sha256": "e81e2fe53870c48f2b0f58cd7043dfd3458344f8f93f81e7d1efa0b1398f7964",
+      "start_sec": 6,
+      "tolerance_sec": 0.22,
+      "original_rank": 5,
+      "review_reason": "V58 main auto92 run 44930079909: 7 rendered 5th-rank frames (2.30-5.70s), SHA-bound source frames at 6.4/8.0/9.6s show a mostly unchanged high brown river and bridge. No visible setup-change-payoff for surprising nature TOP5, even at rank5. Reject only exact 6-10s source cut, not all Garonne footage."
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Side view video of Kawaida Waterfall cascading, Cianda, Kiambu County.webm",
+      "sha256": "8154f19f4c593f7af6021a919a079a8b4ef741d3d09fb7726033b4d157a6b7dc",
+      "start_sec": 2,
+      "tolerance_sec": 0.22,
+      "original_rank": 4,
+      "review_reason": "V58 main auto92 run 44930079909: 7 rendered rank-four frames (6.30-10.70s), SHA-bound source at 2.0/4.0/5.6s show a steadily flowing waterfall, without visible new event or reversal across the selected window. Reject only exact 2-7s cut; stronger unseen waterfall segments remain eligible."
     }
   ],
   "rights_verified": false,
@@ -200,6 +218,13 @@
       "topic_id": "nature_moments",
       "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44923855198",
       "review_basis": "V51 actual sampled 35 full MP4 frames plus original-provenance evidence; specific Berlin 2.0s and Yellowstone 0s cuts only",
+      "rights_verified": false,
+      "publication_approved": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44930079909",
+      "review_basis": "V58 actual 35 rendered rank frames + 15 SHA-bound original frames, specifically Garonne rank5 6-10 and Kawaida rank4 2-7",
       "rights_verified": false,
       "publication_approved": false
     }
