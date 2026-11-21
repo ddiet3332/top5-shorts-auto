@@ -23,6 +23,8 @@ on:
       - '.github/workflows/top5_v31_semantic_qa.yml'
       - 'src/v31_semantic_qa.py'
       - 'tests/test_v31_semantic_qa.py'
+      - 'src/top5_artifact_resolver.py'
+      - 'tests/test_top5_artifact_resolver.py'
 permissions:
   contents: read
   actions: read
@@ -53,16 +55,25 @@ jobs:
           /tmp/v31_env/bin/pip install -q --upgrade pip
           /tmp/v31_env/bin/pip install -q 'torch==2.7.1' --index-url https://download.pytorch.org/whl/cpu
           /tmp/v31_env/bin/pip install -q 'transformers==4.51.3' 'safetensors>=0.4.3' pillow numpy
-      - name: Run deterministic semantic-veto unit tests
-        run: /tmp/v31_env/bin/python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
+      - name: Run deterministic semantic-veto and multi-topic artifact tests
+        run: |
+          /tmp/v31_env/bin/python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
+          /tmp/v31_env/bin/python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
       - name: Download exact previously rendered V30 MP4 and ranking metadata
         env:
           GH_TOKEN: ${{ github.token }}
           V30_RUN: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.id || github.event.inputs.source_run || '43731723388' }}
-          V30_ARTIFACT: ${{ github.event_name == 'workflow_run' && (github.event.workflow_run.name == 'TOP5 Topic-Driven Production' && format('TOP5-dog_surprises-review-{0}', github.event.workflow_run.run_number) || github.event.workflow_run.name == 'TOP5 V32 - Auto stronger original 30s MP4' && format('TOP5-V32-auto-review-{0}', github.event.workflow_run.run_number) || format('TOP5-V30-auto-review-{0}', github.event.workflow_run.run_number)) || github.event.inputs.artifact_name || 'TOP5-V30-auto-review-2' }}
+          TRIGGER_WORKFLOW: ${{ github.event.workflow_run.name || 'MANUAL_EXPLICIT_ARTIFACT' }}
+          TRIGGER_RUN_NUMBER: ${{ github.event.workflow_run.run_number || 1 }}
+          EXPLICIT_ARTIFACT: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.artifact_name || 'TOP5-V30-auto-review-2') || '' }}
         run: |
           mkdir -p input
           if [[ ! "$V30_RUN" =~ ^[0-9]{8,20}$ ]]; then echo 'Invalid run ID'; exit 1; fi
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$V30_RUN/artifacts?per_page=100" > input/V31_UPSTREAM_ARTIFACTS.json
+          V30_ARTIFACT=$(/tmp/v31_env/bin/python src/top5_artifact_resolver.py \
+            --workflow "$TRIGGER_WORKFLOW" --run-number "$TRIGGER_RUN_NUMBER" \
+            --artifacts input/V31_UPSTREAM_ARTIFACTS.json --explicit "$EXPLICIT_ARTIFACT")
+          echo "Resolved upstream artifact: $V30_ARTIFACT"
           gh run download "$V30_RUN" --repo "$GITHUB_REPOSITORY" --name "$V30_ARTIFACT" --dir input
           if test -s input/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4; then
             cp input/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 input/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
