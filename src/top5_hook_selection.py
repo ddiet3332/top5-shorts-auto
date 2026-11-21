@@ -63,7 +63,9 @@ def choose_hook(ranked, candidates, durations, attempts):
                         if rank not in rank_frames:
                             rank_frames[rank] = sampled_frames(ranked_row, ranked_row["cut_start"], durations[rank])
                         ranked_sample = rank_frames[rank]
-                        if len(ranked_sample) < 6:
+                        # Slow-motion ranks can use under two seconds of source for five seconds of output.
+                        # Three decoded samples still permit the visual-overlap comparison.
+                        if len(ranked_sample) < 3:
                             code = "HOOK_COMPARISON_UNAVAILABLE"
                             break
                         distances = np.abs(opening[:, None] - ranked_sample[None, :]).mean(axis=(2, 3))

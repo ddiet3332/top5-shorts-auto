@@ -10,7 +10,7 @@ from top5_hook_selection import SourceShortage, sampled_frames
 from v12_pexels_audition import download_single_pexels, safe_failure_code
 
 
-def select_reviewed_sources(topic, output, rank_lengths):
+def select_reviewed_sources(topic, output, rank_lengths, *, edits=None, additional_sources=(), required_ids=None):
     catalog = json.loads(Path(topic["source_catalog"]).read_text(encoding="utf-8"))
     if catalog["topic_id"] != topic["topic_id"]:
         raise ValueError("Source catalog topic mismatch")
@@ -18,7 +18,10 @@ def select_reviewed_sources(topic, output, rank_lengths):
     originals.mkdir(exist_ok=True, parents=True)
     eligible, hooks, failures = [], [], []
     hashes, samples = set(), []
-    for source in catalog["sources"]:
+    for original in [*catalog["sources"], *additional_sources]:
+        if required_ids is not None and original["id"] not in required_ids:
+            continue
+        source = {**original, **(edits or {}).get(original["id"], {})}
         path = originals / (source["id"] + ".mp4")
         try:
             info = download_single_pexels(source, path, max_bytes=125*1024*1024)
@@ -26,7 +29,8 @@ def select_reviewed_sources(topic, output, rank_lengths):
                 digest = hashlib.file_digest(stream, "sha256").hexdigest()
             start, payoff = source["start_sec"], source["payoff_sec"]
             hook = source.get("independent_hook", False)
-            length = 2 if hook else max(rank_lengths)
+            rate = source.get("playback_rate",1.0)
+            length = 2 if hook else max(rank_lengths)*rate
             if digest != source["sha256"]:
                 raise ValueError("REVIEWED_BYTES_CHANGED")
             if not 0 <= start <= payoff < start+length <= info["duration_sec"]:
@@ -43,11 +47,12 @@ def select_reviewed_sources(topic, output, rank_lengths):
             if span < 48:
                 raise ValueError("SUBJECT_TOO_SMALL_AT_PAYOFF")
             row = {
-                "title":source["title"], "source_page":source["page_url"],
+                "title":source["title"], "source_page":source["page_url"], "source_id":source["id"],
+                "source_width":width, "source_height":height,
                 "author":source["creator"], "provider":"pexels",
                 "license":source["license_label"], "license_url":source["license_url"],
                 "local_path":str(path), "duration_sec":info["duration_sec"],
-                "sha256":digest,
+                "sha256":digest, "playback_rate":rate,
                 "cut_start":start, "payoff_sec":payoff, "action_family":source["action_family"],
                 "payoff_phone_px":round(span, 1),
                 "editorial_quality_heuristic":source["payoff_priority"],
@@ -85,15 +90,18 @@ def select_reviewed_sources(topic, output, rank_lengths):
         families.setdefault(row["action_family"], row)
     selected = list(reversed(list(families.values())[:len(rank_lengths)]))
     windows_ok = len(selected) == len(rank_lengths) and all(
-        row["payoff_sec"] < row["cut_start"]+seconds
+        row["payoff_sec"] < row["cut_start"]+seconds*row["playback_rate"]
         for row,seconds in zip(selected,rank_lengths)
     )
-    status = "SELECTED" if windows_ok and hooks else "SOURCE_SHORTAGE"
+    available = {row["source_id"] for row in [*selected,*hooks]}
+    status = "SELECTED" if windows_ok and hooks and (required_ids is None or required_ids <= available) else (
+        "EDITORIAL_SOURCE_SHORTAGE" if required_ids is not None else "SOURCE_SHORTAGE")
     audit = {"status":status,"topic":topic["topic_id"],"eligible_families":list(families),
              "rejections":failures,"rank_windows_verified":windows_ok,
+             "missing_required_source_ids":sorted((required_ids or set())-available),
              "hook_candidates":[row["source_page"] for row in hooks],
              "selected":[{k:row[k] for k in ("source_page","sha256","author","license","license_url",
-                                             "cut_start","payoff_sec","action_family",
+                                             "cut_start","payoff_sec","action_family","playback_rate",
                                              "payoff_phone_px","review_basis")} for row in selected],
              "visibility_basis":"reviewed payoff bounding box projected into phone frame",
              "rights_verified":False,"publication_approved":False}

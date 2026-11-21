@@ -1,864 +1,237 @@
 name: V32 dog end-to-end MP4 build
 on:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/v32-dog-end-to-end.yml'
-      - 'src/v37_dog_audition.py'
+      - '.github/actions/setup-video-tools/**'
+      - 'requirements-dog-review.txt'
+      - 'src/dog_run_evidence.py'
+      - 'src/dog_editorial_evidence.py'
+      - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
+      - 'scripts/persist_dog_evidence.sh'
+      - 'src/top5_reviewed_*.py'
       - 'src/top5_auto_v32.py'
       - 'src/top5_auto_v29.py'
       - 'src/v28_fullscreen_builder.py'
-      - 'src/top5_auto_repair_plan.py'
-      - 'src/top5_bounded_reedit.py'
-      - 'src/top5_semantic_review.py'
-      - 'src/top5_feedback_repair.py'
-      - 'review/feedback/dog_latest.json'
-      - 'src/editorial_gate.py'
-      - 'src/top5_objective_defect_qa.py'
-      - 'src/top5_quality_gate.py'
-      - 'src/top5_bounded_reedit.py'
+      - 'sample/top5_dog_source_catalog.json'
+      - 'src/top5_locked_design.py'
+      - 'sample/top5_design_lock_v1.json'
+      - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
+  pull_request:
+    paths:
+      - '.github/workflows/v32-dog-end-to-end.yml'
+      - '.github/actions/setup-video-tools/**'
+      - 'requirements-dog-review.txt'
+      - 'src/dog_run_evidence.py'
+      - 'src/dog_editorial_evidence.py'
+      - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
+      - 'scripts/persist_dog_evidence.sh'
+      - 'src/top5_reviewed_*.py'
+      - 'sample/top5_dog_source_catalog.json'
+      - 'sample/dog_editorial_profile_v1.json'
+      - 'sample/dog_replacement_audition.json'
+      - 'tests/test_dog_run_evidence.py'
+      - 'tests/test_dog_editorial_evidence.py'
   workflow_dispatch:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '*/15 * * * *'
 permissions:
-  contents: write
-  issues: write
+  contents: read
 concurrency:
-  group: v32-dog-end-to-end
+  group: dog-review-${{ github.event_name == 'pull_request' && github.ref || 'production' }}
   cancel-in-progress: false
+
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
     steps:
       - uses: actions/checkout@v4
-      - name: Write local run identity independent of GitHub Contents API
-        if: always()
-        env:
-          TOP5_RUN_ID: ${{ github.run_id }}
-          TOP5_RUN_NUMBER: ${{ github.run_number }}
-          TOP5_SOURCE_SHA: ${{ github.sha }}
-          TOP5_EVENT: ${{ github.event_name }}
-        run: |
-          mkdir -p output/top5_diagnostics
-          python3 - <<'PY'
-          import json,os
-          from pathlib import Path
-          data={"run_id":os.environ["TOP5_RUN_ID"],
-                "run_number":os.environ["TOP5_RUN_NUMBER"],
-                "source_sha":os.environ["TOP5_SOURCE_SHA"],
-                "trigger":os.environ["TOP5_EVENT"],
-                "status":"STARTED","editorial_score_100":None,
-                "rights_verified":False,"youtube_auto_upload":False}
-          Path("output/top5_diagnostics/RUN_IDENTITY.json").write_text(json.dumps(data,indent=2)+"\\n")
-          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
-              out.write("## TOP5 run identity\\nRun: "+data["run_id"]+"\\nCommit: "+data["source_sha"]+"\\n")
-          PY
-      - name: Publish traceable run identity before production
-        continue-on-error: true
-        uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const {owner,repo}=context.repo;
-            const dest='review/latest/PRODUCTION_RUN.json';
-            const data={run_id:context.runId,run_number:context.runNumber,
-              workflow:context.workflow,trigger:context.eventName,
-              source_sha:context.sha,status:'STARTED',
-              run_url:`https://github.com/${owner}/${repo}/actions/runs/${context.runId}`,
-              editorial_score_100:null,rights_verified:false,youtube_auto_upload:false};
-            let sha;
-            try {const old=await github.rest.repos.getContent({owner,repo,path:dest});sha=old.data.sha;}
-            catch(e){if(e.status!==404)throw e;}
-            await github.rest.repos.createOrUpdateFileContents({owner,repo,path:dest,sha,
-              content:Buffer.from(JSON.stringify(data,null,2)).toString('base64'),
-              message:'chore: publish dog production run identity [skip ci]',
-              branch:context.payload.repository.default_branch});
-      - name: Install dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg fonts-nanum fonts-noto-cjk
-          python3 -m venv /tmp/top5
-          /tmp/top5/bin/pip install -q numpy pillow
-      - name: Validate Python sources before rendering
-        run: /tmp/top5/bin/python -m compileall -q src/top5_auto_v32.py src/v37_dog_audition.py src/top5_publication_gate.py src/top5_rights_score_audit.py src/top5_bounded_reedit.py src/top5_feedback_repair.py src/top5_quality_gate.py src/top5_objective_defect_qa.py
-      - name: Regression check even-dimension white padding
-        run: |
-          ffmpeg -hide_banner -v error -f lavfi -i testsrc2=size=640x360:rate=24 -t 0.25 \
-            -vf 'scale=1080:1614:force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,setsar=1,pad=1080:1614:(ow-iw)/2:(oh-ih)/2:color=white,pad=1080:1920:0:306:color=white,format=yuv420p' \
-            -f null -
-      - name: Download original dog candidates and contact sheets
-        id: audition
-        run: /tmp/top5/bin/python src/v37_dog_audition.py
-      - name: Verify minimum five usable originals and save SHA-256 evidence
-        run: |
-          python3 - <<'PY'
-          import hashlib,json
-          from pathlib import Path
-          base=Path('output/dog_audition')
-          rows=json.loads((base/'DOG_AUDITION.json').read_text())['candidates']
-          accepted=[]
-          for row in rows:
-              p=base/(row['id']+'.mp4')
-              if row.get('status')=='AWAITING_EDITORIAL_FRAME_REVIEW' and p.is_file():
-                  h=hashlib.sha256()
-                  with p.open('rb') as stream:
-                      for block in iter(lambda:stream.read(1024*1024),b''): h.update(block)
-                  accepted.append({'id':row['id'],'source_page':row['page_url'],'creator_claim':row.get('creator'),'sha256':h.hexdigest(),'size_bytes':p.stat().st_size,'rights_verified':False})
-          (base/'ORIGINAL_SHA256_INVENTORY.json').write_text(json.dumps({'originals':accepted,'independent_rights_verified':False},indent=2)+'\n')
-          print('Usable originals:',len(accepted),'of',len(rows))
-          if len(accepted)<5: raise SystemExit('Fewer than 5 original source files; cannot claim original-based TOP5')
-          PY
-      - name: Validate five distinct playable source videos
-        run: |
-          python3 - <<'PY'
-          import json,subprocess
-          from pathlib import Path
-          base=Path('output/dog_audition')
-          inventory=json.loads((base/'ORIGINAL_SHA256_INVENTORY.json').read_text())['originals']
-          if len(inventory)<5: raise SystemExit('At least five original videos required')
-          ids=[row['id'] for row in inventory]
-          hashes=[row['sha256'] for row in inventory]
-          if len(set(ids))<5 or len(set(hashes))<5: raise SystemExit('Duplicate source IDs or source file hashes')
-          for row in inventory:
-              path=base/(row['id']+'.mp4')
-              if not path.is_file() or path.stat().st_size!=row['size_bytes']:
-                  raise SystemExit(f"Source file missing or size mismatch: {path}")
-              probe=subprocess.run(['ffprobe','-v','error','-select_streams','v:0','-show_entries','stream=codec_type','-of','default=noprint_wrappers=1:nokey=1',str(path)],capture_output=True,text=True)
-              if probe.returncode!=0 or 'video' not in probe.stdout:
-                  raise SystemExit(f"Original is not a playable video: {path}")
-          print('Validated distinct playable source videos:',len(inventory))
-          PY
-      - name: Build dog TOP5 MP4 from downloaded originals
-        run: /tmp/top5/bin/python src/top5_auto_v32.py --topic dog_surprises --output output/v32_dog_final_candidate
-      - name: Recheck exact five selected source hashes before technical QA
-        run: |
-          python3 - <<'PY'
-          import hashlib,json
-          from pathlib import Path
-          p=Path('output/v32_dog_final_candidate/SELECTED_SOURCE_PROVENANCE.json')
-          rows=json.loads(p.read_text())['selected']
-          if len(rows)!=5 or len({r['sha256'] for r in rows})!=5:
-              raise SystemExit('Exactly five distinct selected originals required')
-          for row in rows:
-              source=Path(row['source_path'])
-              if not source.is_file() or source.stat().st_size!=row['size_bytes']:
-                  raise SystemExit('Missing or changed selected original: '+str(source))
-              h=hashlib.sha256()
-              with source.open('rb') as f:
-                  for chunk in iter(lambda:f.read(1048576),b''): h.update(chunk)
-              if h.hexdigest()!=row['sha256']:
-                  raise SystemExit('Selected source SHA-256 mismatch: '+str(source))
-          print('Five selected original SHA-256 values rechecked')
-          PY
-      - name: Verify actual rendered video and audio
-        run: |
-          test -s output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
-          ffmpeg -hide_banner -v error -xerror -i output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
-      - name: Label rendered video as V32 review master
-        run: |
-          cp output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 output/v32_dog_final_candidate/TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4
-      - name: Run technical QA and editorial evidence packet
-        run: |
-          /tmp/top5/bin/python src/top5_automated_qa.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --technical output/v32_dog_final_candidate/V32_TECHNICAL_QA.json --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json --output output/v32_dog_final_candidate/TOP5_AUTOMATED_QA_SCORE.json
-          /tmp/top5/bin/python src/top5_qa_frames.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --output output/v32_dog_final_candidate/FRAME_REVIEW --count 15
-          /tmp/top5/bin/python src/top5_editorial_review_packet.py --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json --frames output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/EDITORIAL_REVIEW_PACKET.json
-          /tmp/top5/bin/python src/top5_free_visual_metrics.py --manifest output/v32_dog_final_candidate/FRAME_REVIEW/FRAME_REVIEW_MANIFEST.json --output output/v32_dog_final_candidate/FREE_VISUAL_METRICS.json
-      - name: Render, assess and select bounded candidate revisions
-        if: success()
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: /tmp/top5/bin/python src/top5_bounded_reedit.py
-      - name: Attempt multimodal editorial review of selected candidate
-        if: success()
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          /tmp/top5/bin/python - <<'PY'
-          import json,subprocess
-          from pathlib import Path
-          root=Path('output/v32_dog_final_candidate')
-          comparison=json.loads((root/'AUTO_ALTERNATE_EDIT.json').read_text())
-          selected=comparison.get('selected_candidate') or str(root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4')
-          subprocess.run(['/tmp/top5/bin/python','src/top5_semantic_review.py',selected,
-                          str(root/'SEMANTIC_EDITORIAL_REVIEW.json')],check=True)
-          PY
-      - name: Export automatically selected candidate and QA verdict
-        if: success()
-        run: |
-          python3 - <<'PY'
-          import json,shutil,subprocess
-          from pathlib import Path
-          root=Path('output/v32_dog_final_candidate')
-          compare=json.loads((root/'AUTO_ALTERNATE_EDIT.json').read_text())
-          src=Path(compare.get('selected_candidate') or root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4')
-          if not src.is_file(): raise SystemExit('Selected candidate missing: '+str(src))
-          target=root/'TOP5_DOG_AUTO_SELECTED_1080x1920.mp4'
-          shutil.copyfile(src,target)
-          subprocess.run(['ffmpeg','-v','error','-xerror','-i',str(target),
-                          '-map','0:v:0','-map','0:a:0','-f','null','-'],check=True)
-          semantic=root/'SEMANTIC_EDITORIAL_REVIEW.json'
-          review=json.loads(semantic.read_text()) if semantic.exists() else {}
-          verdict={'selected_variant':compare.get('selected_variant',0),
-                   'selected_mp4':str(target),'technical_decode_pass':True,
-                   'semantic_review_status':review.get('status','UNVERIFIED'),
-                   'editorial_score_100':None,'editorial_80_verified':False,
-                   'rights_verified':False,'publication_permitted':False}
-          (root/'AUTO_SELECTION_VERDICT.json').write_text(json.dumps(verdict,indent=2)+chr(10))
-          print(json.dumps(verdict))
-          PY
-      - name: Inspect selected video for freeze, black frames and audio gaps
-        if: success()
-        run: |
-          /tmp/top5/bin/python src/top5_objective_defect_qa.py \
-            --video output/v32_dog_final_candidate/TOP5_DOG_AUTO_SELECTED_1080x1920.mp4 \
-            --output output/v32_dog_final_candidate/SELECTED_DOG_OBJECTIVE_DEFECTS.json
-      - name: Evaluate 80-point gate against the actually selected dog video
-        if: success()
-        run: |
-          /tmp/top5/bin/python - <<'PY'
-          import json
-          from pathlib import Path
-          from src.editorial_gate import assess
-          root=Path('output/v32_dog_final_candidate')
-          def read(name):
-              p=root/name
-              try: return json.loads(p.read_text(encoding='utf-8'))
-              except (OSError,ValueError): return {}
-          selection=read('AUTO_SELECTION_VERDICT.json')
-          selected=Path(selection.get('selected_mp4',''))
-          defects=read('SELECTED_DOG_OBJECTIVE_DEFECTS.json')
-          technical={'technical_pass':selection.get('technical_decode_pass') is True and selected.is_file() and defects.get('technical_pass') is True}
-          # An 11-frame vision score is NOT full audiovisual editorial evidence.
-          # Never promote proxy scores to an 80-point verified score.
-          scorecard=read('FULL_AV_EDITORIAL_SCORECARD.json')
-          rights=read('INDEPENDENT_RIGHTS_EVIDENCE.json')
-          if not (scorecard.get('full_av_review_complete') is True
-                  and scorecard.get('reviewed_video_sha256')):
-              scorecard={}
-          else:
-              import hashlib
-              h=hashlib.sha256()
-              if selected.is_file():
-                  with selected.open('rb') as stream:
-                      for block in iter(lambda:stream.read(1048576),b''): h.update(block)
-              if h.hexdigest()!=scorecard['reviewed_video_sha256']:
-                  scorecard={}
-          result=assess(scorecard,technical,rights)
-          result.update({'selected_video':str(selected),
-                         'full_av_review_verified':bool(scorecard),
-                         'auto_reedit_attempts':len(read('AUTO_ALTERNATE_EDIT.json').get('attempts',[])),
-                         'manual_youtube_upload_only':True})
-          (root/'SELECTED_DOG_EDITORIAL_80_GATE.json').write_text(
-              json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          print(json.dumps(result,ensure_ascii=False))
-          PY
-      - name: Report selected-video quality independently of deferred rights
-        if: success()
-        run: |
-          /tmp/top5/bin/python - <<'PY'
-          import json
-          from pathlib import Path
-          from src.top5_quality_gate import assess_quality
-          root=Path('output/v32_dog_final_candidate')
-          def read(name):
-              try: return json.loads((root/name).read_text())
-              except (OSError,ValueError): return {}
-          selection=read('AUTO_SELECTION_VERDICT.json')
-          defects=read('SELECTED_DOG_OBJECTIVE_DEFECTS.json')
-          technical={'technical_pass':selection.get('technical_decode_pass') is True
-                     and defects.get('technical_pass') is True}
-          result=assess_quality(read('FULL_AV_EDITORIAL_SCORECARD.json'),technical,
-                                root/'TOP5_DOG_AUTO_SELECTED_1080x1920.mp4')
-          (root/'SELECTED_DOG_QUALITY_ONLY_80.json').write_text(
-              json.dumps(result,ensure_ascii=False,indent=2)+'\n')
-          print(json.dumps(result,ensure_ascii=False))
-          PY
-      - name: Initialize independent review evidence as unverified
-        if: success()
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          root=Path('output/v32_dog_final_candidate')
-          p=root/'INDEPENDENT_REVIEW_EVIDENCE.json'
-          if not p.exists():
-              p.write_text(json.dumps({'sources':[], 'editorial_scores':{}, 'editorial_review':{}, 'youtube_reused_content_review':{}, 'status':'UNVERIFIED_NEEDS_HUMAN_EVIDENCE'},indent=2)+'\n')
-          PY
-      - name: Independently evidence-gated rights and editorial scoring
-        if: success()
-        run: |
-          /tmp/top5/bin/python src/top5_rights_score_audit.py \
-            --video output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
-            --manifest output/v32_dog_final_candidate/TOP5_REPLACEMENT_REVIEW_INPUT.json \
-            --review output/v32_dog_final_candidate/INDEPENDENT_REVIEW_EVIDENCE.json \
-            --output output/v32_dog_final_candidate/RIGHTS_AND_SCORE_AUDIT.json
-      - name: Fail-closed publication gate
-        if: success()
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          from sys import path
-          path.insert(0,'src')
-          from top5_publication_gate import evaluate
-          root=Path('output/v32_dog_final_candidate')
-          read=lambda p:json.loads(p.read_text()) if p.is_file() else {}
-          video=root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4'
-          result=evaluate(read(root/'editorial_qa.json'),read(root/'independent_rights_review.json'),video)
-          (root/'PUBLICATION_GATE.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
-          print('MP4 rendered; publication permitted:',result['youtube_upload_permitted'])
-          PY
-      - name: Record exact build commit and audit provenance
-        if: always()
-        env:
-          SOURCE_COMMIT: ${{ github.sha }}
-          SOURCE_REF: ${{ github.ref }}
-          SOURCE_RUN: ${{ github.run_id }}
-        run: |
-          python3 - <<'PY'
-          import json,os
-          from pathlib import Path
-          root=Path('output/v32_dog_final_candidate')
-          root.mkdir(parents=True,exist_ok=True)
-          sheet=root/'FRAME_REVIEW'/'TOP5_CONTACT_SHEET.jpg'
-          report={'git_commit':os.environ['SOURCE_COMMIT'],
-                  'git_ref':os.environ['SOURCE_REF'],
-                  'run_id':os.environ['SOURCE_RUN'],
-                  'contact_sheet_present':sheet.is_file(),
-                  'full_motion_subjective_review':False,
-                  'full_audio_subjective_review':False,
-                  'independent_source_rights_cleared':False,
-                  'likeness_review_cleared':False,
-                  'youtube_reused_content_review_cleared':False,
-                  'publication_permitted':False}
-          (root/'BUILD_PROVENANCE.json').write_text(json.dumps(report,indent=2)+chr(10))
-          PY
-      - name: Write failure diagnostics and source inventory
-        if: always()
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          root=Path('output/v32_dog_final_candidate')
-          root.mkdir(parents=True,exist_ok=True)
-          audit=Path('output/dog_audition/DOG_AUDITION.json')
-          rows=json.loads(audit.read_text()).get('candidates',[]) if audit.exists() else []
-          mp4=root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4'
-          report={'workflow':'V32 dog end-to-end','source_manifest_present':audit.exists(),
-              'source_candidates':len(rows),'originals_available':sum((audit.parent/(r.get('id','')+'.mp4')).is_file() for r in rows),
-              'source_failures':[{'id':r.get('id'),'status':r.get('status'),'error':r.get('error_detail')} for r in rows if r.get('status')!='AWAITING_EDITORIAL_FRAME_REVIEW'],
-              'mp4_rendered':mp4.is_file() and mp4.stat().st_size>0,
-              'editorial_score_verified':False,'rights_approved':False,'publication_approved':False}
-          (root/'V32_BUILD_DIAGNOSTICS.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
-          print(json.dumps(report,ensure_ascii=False))
-          PY
-      - name: Verify deliverable status
-        if: always()
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          root=Path('output/v32_dog_final_candidate')
-          video=root/'TOP5_AUTO_V29_REVIEW_1080x1920.mp4'
-          gate=root/'PUBLICATION_GATE.json'
-          result=json.loads(gate.read_text()) if gate.is_file() else {}
-          audit=json.loads((root/'RIGHTS_AND_SCORE_AUDIT.json').read_text()) if (root/'RIGHTS_AND_SCORE_AUDIT.json').is_file() else {}
-          ready=bool(video.is_file() and video.stat().st_size>0 and result.get('publication_candidate_80') is True and result.get('rights_gate_passed') is True and audit.get('publication_candidate') is True)
-          (root/'DELIVERY_STATUS.json').write_text(json.dumps({'rendered_review_mp4_present':video.is_file(),'publication_candidate_80_and_rights_cleared':ready,'youtube_upload_permitted':False,'editorial_score':result.get('score'),'editorial_and_rights_verified':ready},indent=2)+'\n')
-          print('80+ and rights cleared:',ready,'review MP4 exists:',video.is_file())
-          PY
-      - name: Summarize actual render and rights gates
-        if: always()
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('output/v32_dog_final_candidate')
-          p.mkdir(parents=True,exist_ok=True)
-          def read(name):
-              f=p/name
-              try: return json.loads(f.read_text()) if f.exists() else {}
-              except (ValueError,OSError): return {}
-          gate=read('PUBLICATION_GATE.json')
-          status=read('DELIVERY_STATUS.json')
-          diag=read('V32_BUILD_DIAGNOSTICS.json')
-          report={'review_mp4_present':(p/'TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4').is_file(),
-                  'source_originals':diag.get('originals_available'),
-                  'editorial_score_verified':gate.get('score_verified',False),
-                  'editorial_score':gate.get('score'),
-                  'rights_gate_passed':gate.get('rights_gate_passed',False),
-                  'publication_candidate_80':gate.get('publication_candidate_80',False),
-                  'upload_permitted':False,
-                  'failures':diag.get('source_failures',[])}
-          (p/'V32_RESULT_SUMMARY.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
-          print(json.dumps(report,ensure_ascii=False))
-          PY
-      - name: Publish run summary to GitHub Actions
-        if: always()
-        env:
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import json,os
-          from pathlib import Path
-          p=Path('output/v32_dog_final_candidate')
-          def read(name):
-              try: return json.loads((p/name).read_text())
-              except (OSError,ValueError): return {}
-          diag=read('V32_BUILD_DIAGNOSTICS.json')
-          status=read('DELIVERY_STATUS.json')
-          rights=read('RIGHTS_AND_SCORE_AUDIT.json')
-          print('## TOP5 dog automated production report')
-          print(f"- Run: {os.environ['RUN_URL']}")
-          print(f"- Rendered review MP4: {bool(status.get('rendered_review_mp4_present'))}")
-          print(f"- Original candidates: {diag.get('source_candidates', 'unknown')}")
-          print(f"- Downloaded originals: {diag.get('originals_available', 'unknown')}")
-          print(f"- Independent rights and editorial approval: {bool(rights.get('publication_candidate'))}")
-          print(f"- Publication-ready 80+ candidate: {bool(status.get('publication_candidate_80_and_rights_cleared'))}")
-          print('- YouTube upload permission: NOT GRANTED (manual confirmation required)')
-          print('- Source failures: '+json.dumps(diag.get('source_failures',[]),ensure_ascii=False))
-          print('- Evidence: download the run artifact; never treat a successful job as copyright approval.')
-          PY
-      - name: Generate evidence-only repair plan
-        if: always()
-        run: python3 src/top5_auto_repair_plan.py
-      - name: Publish persistent automated production status issue
-        if: always()
-        uses: actions/github-script@v7
+          persist-credentials: false
+      - uses: actions/setup-python@v5
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const root = 'output/v32_dog_final_candidate/';
-            const read = name => { try { return JSON.parse(fs.readFileSync(root + name,'utf8')); } catch (_) { return {}; } };
-            const status = read('DELIVERY_STATUS.json');
-            const diag = read('V32_BUILD_DIAGNOSTICS.json');
-            const provenance = read('SELECTED_SOURCE_PROVENANCE.json');
-            const rows = Array.isArray(provenance.selected) ? provenance.selected : [];
-            const sourcePass = rows.length === 5 && new Set(rows.map(x=>x.sha256)).size === 5;
-            const renderPass = status.rendered_review_mp4_present === true;
-            const editorialPass = status.publication_candidate_80_and_rights_cleared === true;
-            const runUrl = 'https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId;
-            const title = '[TOP5 automation] Latest production status';
-            const result = ok => ok ? 'PASS' : 'BLOCKED / UNVERIFIED';
-            const body = [
-              '## Latest TOP5 dog automated production report',
-              'Run: ' + runUrl,
-              'Commit: ' + context.sha,
-              '',
-              '| Check | Result |', '|---|---|',
-              '| Review MP4 rendered | ' + result(renderPass) + ' |',
-              '| Five distinct selected original hashes | ' + result(sourcePass) + ' |',
-              '| Downloaded originals | ' + (diag.originals_available ?? 'unknown') + ' |',
-              '| Editorial 80+ AND independent rights | ' + result(editorialPass) + ' |',
-              '| YouTube upload | BLOCKED |',
-              '',
-              'Source failures: ' + JSON.stringify(diag.source_failures || []),
-              'Artifact: ' + runUrl + ' (V32-dog-render-and-QA-' + context.runNumber + ')',
-              'Machine-generated report; passing Actions is not copyright or YPP approval.'
-            ].join('\\n');
-            const {owner,repo} = context.repo;
-            const issues = await github.paginate(github.rest.issues.listForRepo,{owner,repo,state:'open',per_page:100});
-            const prior = issues.find(x => !x.pull_request && x.title === title);
-            if (prior) await github.rest.issues.update({owner,repo,issue_number:prior.number,body});
-            else await github.rest.issues.create({owner,repo,title,body});
-      - name: Produce lightweight standalone inspection package
-        if: always()
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-dog-review.txt
+      - name: Install bounded free dependencies
+        id: install
+        timeout-minutes: 6
+        shell: bash
         run: |
-          mkdir -p output/top5_review_light/frames
-          INPUT=output/v32_dog_final_candidate/TOP5_DOG_AUTO_SELECTED_1080x1920.mp4
-          if [ ! -s "$INPUT" ]; then
-            INPUT=output/v32_dog_final_candidate/TOP5_DOG_V32_RENDERED_REVIEW_1080x1920.mp4
+          set -euo pipefail
+          command -v python timeout
+          python --version
+          python -m pip --version
+          timeout --signal=TERM --kill-after=15s 240s python -m pip install \
+            --disable-pip-version-check --no-input --timeout 20 --retries 2 \
+            --only-binary=:all: -r requirements-dog-review.txt
+          python -m pip check
+          python -c 'import cv2, numpy, PIL; print(cv2.__version__, numpy.__version__, PIL.__version__)'
+      - name: Set up FFmpeg and Korean fonts
+        timeout-minutes: 5
+        uses: ./.github/actions/setup-video-tools
+      - name: Check executables and run regression tests
+        timeout-minutes: 6
+        run: |
+          command -v python ffmpeg ffprobe fc-match
+          python -m unittest discover -s tests -q
+      - name: Download the exact Issue 130 regression fixture
+        if: github.event_name == 'pull_request'
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '14672834682'
+          run-id: '44825600263'
+          github-token: ${{ github.token }}
+          path: output/fixture
+      - name: Render five original dog sources with an independent hook
+        id: render
+        timeout-minutes: 12
+        run: |
+          args=(--editorial-profile sample/dog_editorial_profile_v1.json)
+          if [[ "$GITHUB_EVENT_NAME" = pull_request ]]; then
+            fixture="$(find output/fixture -name TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -type f -print -quit)"
+            test -n "$fixture"
+            args+=(--baseline "$fixture")
           fi
-          if [ ! -s "$INPUT" ]; then
-            INPUT=output/v32_dog_final_candidate/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
-          fi
-          if [ -s "$INPUT" ]; then
-            ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf scale=360:640 -c:v libx264 -preset veryfast -crf 31 -c:a aac -b:a 64k -movflags +faststart output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4
-            ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf scale=540:960 -c:v libx264 -preset veryfast -crf 26 -c:a aac -b:a 96k -movflags +faststart output/top5_review_light/TOP5_DOG_SELECTED_540x960.mp4
-            ffmpeg -hide_banner -loglevel error -y -i "$INPUT" -vf "fps=1/2,scale=360:640" -q:v 4 output/top5_review_light/frames/frame_%03d.jpg
-            mkdir -p output/top5_review_light/rank_evidence
-            for SPEC in "hook:0.5" "rank5:2.5" "rank4:6.5" "rank3:11.5" "rank2:15.5" "rank1:21.5" "outro:27.5" "outro_end:29.0"; do
-              NAME="${SPEC%%:*}"
-              TIME="${SPEC#*:}"
-              ffmpeg -hide_banner -loglevel error -y -ss "$TIME" -i "$INPUT" -frames:v 1 -vf scale=540:960 -q:v 3 "output/top5_review_light/rank_evidence/${NAME}.jpg"
-            done
-            cp output/v32_dog_final_candidate/SELECTED_SOURCE_PROVENANCE.json output/top5_review_light/ 2>/dev/null || true
-            cp output/v32_dog_final_candidate/AUTO_REPAIR_PLAN.json output/top5_review_light/ 2>/dev/null || true
-            ffprobe -v error -show_entries format=duration,size -of json output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4 > output/top5_review_light/VIDEO_INFO.json
+          python src/top5_reviewed_render.py --topic dog_surprises --output output/dog "${args[@]}"
+      - name: Measure the rendered audio stream
+        timeout-minutes: 2
+        run: |
+          ffmpeg -nostdin -hide_banner -i output/dog/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 \
+            -map 0:a:0 -af 'atrim=end_sample=1440000,ebur128=peak=true,astats,silencedetect=n=-50dB:d=0.2' \
+            -f null - 2> output/dog/DOG_AUDIO_METRICS.txt
+      - name: Record attempt and validate any completed MP4
+        if: always()
+        id: evidence
+        timeout-minutes: 6
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          RENDER_OUTCOME: ${{ steps.render.outcome }}
+        run: |
+          set -euo pipefail
+          archive="output/evidence/review/runs/$GITHUB_RUN_ID/attempt-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$archive"
+          if ! command -v python3 >/dev/null || [[ ! -f src/dog_run_evidence.py ]]; then
+            printf '{"run_id":%s,"run_attempt":%s,"source_commit":"%s","status":"MP4_NOT_CREATED","reason":"EVIDENCE_PYTHON_OR_CHECKOUT_MISSING","full_decode":"NOT_RUN_NO_MP4","contact_sheet":"NOT_RUN_NO_MP4","video_sha256":null,"publication_approved":false}\n' \
+              "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" > "$archive/PRODUCTION_RUN.json"
           else
-            echo "Review video missing; light package cannot be generated" > output/top5_review_light/ERROR.txt
+            python3 src/dog_run_evidence.py finalize output/dog output/evidence/review "$GITHUB_RUN_ID" \
+              "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "${INSTALL_OUTCOME:-skipped}" "${RENDER_OUTCOME:-skipped}"
           fi
-      - name: Self-contained technical and audio QA for selected video
+          cat "$archive/PRODUCTION_RUN.json" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f "$archive/TOP5_CONTACT_SHEET.jpg" ]] && grep -q '"status": "SUCCESS"' "$archive/PRODUCTION_RUN.json"; then
+            echo 'verified=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Archive immutable run and attempt evidence
         if: always()
-        run: |
-          python3 - <<'PY'
-          import json, subprocess
-          from pathlib import Path
-          root=Path('output/top5_review_light')
-          root.mkdir(parents=True,exist_ok=True)
-          video=root/'TOP5_DOG_SELECTED_540x960.mp4'
-          result={'video':str(video),'exists':video.is_file(),'checks':{},'editorial_score_100':None,'rights_verified':False,'youtube_auto_upload':False}
-          if video.is_file():
-              commands={
-                  'decode':['ffmpeg','-hide_banner','-v','error','-xerror','-i',str(video),'-map','0:v:0','-map','0:a:0','-f','null','-'],
-                  'blackdetect':['ffmpeg','-hide_banner','-i',str(video),'-vf','blackdetect=d=0.15:pix_th=0.08','-an','-f','null','-'],
-                  'silencedetect':['ffmpeg','-hide_banner','-i',str(video),'-af','silencedetect=noise=-42dB:d=0.35','-vn','-f','null','-'],
-                  'volume':['ffmpeg','-hide_banner','-i',str(video),'-af','volumedetect','-vn','-f','null','-']}
-              for name,cmd in commands.items():
-                  try:
-                      p=subprocess.run(cmd,capture_output=True,text=True,timeout=150)
-                      lines=(p.stderr or '').splitlines()
-                      if name=='blackdetect': findings=[x.strip() for x in lines if 'black_start:' in x]
-                      elif name=='silencedetect': findings=[x.strip() for x in lines if 'silence_start:' in x or 'silence_end:' in x]
-                      elif name=='volume': findings=[x.strip() for x in lines if 'mean_volume:' in x or 'max_volume:' in x]
-                      else: findings=[x.strip() for x in lines[-12:]]
-                      result['checks'][name]={'exit_code':p.returncode,'pass':p.returncode==0,'findings':findings[:40]}
-                  except Exception as exc:
-                      result['checks'][name]={'pass':False,'error':str(exc)[:200]}
-              p=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration,size:stream=codec_type,width,height','-of','json',str(video)],capture_output=True,text=True)
-              if p.returncode==0:
-                  result['media_info']=json.loads(p.stdout)
-              result['technical_pass']=all(x.get('pass') for x in result['checks'].values())
-          (root/'SELF_CONTAINED_QA.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+chr(10))
-          print(json.dumps({'technical_pass':result.get('technical_pass',False),'checks':result['checks']},ensure_ascii=False))
-          PY
-      - name: Publish machine-readable technical QA report
-        if: always()
-        uses: actions/github-script@v7
+        uses: actions/upload-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs=require('fs');
-            const source='output/top5_review_light/SELF_CONTAINED_QA.json';
-            if (!fs.existsSync(source)) { core.warning('QA JSON unavailable'); return; }
-            const {owner,repo}=context.repo;
-            const dest='review/latest/SELF_CONTAINED_QA.json';
-            let sha;
-            try { const old=await github.rest.repos.getContent({owner,repo,path:dest}); sha=old.data.sha; }
-            catch(e) { if(e.status!==404) throw e; }
-            await github.rest.repos.createOrUpdateFileContents({
-              owner,repo,path:dest,sha,branch:context.payload.repository.default_branch,
-              content:fs.readFileSync(source).toString('base64'),
-              message:'chore: update latest dog technical QA [skip ci]'
-            });
-            core.info('Published QA JSON: '+dest);
-      - name: Publish a directly readable contact sheet to repository
-        if: always()
-        run: |
-          /tmp/top5/bin/python - <<'PY'
-          from pathlib import Path
-          from PIL import Image,ImageDraw
-          frames=sorted(Path('output/top5_review_light/frames').glob('frame_*.jpg'))
-          if not frames:
-              print('No frames to publish')
-          else:
-              w,h=240,450
-              sheet=Image.new('RGB',(w*5,h*3),'white')
-              for i,p in enumerate(frames[:15]):
-                  with Image.open(p) as im:
-                      im.thumbnail((w,h-25))
-                      x=(i%5)*w+(w-im.width)//2
-                      y=(i//5)*h
-                      sheet.paste(im,(x,y+25))
-                  ImageDraw.Draw(sheet).text(((i%5)*w+8,(i//5)*h+6),f'{i*2:02d}s',fill='black')
-              out=Path('output/top5_review_light/TOP5_CONTACT_SHEET.jpg')
-              sheet.save(out,quality=72,optimize=True)
-              print('Contact sheet bytes:',out.stat().st_size)
-          PY
-      - name: Build rank-boundary visual evidence sheet
-        if: always()
-        run: |
-          /tmp/top5/bin/python - <<'PY'
-          from pathlib import Path
-          from PIL import Image, ImageDraw
-          root=Path('output/top5_review_light')
-          names=['hook','rank5','rank4','rank3','rank2','rank1','outro','outro_end']
-          canvas=Image.new('RGB',(270*4,515*2),'white')
-          draw=ImageDraw.Draw(canvas)
-          for i,name in enumerate(names):
-              p=root/'rank_evidence'/f'{name}.jpg'
-              if not p.exists(): continue
-              with Image.open(p) as im:
-                  im=im.convert('RGB')
-                  im.thumbnail((270,480))
-                  canvas.paste(im,((i%4)*270+(270-im.width)//2,(i//4)*515+30))
-              draw.text(((i%4)*270+8,(i//4)*515+7),name,fill='black')
-          canvas.save(root/'RANK_BOUNDARY_CONTACT_SHEET.jpg',quality=88)
-          PY
-      - name: Bind contact sheet and rank evidence to exact rendered MP4
+          name: dog-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: output/evidence/review/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload verified dog MP4 and evidence
+        if: always() && steps.evidence.outputs.verified == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dog-mp4-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            output/dog/TOP5_AUTO_V29_REVIEW_1080x1920.mp4
+            output/dog/work/captions.ass
+            output/dog/V32_TECHNICAL_QA.json
+            output/evidence/review/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Require a validated production output
         if: always()
         env:
-          TOP5_RUN_ID: ${{ github.run_id }}
-          TOP5_SOURCE_SHA: ${{ github.sha }}
+          VERIFIED: ${{ steps.evidence.outputs.verified }}
+        run: test "$VERIFIED" = true
+
+      - name: Rehearse production evidence persistence against isolated Git
+        if: github.event_name == 'pull_request'
+        timeout-minutes: 3
+        shell: bash
         run: |
+          set -euo pipefail
+          workspace="$PWD"
+          archive="$workspace/output/evidence/review/runs/$GITHUB_RUN_ID/attempt-$GITHUB_RUN_ATTEMPT"
+          sandbox="$(mktemp -d)"
+          git init --bare "$sandbox/origin.git"
+          git init "$sandbox/checkout"
+          git -C "$sandbox/checkout" -c user.name=rehearsal -c user.email=rehearsal@example.invalid \
+            commit --allow-empty -m rehearsal
+          git -C "$sandbox/checkout" remote add origin "$sandbox/origin.git"
+          cd "$sandbox/checkout"
+          writer="$workspace/scripts/persist_dog_evidence.sh"
+          recorder="$workspace/src/dog_run_evidence.py"
+          bash "$writer" "$archive" "$sandbox/first" "$recorder"
+          # Use a later attempt of this run to prove that it only moves latest_attempt.
+          later=$((GITHUB_RUN_ATTEMPT+1))
+          python3 "$recorder" finalize "$sandbox/no-output" "$sandbox/failed" \
+            "$GITHUB_RUN_ID" "$later" "$GITHUB_SHA" success failure
+          git worktree remove "$sandbox/first"
+          bash "$writer" "$sandbox/failed/runs/$GITHUB_RUN_ID/attempt-$later" "$sandbox/second" "$recorder"
+          cd "$workspace"
+          mkdir -p output/persistence-rehearsal
+          for pointer in latest_attempt latest_success; do
+            git --git-dir="$sandbox/origin.git" show "top5-review-evidence:review/$pointer/PRODUCTION_RUN.json" \
+              > "output/persistence-rehearsal/$pointer.json"
+          done
           python3 - <<'PY'
-          import hashlib,json,os
+          import json
           from pathlib import Path
-          root=Path('output/top5_review_light')
-          selected=Path('output/v32_dog_final_candidate/TOP5_DOG_AUTO_SELECTED_1080x1920.mp4')
-          def digest(path):
-              if not path.is_file(): return None
-              h=hashlib.sha256()
-              with path.open('rb') as stream:
-                  for chunk in iter(lambda:stream.read(1024*1024),b''): h.update(chunk)
-              return h.hexdigest()
-          timestamps={'hook':0.5,'rank5':2.5,'rank4':6.5,'rank3':11.5,
-                      'rank2':15.5,'rank1':21.5,'outro':27.5,'outro_end':29.0}
-          manifest={'schema_version':1,'run_id':os.environ['TOP5_RUN_ID'],
-                    'source_sha':os.environ['TOP5_SOURCE_SHA'],
-                    'selected_mp4_sha256':digest(selected),
-                    'contact_sheet_sha256':digest(root/'TOP5_CONTACT_SHEET.jpg'),
-                    'contact_sheet_inspected_by_human':False,
-                    'full_av_review_complete':False,
-                    'editorial_score_100':None,'rights_verified':False,
-                    'publication_approved':False,
-                    'rank_frames':[{'label':name,'time_sec':seconds,
-                                    'sha256':digest(root/'rank_evidence'/f'{name}.jpg')}
-                                   for name,seconds in timestamps.items()]}
-          root.mkdir(parents=True,exist_ok=True)
-          (root/'FRAME_EVIDENCE_MANIFEST.json').write_text(
-              json.dumps(manifest,ensure_ascii=False,indent=2)+'\\n')
-          if not manifest['selected_mp4_sha256'] or not manifest['contact_sheet_sha256']:
-              print('WARNING: frame evidence incomplete; no editorial certification')
+          root = Path("output/persistence-rehearsal")
+          attempt = json.loads((root/"latest_attempt.json").read_text())
+          success = json.loads((root/"latest_success.json").read_text())
+          assert attempt["status"] == "MP4_NOT_CREATED"
+          assert success["status"] == "SUCCESS"
+          assert attempt["run_attempt"] == success["run_attempt"] + 1
+          assert success["video_sha256"] and attempt["video_sha256"] is None
           PY
-      - name: Publish text-readable exact-run frame evidence manifest
-        if: always()
-        uses: actions/github-script@v7
+      - name: Upload isolated persistence evidence
+        if: github.event_name == 'pull_request' && success()
+        uses: actions/upload-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs=require('fs');
-            const source='output/top5_review_light/FRAME_EVIDENCE_MANIFEST.json';
-            if (!fs.existsSync(source)) {core.warning('Frame manifest missing');return;}
-            const {owner,repo}=context.repo;
-            const dest='review/latest/FRAME_EVIDENCE_MANIFEST.json';
-            let sha;
-            try {const old=await github.rest.repos.getContent({owner,repo,path:dest});sha=old.data.sha;}
-            catch(e){if(e.status!==404)throw e;}
-            await github.rest.repos.createOrUpdateFileContents({owner,repo,path:dest,sha,
-              content:fs.readFileSync(source).toString('base64'),
-              message:'chore: bind dog review frames to rendered MP4 [skip ci]',
-              branch:context.payload.repository.default_branch});
-      - name: Commit contact sheet for direct GitHub image access
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const path = 'output/top5_review_light/TOP5_CONTACT_SHEET.jpg';
-            if (!fs.existsSync(path)) return;
-            const {owner,repo} = context.repo;
-            const dest = 'review/latest/TOP5_CONTACT_SHEET.jpg';
-            let sha;
-            try {
-              const prev = await github.rest.repos.getContent({owner,repo,path:dest,ref:context.payload.repository.default_branch});
-              sha = prev.data.sha;
-            } catch (e) { if (e.status !== 404) throw e; }
-            await github.rest.repos.createOrUpdateFileContents({owner,repo,path:dest,
-              message:'chore: update latest dog TOP5 visual review contact sheet [skip ci]',
-              content:fs.readFileSync(path).toString('base64'),sha,
-              branch:context.payload.repository.default_branch});
-            core.info('Contact sheet published: https://github.com/'+owner+'/'+repo+'/blob/'+context.payload.repository.default_branch+'/'+dest);
-      - name: Publish binary-safe textual frame previews for independent visual review
-        if: always()
+          name: dog-persistence-rehearsal-${{ github.run_id }}-${{ github.run_attempt }}
+          path: output/persistence-rehearsal/
+          if-no-files-found: error
+          retention-days: 30
+
+  persist-evidence:
+    needs: build
+    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         continue-on-error: true
-        uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // GitHub's connected text reader cannot decode raw JPEG bytes.
-            // Store a bounded JPEG as ASCII base64, retrievable as UTF-8.
-            // This is visual evidence only; never an editorial or rights pass.
-            const fs=require('fs');
-            const crypto=require('crypto');
-            const {owner,repo}=context.repo;
-            const previews=[
-              ['TOP5_CONTACT_SHEET.jpg','TOP5_CONTACT_SHEET_BASE64.txt'],
-              ['RANK_BOUNDARY_CONTACT_SHEET.jpg','RANK_BOUNDARY_BASE64.txt']
-            ];
-            for(const [sourceName,destName] of previews){
-              const source='output/top5_review_light/'+sourceName;
-              if(!fs.existsSync(source)){core.warning('Missing visual evidence: '+source);continue;}
-              const bytes=fs.readFileSync(source);
-              if(bytes.length>1500000){core.warning('Visual evidence too large: '+source);continue;}
-              const dest='review/latest/'+destName;
-              const content=bytes.toString('base64')+'\\n';
-              let sha;
-              try{const old=await github.rest.repos.getContent({owner,repo,path:dest});sha=old.data.sha;}
-              catch(e){if(e.status!==404)throw e;}
-              await github.rest.repos.createOrUpdateFileContents({owner,repo,path:dest,sha,
-                content:Buffer.from(content,'utf8').toString('base64'),
-                message:'chore: publish text-readable dog visual evidence [skip ci]',
-                branch:context.payload.repository.default_branch});
-              core.info(dest+' jpeg_sha256='+crypto.createHash('sha256').update(bytes).digest('hex')+
-                ' run_id='+context.runId);
-            }
-      - name: Publish directly accessible lightweight review MP4
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const source = 'output/top5_review_light/TOP5_DOG_REVIEW_360x640.mp4';
-            if (!fs.existsSync(source)) { core.warning('No lightweight MP4'); return; }
-            const bytes = fs.readFileSync(source);
-            if (bytes.length > 20 * 1024 * 1024) {
-              core.warning('Review MP4 exceeds GitHub Contents API safe upload size');
-              return;
-            }
-            const {owner,repo} = context.repo;
-            const dest = 'review/latest/TOP5_DOG_REVIEW_360x640.mp4';
-            let sha;
-            try {
-              const prior = await github.rest.repos.getContent({owner,repo,path:dest});
-              sha = prior.data.sha;
-            } catch (e) { if (e.status !== 404) throw e; }
-            await github.rest.repos.createOrUpdateFileContents({
-              owner,repo,path:dest,sha,content:bytes.toString('base64'),
-              message:'chore: publish direct dog review MP4 [skip ci]',
-              branch:context.payload.repository.default_branch
-            });
-            core.info('Review MP4: https://github.com/'+owner+'/'+repo+'/raw/HEAD/'+dest);
-      - name: Generate 60-frame temporal evidence for action and payoff review
-        if: always()
+          name: dog-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: incoming
+      - name: Advance evidence pointers on the dedicated branch
+        env:
+          BUILD_OUTCOME: ${{ needs.build.result }}
+        shell: bash
         run: |
-          /tmp/top5/bin/python - <<'PY'
-          from pathlib import Path
-          import json, subprocess
-          from PIL import Image,ImageDraw
-          root=Path('output/top5_review_light')
-          video=root/'TOP5_DOG_SELECTED_540x960.mp4'
-          if not video.is_file():
-              print('No selected review MP4; temporal evidence unavailable')
-          else:
-              frames=root/'temporal_2fps'
-              frames.mkdir(exist_ok=True)
-              subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',
-                  '-i',str(video),'-vf','fps=2,scale=180:320',
-                  str(frames/'frame_%03d.jpg')],check=True,timeout=120)
-              paths=sorted(frames.glob('frame_*.jpg'))[:60]
-              if len(paths)<58:
-                  raise RuntimeError('Temporal frame evidence incomplete')
-              canvas=Image.new('RGB',(180*10,345*6),'white')
-              draw=ImageDraw.Draw(canvas)
-              for i,p in enumerate(paths):
-                  x=(i%10)*180;y=(i//10)*345
-                  with Image.open(p) as im: canvas.paste(im.convert('RGB'),(x,y+25))
-                  draw.text((x+5,y+5),f'{i/2:.1f}s',fill='black')
-              canvas.save(root/'TOP5_TEMPORAL_60FRAME.jpg',quality=82)
-              (root/'TEMPORAL_REVIEW_STATUS.json').write_text(json.dumps({
-                  'frame_count':len(paths),'interval_seconds':0.5,
-                  'full_motion_review_complete':False,
-                  'audio_listening_review_complete':False,
-                  'editorial_score_100':None,
-                  'publication_approved':False,
-                  'known_risks':['hook and rank1 reuse same source footage',
-                      'rank5 weak/static puppy','rank4 distant dog in field',
-                      'metadata/motion proxies do not prove comedy'],
-                  'note':'Temporal sheet is visual sampling, not subjective approval'
-              },indent=2)+'\\n')
-          PY
-      - name: Upload temporal 60-frame evidence after it is generated
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: TOP5-DOG-TEMPORAL-EVIDENCE-${{ github.run_number }}
-          path: |
-            output/top5_review_light/TOP5_TEMPORAL_60FRAME.jpg
-            output/top5_review_light/TEMPORAL_REVIEW_STATUS.json
-            output/top5_review_light/temporal_2fps/
-          retention-days: 7
-          if-no-files-found: warn
-      - name: Upload lightweight video-only inspection artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: TOP5-DOG-LIGHT-REVIEW-${{ github.run_number }}
-          path: output/top5_review_light/
-          retention-days: 7
-          if-no-files-found: error
-      - name: Upload rendered MP4, original evidence and QA
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: V32-dog-render-and-QA-${{ github.run_number }}
-          path: |
-            output/v32_dog_final_candidate/
-            output/v32_dog_alternate_candidate_1/
-            output/v32_dog_alternate_candidate_2/
-            output/v32_dog_alternate_candidate_3/
-            output/dog_audition/DOG_AUDITION.json
-            output/dog_audition/ORIGINAL_SHA256_INVENTORY.json
-            output/dog_audition/*.mp4
-            output/v32_dog_final_candidate/dog_commons_*.webm
-            output/dog_audition/*.jpg
-            output/dog_audition/*.png
-          retention-days: 7
-          if-no-files-found: error
-      - name: Publish final run identity and selected MP4 SHA-256
-        if: always()
-        continue-on-error: true
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs=require('fs');
-            const crypto=require('crypto');
-            const {owner,repo}=context.repo;
-            const dest='review/latest/PRODUCTION_RUN.json';
-            const selected='output/v32_dog_final_candidate/TOP5_DOG_AUTO_SELECTED_1080x1920.mp4';
-            const applied='output/v32_dog_final_candidate/FEEDBACK_REPAIR_APPLIED.json';
-            const data={run_id:context.runId,run_number:context.runNumber,
-              workflow:context.workflow,trigger:context.eventName,source_sha:context.sha,
-              status:fs.existsSync(selected)?'MP4_CREATED_NEEDS_REVIEW':'MP4_NOT_CREATED',
-              run_url:`https://github.com/${owner}/${repo}/actions/runs/${context.runId}`,
-              selected_mp4_sha256:fs.existsSync(selected)?
-                crypto.createHash('sha256').update(fs.readFileSync(selected)).digest('hex'):null,
-              feedback:fs.existsSync(applied)?JSON.parse(fs.readFileSync(applied,'utf8')):null,
-              editorial_score_100:null,rights_verified:false,youtube_auto_upload:false};
-            let sha;
-            try {const old=await github.rest.repos.getContent({owner,repo,path:dest});sha=old.data.sha;}
-            catch(e){if(e.status!==404)throw e;}
-            await github.rest.repos.createOrUpdateFileContents({owner,repo,path:dest,sha,
-              content:Buffer.from(JSON.stringify(data,null,2)).toString('base64'),
-              message:'chore: publish final dog production evidence [skip ci]',
-              branch:context.payload.repository.default_branch});
-      - name: Upload independent run diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: TOP5-RUN-DIAGNOSTICS-${{ github.run_number }}
-          path: |
-            output/top5_diagnostics/
-            output/v32_dog_final_candidate/FEEDBACK_REPAIR_APPLIED.json
-            output/v32_dog_final_candidate/AUTO_SELECTION_VERDICT.json
-            output/v32_dog_final_candidate/AUTO_ALTERNATE_EDIT.json
-          retention-days: 14
-          if-no-files-found: warn
-      - name: Create or update GitHub issue on production failure
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const title = '[TOP5 automation] Production workflow failure';
-            const runUrl = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
-            const body = [
-              'The dog TOP5 workflow failed. This issue tracks the latest failure.',
-              '',
-              'Run: ' + runUrl,
-              'Commit: ${{ github.sha }}',
-              'Inspect the failed job logs before changing code.',
-              'Do not publish any review-only MP4.'
-            ].join('\\n');
-            const {owner,repo} = context.repo;
-            const issues = await github.paginate(github.rest.issues.listForRepo, {owner,repo,state:'open',per_page:100});
-            const prior = issues.find(x => !x.pull_request && x.title === title);
-            if (prior) {
-              await github.rest.issues.createComment({owner,repo,issue_number:prior.number,body});
-            } else {
-              await github.rest.issues.create({owner,repo,title,body});
-            }
+          set -euo pipefail
+          source_archive="$PWD/incoming/runs/$GITHUB_RUN_ID/attempt-$GITHUB_RUN_ATTEMPT"
+          if [[ ! -f "$source_archive/PRODUCTION_RUN.json" ]] || { [[ "$BUILD_OUTCOME" != success ]] && grep -q '"status": "SUCCESS"' "$source_archive/PRODUCTION_RUN.json"; }; then
+            work="$RUNNER_TEMP/dog-fallback-review"
+            python3 src/dog_run_evidence.py finalize "$RUNNER_TEMP/no-dog-output" "$work" \
+              "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_SHA" "$BUILD_OUTCOME" skipped
+            source_archive="$work/runs/$GITHUB_RUN_ID/attempt-$GITHUB_RUN_ATTEMPT"
+          fi
+          bash scripts/persist_dog_evidence.sh "$source_archive" \
+            "$RUNNER_TEMP/dog-evidence-branch" "$PWD/src/dog_run_evidence.py"
