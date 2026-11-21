@@ -1,0 +1,37 @@
+{
+  "status": "PREVIEW_READY",
+  "provider": "pixabay",
+  "candidates": [
+    {
+      "id": "PB-77534",
+      "source_url": "https://pixabay.com/videos/id-77534/",
+      "creator": "gammeholton84",
+      "license_url": "https://pixabay.com/service/license-summary/",
+      "rights_status": "UNVERIFIED",
+      "semantic_review": "UNVERIFIED",
+      "reviewed_frames": false,
+      "editorial_score": null,
+      "publication_approved": false,
+      "sha256": "225da89b135971cd76368affad021bb0185c24e57bf1512aaddd61a9b10e92dd",
+      "duration_sec": 7.146667,
+      "preview_file": "PB-77534_preview.mp4",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED"
+    },
+    {
+      "id": "PB-4740",
+      "source_url": "https://pixabay.com/videos/id-4740/",
+      "creator": "Coverr-Free-Footage",
+      "license_url": "https://pixabay.com/service/license-summary/",
+      "rights_status": "UNVERIFIED",
+      "semantic_review": "UNVERIFIED",
+      "reviewed_frames": false,
+      "editorial_score": null,
+      "publication_approved": false,
+      "sha256": "8448e7f4ec722ad46389f5e2fd2af7547efd5cceeea5843a216661deddc7a657",
+      "duration_sec": 14.6,
+      "preview_file": "PB-4740_preview.mp4",
+      "status": "PREVIEW_READY_REVIEW_REQUIRED"
+    }
+  ],
+  "publication_approved": false
+}

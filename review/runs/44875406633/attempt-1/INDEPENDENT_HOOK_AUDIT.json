@@ -1,0 +1,36 @@
+{
+  "status": "HOOK_RENDER_VERIFIED",
+  "independent_hook": true,
+  "editorial_action_verified": false,
+  "rights_verified": false,
+  "publication_approved": false,
+  "attempts": [
+    {
+      "stage": "hook",
+      "title": "가방 밖으로 뛰어내리는 강아지",
+      "start_sec": 4.17,
+      "mode": "independent_source",
+      "reason_code": null,
+      "status": "SELECTED"
+    }
+  ],
+  "hook_mode": "independent_source",
+  "sha256": "85e8e4ebbba9c3aecfb0badc5db502eceb03e03d088d31114a5668b763891d08",
+  "title": "가방 밖으로 뛰어내리는 강아지",
+  "source_page": "https://www.pexels.com/video/dog-jumping-out-of-a-bag-8473589/",
+  "source_start_sec": 4.17,
+  "source_end_sec": 5.77,
+  "reused_rank": null,
+  "ranked_cut_sec": null,
+  "rendered_video_sha256": "98aec0e358864babd018b3006bed7e9713f8dcb5dbc36a417383cd90a8566c98",
+  "rendered_hook_range_sec": [
+    0,
+    2
+  ],
+  "rendered_sample_times_sec": [
+    0.25,
+    1.0,
+    1.75
+  ],
+  "rendered_sample_sheet": "V32_RENDERED_HOOK_QA.jpg"
+}
