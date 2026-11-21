@@ -57,10 +57,16 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_reviewed_weak_windows.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
-      - name: Audition real dog footage using proven V37 cat source pipeline
-        run: /tmp/top5-topic/bin/python src/v37_dog_audition.py
       - name: Audit discovery and save failure evidence
         run: /tmp/top5-topic/bin/python src/topic_discovery_audit.py --topic "$TOPIC" --output output/topic_run/DISCOVERY_AUDIT.json
+      - name: Run dog-only visual source audition only if dog topic was actually selected
+        run: |
+          RESOLVED_TOPIC=$(/tmp/top5-topic/bin/python -c "import json; print(json.load(open('output/topic_run/DISCOVERY_AUDIT.json'))['topic'])")
+          if test "$RESOLVED_TOPIC" = dog_surprises; then
+            /tmp/top5-topic/bin/python src/v37_dog_audition.py
+          else
+            echo "Skipping dog-only audition for selected generic TOP5 topic: $RESOLVED_TOPIC"
+          fi
       - name: Verify external-source catalog validation
         run: |
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_v19_multisource_review.py' -v
