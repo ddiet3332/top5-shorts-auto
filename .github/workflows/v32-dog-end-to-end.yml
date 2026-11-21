@@ -140,6 +140,7 @@ jobs:
           restore-keys: |
             pixabay-dog-review-queue-v1-
       - name: Discover Pixabay dog candidates using existing repository secret
+        if: github.event_name != 'pull_request'
         id: pixabay_discovery
         timeout-minutes: 2
         env:
