@@ -83,6 +83,29 @@ class HumanStockFallbackTests(unittest.TestCase):
             save(render/"GENERIC_V06_QA.json",qa)
             self.assertFalse(assess_human_fallback(root,probe=stream_info)["technical_pass"])
 
+    def test_actual_pixabay_flamingos_dancing_are_not_a_human_dance_clip(self):
+        from top5_free_source_download import obvious_topic_mismatch
+        topic="놀라운 댄스 동작 TOP5"
+        self.assertTrue(obvious_topic_mismatch(
+            "flamingo, flamingos, birds, dancing, animals, pink, pond",topic))
+        self.assertTrue(obvious_topic_mismatch(
+            "puppy, dog, dancing, animals",topic))
+        self.assertFalse(obvious_topic_mismatch(
+            "girl, ballerina, dancing, dance, festival",topic))
+        self.assertFalse(obvious_topic_mismatch(
+            "couple, dancers, silhouette, dance off, street dancer",topic))
+
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            source,_=self.make_sources_and_video(root)
+            manifest=json.loads((source/"SOURCE_DOWNLOAD_QA.json").read_text())
+            manifest["sources"][4]["tags"]="flamingo, flamingos, birds, dancing, animals"
+            save(source/"SOURCE_DOWNLOAD_QA.json",manifest)
+            result=assess_human_fallback(root,probe=stream_info)
+            self.assertFalse(result["technical_pass"])
+            self.assertFalse(result["publication_approved"])
+            self.assertFalse((root/EXPORT_VIDEO).exists())
+
     def test_no_key_is_a_clear_source_blocker_not_a_fake_video(self):
         with tempfile.TemporaryDirectory() as td:
             with patch.dict(os.environ,{"PIXABAY_API_KEY":""}):
