@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import urllib.parse
 import urllib.request
+import urllib.error
 
 QUERIES = ("funny dog trick", "dog unexpected reaction", "playful dog")
 API = "https://api.pexels.com/videos/search"
@@ -59,7 +60,7 @@ def discover(api_key, *, fetch=None, per_page=8, max_results=18, excluded_ids=()
                 })
                 if len(candidates) >= max_results:
                     break
-        except (ValueError, OSError, TimeoutError) as exc:
+        except (ValueError, OSError, TimeoutError, urllib.error.HTTPError, urllib.error.URLError) as exc:
             errors.append({"query": query, "error": type(exc).__name__})
         if len(candidates) >= max_results:
             break
