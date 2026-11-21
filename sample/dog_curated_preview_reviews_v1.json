@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "review_kind": "source_hash_and_window_matched_preview_rejections",
+  "evidence_run_id": 44885553034,
+  "method": "Manual visual audit of four sampled frames at 0.3, 1.5, 2.9, 4.2 seconds from each actual five-second archived Pexels preview",
+  "scope": "Visual-only provisional editorial triage; no audio, third-party rights or monetization clearance",
+  "publication_approved": false,
+  "rejections": [
+    {
+      "id": "PX-33567553",
+      "provider": "pexels",
+      "source_sha256": "44e2e371c42446a68abd500bf38db7db80e8474fb1592bc8dd70150ddb436b05",
+      "reviewed_window_starts_sec": [4.0, 28.0],
+      "sampled_frame_offsets_sec": [0.3, 1.5, 2.9, 4.2],
+      "decision": "DO_NOT_REPLACE",
+      "review_notes": "Both actual five-second preview windows show a small dog steadily chewing or pulling colorful fabric from a ball-like toy. No distinct unexpected reversal is apparent; the crowded prop makes the action harder to read on a phone. This does not justify replacing rank 5.",
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false
+    },
+    {
+      "id": "PX-28860202",
+      "provider": "pexels",
+      "source_sha256": "2b6097a5c19df33208b855fee985820bf01b0d214ee94cf415fcc15209b1ea81",
+      "reviewed_window_starts_sec": [2.0],
+      "sampled_frame_offsets_sec": [0.3, 1.5, 2.9, 4.2],
+      "decision": "DO_NOT_REPLACE",
+      "review_notes": "Actual preview shows a dog run toward and jump into a lake, with a splash near the end. The dog is very small in a wide landscape composition and the action has a predictable payoff, so this preview does not improve rank 2.",
+      "rights_status": "UNVERIFIED",
+      "publication_approved": false
+    }
+  ]
+}
