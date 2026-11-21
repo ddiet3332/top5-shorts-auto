@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from top5_auto_v29 import CUT_LENGTHS
 
 ROOT=Path(__file__).resolve().parents[1]
 STORIES=ROOT/"review/top5_reviewed_action_stories.json"
@@ -41,7 +42,9 @@ def apply_reviewed_captions(topic,items,out,registry=STORIES):
             and row.get("title")==item.get("title")
             and row.get("source_page")==item.get("source_page")
             and row.get("sha256")==digest
-            and row.get("original_rank")==rank
+            # V50 source material was reviewed at a prior *rank*; this source
+            # can legitimately move to another rank after a weak cut veto.
+            and isinstance(row.get("original_rank"),int)
             and abs(float(row.get("start_sec",-999))-float(item.get("cut_start",-998)))
                 <=float(row.get("cut_tolerance_sec",0.12))
         ]
@@ -64,14 +67,32 @@ def apply_reviewed_captions(topic,items,out,registry=STORIES):
                 or any(not isinstance(x[1],str) or not x[1].strip()
                        or len(x[1])>38 for x in seq)):
                 raise ValueError("INVALID_REVIEWED_STORY_CAPTION")
-            # Do not overwrite stronger actual video-dependent edits for cats
-            # and never infer this model output is owner verified.
-            item["caption_sequence"]=seq
-            item["caption"]=seq[0][1]
+            # The new rank may last longer than the reviewed source window
+            # (e.g. Tonga 4s reviewed at rank3 becomes 6s at rank1).
+            # Slow down, NEVER extrapolate into unreviewed dark source frames.
+            # Preserve all source-frame-backed temporal words by scaling cues.
+            slot_seconds=list(CUT_LENGTHS.values())[index]
+            existing_speed=float(item.get("playback_rate",1.0))
+            if not math.isclose(existing_speed,1.0,abs_tol=1e-6):
+                raise ValueError("EXISTING_SPEED_REQUIRES_SEPARATE_SCENE_REVIEW")
+            speed=min(1.0,float(seconds)/float(slot_seconds))
+            if not math.isfinite(speed) or not .6 <=speed <=1.0:
+                raise ValueError("UNSUPPORTED_REVIEWED_SPEED")
+            timed=[[round(float(offset)/speed,2),str(words)]
+                   for offset,words in seq]
+            if slot_seconds-timed[-1][0]<.65:
+                raise ValueError("REVIEWED_CAPTION_OVERRUNS_NEW_SLOT")
+            item["playback_rate"]=speed
+            item["caption_sequence"]=timed
+            item["caption"]=timed[0][1]
             item["label"]=item.get("label") if item.get("label") not in (
                 "장면 내용 검수 필요","사물 장면 검수 필요","자연 장면 검수 필요",
                 "사람 장면 검수 필요") else "실제 장면 확인"
-            item["caption_source_review"]="EXACT_SHA_AND_CUT_35_PLUS_15_FRAMES"
+            item["caption_source_review"]="EXACT_SHA_CUT_AND_BOUNDED_SPEED_35_PLUS_15_FRAMES"
+            item["source_reviewed_end_sec"]=round(float(item["cut_start"])+float(seconds),3)
+            item["reviewed_source_original_rank"]=source_row["original_rank"]
+            item["observed_source_seconds"]=float(seconds)
+            item["rendered_rank_slot_seconds"]=slot_seconds
             item["action_story_fully_verified"]=False
             item["rights_verified"]=False
             item["publication_approved"]=False
@@ -79,7 +100,11 @@ def apply_reviewed_captions(topic,items,out,registry=STORIES):
         else:
             status="NO_EXACT_VERIFIED_CAPTION_RETAIN_REVIEW_LABEL"
         selected.append(item)
-        audit.append({"rank":rank,"title":item.get("title"),
+        audit.append({"rank":rank,"original_observed_rank":matches[0]["original_rank"] if matches else None,
+                      "rendered_slot_seconds":list(CUT_LENGTHS.values())[index],
+                      "source_playback_rate":item.get("playback_rate",1.0),
+                      "bounded_source_original_seconds":item.get("observed_source_seconds"),
+                      "title":item.get("title"),
                       "original_source_sha256":digest,"cut_start":item.get("cut_start"),
                       "status":status,"rights_verified":False,
                       "whole_action_and_humor_certified":False,"publication_approved":False})
