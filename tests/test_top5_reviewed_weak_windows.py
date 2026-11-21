@@ -48,6 +48,7 @@ class ReviewedWeakSceneTests(unittest.TestCase):
                   patch("top5_auto_v30.probe_duration",return_value=31.0),
                   patch("top5_auto_v30.motion_highlight",return_value=(weak["start_sec"],15)),
                   patch("top5_auto_v30.checked_scenes",return_value={}),
+                  patch("top5_auto_v30.apply_curated_cut_shift",side_effect=lambda title,at,dur:at),
                   patch("top5_auto_v30.reviewed_weak_window",
                         side_effect=lambda *args: reviewed_weak_window(*args,registry_path=registry))):
                 from top5_hook_selection import SourceShortage
