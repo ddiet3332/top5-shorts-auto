@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 
 from dog_replacement_gate import decide_replacements
+from dog_preview_review import load_preview_rejections, is_evidenced_rejection
 
 
 
@@ -90,7 +91,7 @@ def read_sample_reviewed_candidates(path):
     return candidates
 
 
-def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbent_review_path=None, reviewed_candidate_path=None) -> dict:
+def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbent_review_path=None, reviewed_candidate_path=None, preview_review_path=None) -> dict:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     audition = json.loads(audition_path.read_text(encoding="utf-8"))
     fixed = {label: spec for label, spec in profile["shots"].items()
@@ -113,6 +114,8 @@ def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbe
     reviewed_incumbents, baseline_blockers = incumbent_reviews(profile, incumbent_review_path)
     # Provider previews are only candidate discovery, never independent
     # rights clearance, verified comedy, or automatic rank assignments.
+    preview_rejections = load_preview_rejections(preview_review_path)
+    provider_rejected = []
     provider_auditions = []
     provider_ready = []
     provider_new = []
@@ -135,6 +138,10 @@ def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbe
                        "rights_status":item.get("rights_status","UNVERIFIED"),
                        "editorial_score":None,
                        "publication_approved":False}
+                if name == "pexels" and is_evidenced_rejection(item, preview_rejections):
+                    row["status"] = "PROVISIONAL_EDITORIAL_REJECTED"
+                    row["review_basis"] = "EXACT_SOURCE_SHA_AND_ALL_PREVIEW_WINDOWS"
+                    provider_rejected.append(row)
                 provider_auditions.append(row)
                 if row["status"]=="PREVIEW_READY_REVIEW_REQUIRED":
                     provider_ready.append(row)
@@ -156,6 +163,8 @@ def report(profile_path: Path, audition_path: Path, provider_reports=(), incumbe
         "visually_reviewed_candidate_ids_rights_pending": [
             row["id"] for row in visually_reviewed if row["rights_status"]!="CLEARED"],
         "provider_preview_count": len(provider_ready),
+        "provider_reviewed_rejected_count": len(provider_rejected),
+        "provider_reviewed_rejected_ids": [r["id"] for r in provider_rejected],
         "provider_preview_new_count": len(provider_new),
         "provider_preview_cached_count": len(provider_cached),
         "provider_preview_ids_pending_review": [r["id"] for r in provider_ready],
@@ -184,8 +193,9 @@ def main():
     p.add_argument("--provider-reports",type=Path,nargs="*",default=[])
     p.add_argument("--incumbent-review",type=Path,default=Path("sample/dog_incumbent_segment_review_v1.json"))
     p.add_argument("--reviewed-candidates",type=Path,default=Path("sample/dog_rank5_reviewed_candidates_v1.json"))
+    p.add_argument("--preview-reviews",type=Path,default=Path("sample/dog_curated_preview_reviews_v1.json"))
     a = p.parse_args()
-    result = report(a.profile, a.audition, a.provider_reports, a.incumbent_review, a.reviewed_candidates)
+    result = report(a.profile, a.audition, a.provider_reports, a.incumbent_review, a.reviewed_candidates, a.preview_reviews)
     a.output.parent.mkdir(parents=True, exist_ok=True)
     a.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("DOG_REPLACEMENT_STATUS", result["next_action"], flush=True)
