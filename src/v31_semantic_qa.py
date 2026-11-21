@@ -68,8 +68,51 @@ FALLBACK=[
  "A video of a cat walking slowly.",
  "A video of a room without cats."]
 
+# Deliberately conservative subject hypotheses from original filenames.
+# A matching *title* only defines a question for the model, never certifies
+# that the selected 6-second frames actually depict the described event.
+GENERIC_SCENES=[
+    (("waterfall","cascading","cascade"),[
+        "A video showing a natural waterfall flowing over a rocky edge.",
+        "A video showing a calm lake without a waterfall.",
+        "A video of a person walking in a city street.",
+        "A video of a dry landscape without water."]),
+    (("lightning",),[
+        "A video showing lightning flashes in a cloudy sky.",
+        "A video of a daytime sky with no lightning.",
+        "A video of a waterfall flowing over rocks.",
+        "A video of a city street with people walking."]),
+    (("volcano","eruption",),[
+        "A video showing a volcano or volcanic eruption seen from far away.",
+        "A video showing calm ocean water with no volcano.",
+        "A video of an indoor room with furniture.",
+        "A video of a regular cloudy sky without mountains."]),
+    (("domino",),[
+        "A video featuring domino tiles arranged or moving in a demonstration.",
+        "A video showing empty wooden furniture with no dominoes.",
+        "A video of people walking outdoors.",
+        "A video of ocean waves on a beach."]),
+    (("arduino",),[
+        "A video of an electronic Arduino device or electronic components.",
+        "A video of a forest with trees and no electronics.",
+        "A video of a cat moving indoors.",
+        "A video of ocean waves crashing."]),
+    (("acrobat","gymnast","performance","dance","skate"),[
+        "A video showing a person moving or performing a physical activity.",
+        "A video showing an empty stage with no people.",
+        "A video showing a dog playing outdoors.",
+        "A video of an empty street with no people."]),
+]
+
 def prompts_for(title,label):
     key=(title+" "+label).lower()
+    # Do not evaluate real object, nature, or human footage as cats.
+    if not any(k in key for k in ("cat","kitten","katz","chloé","moomin","larry","felis","dog","puppies","canine","hund","perro")):
+        for terms,arr in GENERIC_SCENES:
+            if any(term in key for term in terms):
+                return arr
+        # Explicit uncertainty is safer than a misleading cat-only verdict.
+        return None
     # Dog TOP5 must never be evaluated against cat-only prompts.
     if any(term in key for term in ("pexels dog","puppiesplaying","dog playing","dog jumping","dog running")):
         if "jump" in key:
@@ -148,7 +191,8 @@ def storyboard(ranks,path):
 def summary(flags):
     return {"relative_match":flags.count("RELATIVE_TEXT_VIDEO_MATCH_ONLY"),
             "possible_mismatch":flags.count("POSSIBLE_CAPTION_SCENE_MISMATCH"),
-            "needs_editorial_review":flags.count("INCONCLUSIVE_NEEDS_EDITORIAL_REVIEW"),
+            "needs_editorial_review":flags.count("INCONCLUSIVE_NEEDS_EDITORIAL_REVIEW") +
+                                     flags.count("UNSUPPORTED_SUBJECT_NEEDS_EDITORIAL_REVIEW"),
             "funny_outcome_certified":False,
             "copyright_and_licensing_cleared":False,
             "youtube_monetization_approved":False,
@@ -173,11 +217,20 @@ def main():
         frames=[take(args.video,t) for t in times]
         allframes.append((rank,frames))
         prompts=prompts_for(src["title"],src.get("label",""))
-        tokens=processor(text=prompts,videos=frames,return_tensors="pt",padding=True)
-        with torch.inference_mode():
-            logits=model(**tokens).logits_per_video[0]
-        probs=[round(float(x),5) for x in logits.softmax(dim=0).tolist()]
-        verdict=relative_verdict(probs)
+        if prompts is None:
+            # Filename/label insufficient for defensible scene hypothesis.
+            # Include its actual frames in storyboard, but no false model vote.
+            probs=[]
+            verdict={"flag":"UNSUPPORTED_SUBJECT_NEEDS_EDITORIAL_REVIEW",
+                     "expected_minus_best_alternative":0.0,
+                     "top_prompt_index":None,
+                     "no_calibrated_confidence":True}
+        else:
+            tokens=processor(text=prompts,videos=frames,return_tensors="pt",padding=True)
+            with torch.inference_mode():
+                logits=model(**tokens).logits_per_video[0]
+            probs=[round(float(x),5) for x in logits.softmax(dim=0).tolist()]
+            verdict=relative_verdict(probs)
         results.append({
          "rank":rank,"original_title":src["title"],
          "on_screen_label":src.get("label",""),

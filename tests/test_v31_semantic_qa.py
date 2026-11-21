@@ -22,6 +22,23 @@ class V31SemanticTests(unittest.TestCase):
             ("File:Larry the cat and Chloé playing (100111224612).webm","둘의 눈치싸움")]:
             self.assertEqual(len(prompts_for(name,label)),4)
         self.assertIn("bag",prompts_for("File:Cat in a Bag.webm","쇼핑백 점령")[0])
+    def test_generic_subjects_never_get_cat_only_prompts(self):
+        for title, expected in [
+            ("File:Side view video of Kawaida Waterfall cascading.webm", "waterfall"),
+            ("File:Lightning Storm in Rolla.webm", "lightning"),
+            ("File:Domino Stop Motion.webm", "domino"),
+            ("File:Arduino-blinkingLikeABouncingBall.ogv", "electronic"),
+            ("File:Acrobat Performance.mp4", "person"),
+        ]:
+            prompts=prompts_for(title,"장면 검수 필요")
+            self.assertEqual(len(prompts), 4)
+            self.assertIn(expected, prompts[0].lower())
+        # A filename alone cannot prove which action the 6s interval shows.
+        self.assertIsNone(prompts_for("File:Unrecognized Video.webm", "장면 검수 필요"))
+        s=summary(["UNSUPPORTED_SUBJECT_NEEDS_EDITORIAL_REVIEW"])
+        self.assertEqual(s["needs_editorial_review"], 1)
+        self.assertFalse(s["publication_approved"])
+
     def test_non_calibrated_decisions(self):
         self.assertEqual(relative_verdict([.2,.6,.1,.1])["flag"],
                          "POSSIBLE_CAPTION_SCENE_MISMATCH")
