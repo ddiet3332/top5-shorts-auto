@@ -94,6 +94,7 @@ class GenericWeakWindowTests(unittest.TestCase):
                   patch.object(production, "select_start", return_value=0),
                   patch.object(production, "motion", return_value={"peak_change": 15, "mean_change": 5, "sample_count": 24}),
                   patch.object(production, "frame_signature", side_effect=lambda p, t: (int(Path(p).stem.split("_")[-1]), 120)),
+                  patch.object(production, "similar_frames", return_value=False),
                   patch.object(production, "reviewed_weak_generic_window", side_effect=scoped_gate)):
                 result = dl.inspect(
                     "fake-key",
