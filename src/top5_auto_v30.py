@@ -35,6 +35,8 @@ PROMOTED={
 }
 MIN_STRONG=50
 MAX_DOWNLOADS=15
+NATURE_MAX_DOWNLOAD_ATTEMPTS=32  # V54: 44 eligible metadata rows, only first 15 checked
+OBJECT_MAX_DOWNLOAD_ATTEMPTS=23
 
 def checked_scenes():
     # Prior real-frame editorial evidence can guide later automatic reranks.
@@ -223,7 +225,11 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
     attempts=[]
     seen=set()
     provider_failure_streak=0
-    for idx,src in enumerate(candidates[:23 if (topic or {}).get("category")=="사물" else MAX_DOWNLOADS],1):
+    category=(topic or {}).get("category")
+    candidate_limit=(NATURE_MAX_DOWNLOAD_ATTEMPTS if category=="자연"
+                     else OBJECT_MAX_DOWNLOAD_ATTEMPTS if category=="사물"
+                     else MAX_DOWNLOADS)
+    for idx,src in enumerate(candidates[:candidate_limit],1):
         suffix=Path(src["title"]).suffix.lower()
         if suffix not in (".webm",".mp4",".ogv"):
             attempts.append({"title":src["title"],"status":"REJECTED","reason_code":"UNSUPPORTED_CONTAINER"})
@@ -318,6 +324,35 @@ def select_sources(candidates,out,*,topic=None,with_hook=False,reserve_pool=None
                 diversified=accepted
             if len(diversified)>=5:
                 break
+    # V55: publish the ACTUAL breadth of attempted source screening. Metadata
+    # discovery is not an original-video audition; exhausting the 15-row cap
+    # had incorrectly been described as exhausting nature footage.
+    distinct_types=(
+        sorted({nature_event_family(x["title"]) for x in accepted
+                if nature_event_family(x["title"])})
+        if category=="자연" else [])
+    stopped_after_provisional_success=(
+        len(attempts)<min(len(candidates),candidate_limit))
+    span_report={
+        "schema_version":1,
+        "topic_id":(topic or {}).get("topic_id"),
+        "metadata_candidate_count":len(candidates),
+        "candidate_screening_budget":candidate_limit,
+        "attempted_candidate_count":len(attempts),
+        "uninspected_metadata_candidates":max(0,len(candidates)-len(attempts)),
+        "accepted_source_window_count":len(accepted),
+        "distinct_known_nature_event_family_count":len(distinct_types),
+        "distinct_known_nature_event_families":distinct_types,
+        "provisional_selection_stopped_early":stopped_after_provisional_success,
+        "provider_error_candidate_count":sum(
+            a.get("status")=="TEMPORARY_PROVIDER_ERROR" for a in attempts),
+        "provider_circuit_breaker_tripped":provider_failure_streak>=3,
+        "remaining_metadata_not_conclusive_inventory":True,
+        "source_rights_verified":False,
+        "editorial_score_100":None,"publication_approved":False,
+    }
+    (Path(out)/"V30_SOURCE_SCREENING_SPAN_QA.json").write_text(
+        json.dumps(span_report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     if len(accepted)<5:
         out=Path(out)
         (out/"V30_CANDIDATES.json").write_text(
