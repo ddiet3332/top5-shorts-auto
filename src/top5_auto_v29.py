@@ -236,7 +236,7 @@ def build_dynamic_subtitles(path,topic,items,*,moving_ending=False,hook_caption=
         caption=str(clip.get("caption") or "")
         if caption and not re.search(r"[A-Za-z]",caption):
             return caption[:12]
-        return "강아지 순간 포착"
+        return "장면 검수 필요"
     rank_titles={5-i:display_rank_name(clip) for i,clip in enumerate(items)}
     # Hook intentionally does not reveal which rank its footage belongs to.
     positions={"hook":None,"rank5":5,"rank4":4,"rank3":3,"rank2":2,"rank1":1}
