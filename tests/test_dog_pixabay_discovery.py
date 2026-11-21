@@ -1,10 +1,20 @@
 import sys
 import unittest
+import urllib.error
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
 from dog_pixabay_discovery import discover_pixabay
 
 class PixabayDiscoveryTests(unittest.TestCase):
+    def test_all_http_failures_are_not_source_shortage(self):
+        def fail(_url):
+            raise urllib.error.HTTPError("https://pixabay.com/api/videos/", 403, "Forbidden", {}, None)
+        result=discover_pixabay("mock",fetch=fail)
+        self.assertEqual(result["status"],"API_REQUEST_FAILED")
+        self.assertEqual(len(result["errors"]),3)
+        self.assertTrue(all(item["http_status"]==403 for item in result["errors"]))
+        self.assertFalse(result["publication_approved"])
+
     def test_missing_key(self):
         self.assertEqual(discover_pixabay("")["status"],"NO_API_KEY")
     def test_unique_and_unverified(self):
