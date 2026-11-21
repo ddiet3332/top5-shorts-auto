@@ -133,6 +133,48 @@ class ReportTests(unittest.TestCase):
             self.assertTrue(all(x["status"]=="NO_UPGRADE" for x in result["decisions"]))
             self.assertFalse(result["publication_approved"])
 
+    def test_actual_rank5_visual_78_is_blocked_by_rights_not_shortage(self):
+        from dog_replacement_report import read_sample_reviewed_candidates
+        root=Path(__file__).resolve().parents[1]
+        reviewed=root/"sample/dog_rank5_reviewed_candidates_v1.json"
+        incumbent=root/"sample/dog_incumbent_segment_review_v1.json"
+        profile=root/"sample/dog_editorial_profile_v1.json"
+        visual=read_sample_reviewed_candidates(reviewed)
+        self.assertEqual(len(visual),1)
+        self.assertEqual(visual[0]["editorial_score"],78)
+        self.assertEqual(visual[0]["rights_status"],"UNVERIFIED")
+        with tempfile.TemporaryDirectory() as tmp:
+            empty=Path(tmp)/"old.json"
+            empty.write_text(json.dumps({"candidates":[]}))
+            result=report(profile,empty,incumbent_review_path=incumbent,
+                          reviewed_candidate_path=reviewed)
+        self.assertEqual(result["candidate_count"],1)
+        self.assertEqual(result["incumbent_review_scores"],{"rank5":55,"rank2":72})
+        self.assertEqual(result["visually_reviewed_candidate_ids_rights_pending"],
+                         ["PX-5263686"])
+        self.assertEqual(result["decisions"][0]["reason"],"RIGHTS_REVIEW_REQUIRED")
+        self.assertEqual(result["decisions"][0]["source_id"],"PX-9006741")
+        self.assertEqual(result["decisions"][1]["reason"],"EDITORIAL_SOURCE_SHORTAGE")
+        self.assertEqual(result["next_action"],"RIGHTS_REVIEW_REQUIRED_FOR_RANK5")
+        self.assertFalse(result["publication_approved"])
+        self.assertIsNone(result["editorial_score"])
+
+    def test_tampered_rank5_manifest_rejected_instead_of_approving(self):
+        from dog_replacement_report import read_sample_reviewed_candidates
+        original=Path(__file__).resolve().parents[1]/"sample/dog_rank5_reviewed_candidates_v1.json"
+        data=json.loads(original.read_text())
+        for field,value in (("rights_status","CLEARED"),
+                            ("editorial_score",99),
+                            ("publication_approved",True),
+                            ("sha256","a"*64)):
+            copy=json.loads(json.dumps(data))
+            copy["candidates"][0][field]=value
+            with tempfile.TemporaryDirectory() as tmp:
+                file=Path(tmp)/"tampered.json"
+                file.write_text(json.dumps(copy))
+                with self.subTest(field=field),self.assertRaises(ValueError):
+                    read_sample_reviewed_candidates(file)
+
     def test_unreviewed_candidates_do_not_upgrade(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
