@@ -15,7 +15,7 @@ from v12_pexels_audition import make_five_second_preview, safe_failure_code
 API = "https://pixabay.com/api/videos/"
 
 def download_pixabay(video_id, api_key, destination, *, max_bytes=35*1024*1024, fetch=None, opener=None):
-    if not api_key or not isinstance(video_id,int) or video_id<=0:
+    if not api_key or not isinstance(video_id,int) or isinstance(video_id,bool) or video_id<=0:
         raise ValueError("INVALID_PIXABAY_REQUEST")
     if fetch is None:
         def fetch(url):
@@ -43,6 +43,9 @@ def download_pixabay(video_id, api_key, destination, *, max_bytes=35*1024*1024, 
         if final.scheme!="https" or not final.hostname or not (
                 final.hostname=="pixabay.com" or final.hostname.endswith(".pixabay.com")):
             raise ValueError("UNTRUSTED_VIDEO_REDIRECT")
+        media_type=response.headers.get("Content-Type","").lower()
+        if media_type and not (media_type.startswith("video/") or media_type.startswith("application/octet-stream")):
+            raise ValueError("NOT_VIDEO_RESPONSE")
         declared=response.headers.get("Content-Length")
         if declared and int(declared)>max_bytes:
             raise ValueError("FILE_TOO_LARGE")
