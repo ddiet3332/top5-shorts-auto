@@ -124,8 +124,8 @@ jobs:
         env:
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
         run: |
-          python src/dog_pixabay_audition.py \\
-            --discovery output/dog/DOG_PIXABAY_CANDIDATES.json \\
+          python src/dog_pixabay_audition.py \
+            --discovery output/dog/DOG_PIXABAY_CANDIDATES.json \
             --output output/dog/pixabay_audition
       - name: Archive Pixabay review previews
         if: always() && github.event_name != 'pull_request'
