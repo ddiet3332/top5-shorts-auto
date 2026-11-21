@@ -15,7 +15,7 @@ from top5_hook_selection import SourceShortage
 class ObjectEditorialDiversityTests(unittest.TestCase):
     def test_three_real_domino_ranks_against_two_other_mechanisms_are_blocked(self):
         labels=[
-            "File:Domino Roach 2024.webm",
+            "File:Domino Stop Motion.webm",
             'File:Efectul domino cu cărți la Biblioteca Centrală.webm',
             "File:Domino collapse at PAX 2009.ogv",
             "File:Arduino-blinkingLikeABouncingBall.ogv",
