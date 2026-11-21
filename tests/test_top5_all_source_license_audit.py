@@ -92,6 +92,45 @@ class AllVisualSourceRightsTests(unittest.TestCase):
         self.assertEqual(x["share_alike_legal_review_roles"],["rank_2"])
         self.assertFalse(x["youtube_reused_content_monetization_verified"])
 
+    def test_all_five_other_topic_sources_get_provisional_metadata_not_false_licence_clearance(self):
+        # V48 real nature run #44920949507 had 0/5 catalogue observations,
+        # but V37 already contains author/licence *provider claims* for 5 ranks.
+        v37=["# Publication gates"]
+        for i,row in enumerate(self.rank):
+            v37.extend([f"## {row['rank']}위: 자연 장면",
+                f"- Source: {row['source_page']}",
+                f"- Credited author: Metadata Creator {i}",
+                "- Source licence: CC BY 4.0",
+                "- Licence URL: https://creativecommons.org/licenses/by/4.0/",
+                "- Rights not independently verified.",""])
+        (self.root/"V37_ATTRIBUTION_AND_PUBLISH_GATES.md").write_text("\n".join(v37))
+        write(self.catalog,{"sources":[]})
+        result=audit(self.root,self.catalog)
+        self.assertEqual(result["source_page_metadata_observed_count"],0)
+        self.assertEqual(result["upstream_provider_metadata_unverified_count"],5)
+        self.assertEqual(result["unobserved_source_roles"],
+                         ["rank_5","rank_4","rank_3","rank_2","rank_1","hook_0_2sec"])
+        self.assertFalse(result["publication_approved"])
+        self.assertIn("Metadata Creator 0",
+            (self.root/"TOP5_SOURCE_CREDITS_COPY_DRAFT_KO.md").read_text())
+        self.assertIn("미검증",
+            (self.root/"TOP5_SOURCE_CREDITS_COPY_DRAFT_KO.md").read_text())
+
+    def test_independent_hook_gets_provisional_credit_from_existing_source_credits(self):
+        (self.root/"SOURCE_CREDITS_REVIEW.md").write_text(
+            "## 시작 훅\n"
+            "- 원본 · https://example.org/footage/hook\n"
+            "- 제작자 · Trougnouf\n"
+            "- 표시 라이선스 · CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)\n")
+        write(self.catalog,{"sources":[]})
+        result=audit(self.root,self.catalog)
+        self.assertEqual(result["upstream_provider_metadata_unverified_count"],1)
+        hook=result["items"][-1]
+        self.assertEqual(hook["role"],"hook_0_2sec")
+        self.assertEqual(hook["creator"],"Trougnouf")
+        self.assertEqual(hook["licence_data_status"],"UPSTREAM_METADATA_UNVERIFIED")
+        self.assertFalse(hook["publication_approved"])
+
     def test_missing_hook_is_rejected_not_five_rights_approved(self):
         (self.root/"INDEPENDENT_HOOK_AUDIT.json").unlink()
         with self.assertRaises(FileNotFoundError):
