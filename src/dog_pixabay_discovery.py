@@ -55,7 +55,10 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
             errors.append({"query":query,"error":type(exc).__name__})
         if len(rows)>=max_results:
             break
-    return {"status":"CANDIDATES_FOUND" if rows else "SOURCE_SHORTAGE",
+    status = ("CANDIDATES_FOUND" if rows else
+              "API_REQUEST_FAILED" if errors and len(errors) == len(QUERIES) else
+              "SOURCE_SHORTAGE")
+    return {"status":status,
             "provider":"pixabay","candidates":rows,"errors":errors,"publication_approved":False}
 
 def main():
@@ -77,6 +80,8 @@ def main():
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("PIXABAY_DISCOVERY",result["status"],"count",len(result["candidates"]))
+    for issue in result.get("errors", []):
+        print("PIXABAY_REQUEST_ERROR",issue.get("query"),issue.get("error"),issue.get("http_status","unknown"))
 
 if __name__=="__main__":
     main()
