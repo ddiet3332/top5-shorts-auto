@@ -7,6 +7,14 @@ on:
       - 'src/topic_discovery_audit.py'
       - 'tests/test_topic_discovery_audit.py'
       - 'tests/test_top5_topic_workflow_policy.py'
+      - 'src/top5_auto_v30.py'
+      - 'src/top5_auto_v29.py'
+      - 'src/top5_auto_v32.py'
+      - 'src/top5_artifact_resolver.py'
+      - 'src/v31_semantic_qa.py'
+      - 'tests/test_top5_generic_label_safety.py'
+      - 'tests/test_top5_artifact_resolver.py'
+      - 'tests/test_v31_semantic_qa.py'
   push:
     branches: [main]
     paths:
@@ -15,6 +23,14 @@ on:
       - 'src/topic_discovery_audit.py'
       - 'tests/test_topic_discovery_audit.py'
       - 'tests/test_top5_topic_workflow_policy.py'
+      - 'src/top5_auto_v30.py'
+      - 'src/top5_auto_v29.py'
+      - 'src/top5_auto_v32.py'
+      - 'src/top5_artifact_resolver.py'
+      - 'src/v31_semantic_qa.py'
+      - 'tests/test_top5_generic_label_safety.py'
+      - 'tests/test_top5_artifact_resolver.py'
+      - 'tests/test_v31_semantic_qa.py'
 permissions:
   contents: read
 jobs:
@@ -34,4 +50,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
           python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
+          python -m unittest discover -s tests -p 'test_top5_generic_label_safety.py' -v
+          python -m unittest discover -s tests -p 'test_top5_artifact_resolver.py' -v
+          python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
 # This CI only validates routing. Full videos and rights review are separate.
