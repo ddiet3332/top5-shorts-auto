@@ -26,6 +26,8 @@ on:
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_object_diversity.py'
       - 'src/top5_standard_scene_review.py'
+      - 'src/top5_smolvlm2_editorial.py'
+      - 'tests/test_top5_smolvlm2_editorial.py'
       - 'tests/test_top5_standard_scene_review.py'
       - 'tests/test_top5_candidate_visual_gate.py'
       - 'sample/top5_auto_topics_v30.json'
@@ -64,6 +66,7 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_standard_scene_review.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
       - name: Audit discovery and save failure evidence
