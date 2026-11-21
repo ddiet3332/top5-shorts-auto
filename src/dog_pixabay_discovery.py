@@ -120,7 +120,7 @@ def main():
           "cache",result.get("cache_status","DISABLED"))
     if args.cache_file and os.environ.get("GITHUB_OUTPUT"):
         with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as stream:
-            stream.write("fetched="+str(result.get("cache_status")=="REFRESHED").lower()+"\\n")
+            stream.write("fetched="+str(result.get("cache_status")=="REFRESHED").lower()+"\n")
     for issue in result.get("errors", []):
         print("PIXABAY_REQUEST_ERROR",issue.get("query"),issue.get("error"),issue.get("http_status","unknown"))
 
