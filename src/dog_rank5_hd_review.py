@@ -45,7 +45,7 @@ def render_vertical(source: Path, destination: Path, *, start: float, seconds: f
     # Retains natural action speed and minimizes fake enlargements.
     filtergraph=(
         "scale=-2:1920:flags=lanczos,"
-        "crop=1080:1920:(iw-ow)/2+(iw-ow)*0.115*(1+tanh((t-3.2)*1.6)):0,"
+        "crop=1080:1920:(iw-ow)/2+(iw-ow)*0.06*(1+tanh((t-3.85)*3.1)):0,"
         "drawbox=x=0:y=0:w=iw:h=70:color=black@0.78:t=fill,"
         "drawtext=text='REVIEW ONLY - RANK 5':x=(w-text_w)/2:y=20:"
         "fontsize=30:fontcolor=white,"
@@ -91,7 +91,7 @@ def create_review(manifest_path, output, *, downloader=None, renderer=None, veri
     renderer=renderer or render_vertical
     verifier=verifier or verify_video
     row={"id":item["id"],"rank":"rank5","provider":"pexels",
-         "crop_approach":"SMOOTH_RIGHT_PAN_AFTER_2_5S",
+         "crop_approach":"DELAYED_GENTLE_RIGHT_PAN_AFTER_3_4S",
          "source_url":item["page_url"],"source_original_sha256":None,
          "original_matches_prior_download":None,
          "review_video_file":None,"render_from_original":False,
