@@ -41,7 +41,7 @@ def screen_catalog(path):
         if sid in ids:
             raise ValueError("DUPLICATE_MIXKIT_SOURCE")
         ids.add(sid)
-        if (page.scheme!="https" or page.hostname!="mixkit.co" or page.query or page.fragment
+        if (page.scheme!="https" or page.netloc!="mixkit.co" or page.query or page.fragment
             or not re.fullmatch(r"/free-stock-video/[a-z0-9-]+-"+sid[3:]+r"/?", page.path)):
             raise ValueError("UNTRUSTED_MIXKIT_PAGE")
         if row.get("rank_target") not in ("rank5","rank2"):
