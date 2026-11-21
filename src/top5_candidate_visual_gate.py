@@ -77,23 +77,72 @@ def inspect_original_window(path: Path, start: float, *, timeout_sec: int = 32) 
     return raw_grayscale_luminance(output)
 
 
-def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[list[dict], list[dict]]:
-    """Distinct named nature landmarks before final five-rank selection.
+def nature_event_family(title: str) -> str | None:
+    """Recognize broad event classes from filename terms, NEVER the video pixels."""
+    text = re.sub(r"(?i)^file:", "", str(title)).casefold()
+    for pattern, family in (
+        (r"\bgeyser\b", "geyser"),
+        (r"\bvolcan(?:o|ic)\b|\beruption\b", "volcano"),
+        (r"\bflood(?:ing|s|ed)?\b", "flood"),
+        (r"\bwaterfalls?\b|\bcascade\b", "waterfall"),
+        (r"\blightning\b|\bthunder(?:storm)?\b", "lightning"),
+        (r"\baurora\b|\bnorthern lights\b", "aurora"),
+        (r"\btornado\b|\btwister\b", "tornado"),
+        (r"\bavalanche\b|\bsnow slide\b", "avalanche"),
+        (r"\bglacier\b", "glacier"),
+        (r"\bocean\b|\bsurf\b|\bwave\b", "waves"),
+        (r"\bhail\b", "hail"),
+        (r"\bcloud\b", "cloud"),
+    ):
+        if re.search(pattern, text):
+            return family
+    return None
 
-    Unknown location is NOT invented. Reject duplicate named-site candidates
-    rather than passing a visually redundant, editorially unverified rank.
+
+def diverse_scene_selection(rows: list[dict], *, required: int = 5) -> tuple[list[dict], list[dict]]:
+    """Diversify five ranked scenes by BOTH named site and broad event type.
+
+    First prefer distinct event families. Only when insufficient, accept a
+    *second* scene of the same type at a different named location. Never fill
+    three ranks with one event family or two with the same named landmark.
+    Metadata keys are hints, not independently verified visual semantics.
     """
-    chosen, duplicate_sites = [], []
-    used = set()
-    for row in rows:
-        key = named_nature_site(row["title"])
-        if key and key in used:
-            duplicate_sites.append({"title": row["title"], "site_key": key,
-                                    "reason_code": "REPEATED_NAMED_NATURE_SITE"})
-            continue
-        chosen.append(row)
-        if key:
-            used.add(key)
+    chosen = []
+    used_ids = set()
+    used_sites = set()
+    family_count = {}
+    for pass_no in (1, 2):
+        for index, row in enumerate(rows):
+            if index in used_ids:
+                continue
+            site = named_nature_site(row["title"])
+            family = nature_event_family(row["title"])
+            if site and site in used_sites:
+                continue
+            if family and family_count.get(family, 0) >= pass_no:
+                continue
+            chosen.append(row)
+            used_ids.add(index)
+            if site:
+                used_sites.add(site)
+            if family:
+                family_count[family] = family_count.get(family, 0) + 1
+            if len(chosen) >= required:
+                break
         if len(chosen) >= required:
             break
-    return chosen, duplicate_sites
+    excluded = []
+    for index, row in enumerate(rows):
+        if index in used_ids:
+            continue
+        site = named_nature_site(row["title"])
+        family = nature_event_family(row["title"])
+        if site and site in used_sites:
+            reason = "REPEATED_NAMED_NATURE_SITE"
+        elif family and family_count.get(family, 0) >= 2:
+            reason = "REPEATED_NATURE_EVENT_FAMILY"
+        else:
+            reason = "LOWER_PRIORITY_OR_SAME_EVENT_REVIEW"
+        excluded.append({"title": row["title"], "site_key": site,
+                         "event_family": family, "reason_code": reason})
+    return chosen, excluded
