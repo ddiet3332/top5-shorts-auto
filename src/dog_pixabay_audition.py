@@ -121,6 +121,28 @@ def recover_cached_previews(output, rejected_ids):
     return ready[:12]
 
 
+def resume_cached_pixabay_queue(output, rejection_file=Path("sample/dog_editorial_rejections_v1.json")):
+    """Refresh review metadata from local previews without any network request."""
+    output = Path(output)
+    output.mkdir(parents=True, exist_ok=True)
+    rejected = load_provisional_rejections(rejection_file)
+    recovered = recover_cached_previews(output, rejected)
+    allowed = {row["id"] for row in recovered}
+    for preview in output.glob("PB-*_preview.mp4"):
+        if preview.stem.removesuffix("_preview") not in allowed:
+            preview.unlink(missing_ok=True)
+    result = {
+        "status": "PREVIEW_READY" if recovered else "NO_PREVIEW",
+        "provider": "pixabay", "candidates": recovered,
+        "new_preview_count": 0, "cached_preview_count": len(recovered),
+        "skipped_provisionally_rejected_ids": sorted(rejected),
+        "publication_approved": False
+    }
+    (output/"DOG_PIXABAY_AUDITION_RESULTS.json").write_text(
+        json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    return result
+
+
 def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None,previewer=None,media_index=None,rejection_file=Path("sample/dog_editorial_rejections_v1.json")):
     if not 0<=max_items<=6:
         raise ValueError("MAX_ITEMS_EXCEEDED")
@@ -213,10 +235,14 @@ def main():
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("--media-index",type=Path)
     parser.add_argument("--rejection-file",type=Path,default=Path("sample/dog_editorial_rejections_v1.json"))
+    parser.add_argument("--reuse-cached-only",action="store_true")
     args=parser.parse_args()
-    media_index=json.loads(args.media_index.read_text(encoding="utf-8")) if args.media_index else None
-    result=audition_pixabay(args.discovery,args.output,os.environ.get("PIXABAY_API_KEY",""),
-                           media_index=media_index,rejection_file=args.rejection_file)
+    if args.reuse_cached_only:
+        result=resume_cached_pixabay_queue(args.output,args.rejection_file)
+    else:
+        media_index=json.loads(args.media_index.read_text(encoding="utf-8")) if args.media_index else None
+        result=audition_pixabay(args.discovery,args.output,os.environ.get("PIXABAY_API_KEY",""),
+                               media_index=media_index,rejection_file=args.rejection_file)
     print("PIXABAY_AUDITION",result["status"],len(result["candidates"]))
 
 if __name__=="__main__":
