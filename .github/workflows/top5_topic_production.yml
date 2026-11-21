@@ -26,6 +26,8 @@ on:
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_object_diversity.py'
       - 'src/top5_standard_scene_review.py'
+      - 'src/top5_original_frame_evidence.py'
+      - 'tests/test_top5_original_frame_evidence.py'
       - 'src/top5_smolvlm2_editorial.py'
       - '.github/workflows/top5_v38_vlm_scene_audit.yml'
       - 'tests/test_top5_smolvlm2_editorial.py'
@@ -67,6 +69,7 @@ jobs:
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_candidate_visual_gate.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_object_diversity.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_standard_scene_review.py' -v
+          /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_original_frame_evidence.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_top5_topic_workflow_policy.py' -v
           /tmp/top5-topic/bin/python -m unittest discover -s tests -p 'test_topic_discovery_audit.py' -v
@@ -93,6 +96,8 @@ jobs:
         run: ffmpeg -hide_banner -v error -xerror -i output/topic_run/TOP5_AUTO_V29_REVIEW_1080x1920.mp4 -map 0:v:0 -map 0:a:0 -f null -
       - name: Inspect 35 real ranked MP4 frames and 3 opening hook samples
         run: /tmp/top5-topic/bin/python src/top5_standard_scene_review.py --output output/topic_run
+      - name: Capture 15 actual ORIGINAL source frames before composited TOP5 captions
+        run: /tmp/top5-topic/bin/python src/top5_original_frame_evidence.py --output output/topic_run
       - name: Export review MP4 and rights evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -105,6 +110,7 @@ jobs:
             output/topic_run/*.json
             output/topic_run/*.md
             output/topic_run/*.jpg
+            output/topic_run/V40_ORIGINAL_SOURCE_FRAMES/*.jpg
           retention-days: 7
           if-no-files-found: warn
 # Publication is intentionally disabled; source licensing and YPP require separate review.
