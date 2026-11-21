@@ -9,22 +9,55 @@
     "mobile_readability": 15,
     "distinctness": 10
   },
-  "note": "Only set reviewed_frames:true and breakdown points after actually watching and verifying the exact original clip or its derived five-second rank segment. Score only after real review; no automatic promotion or rights clearance.",
+  "note": "Scores are an editorial VISUAL-ONLY assessment of 15 sampled frames from each rank's exact rendered five-second segment; not a full-video 100pt score, audio/right clearance, or publication approval.",
   "publication_approved": false,
   "ranks": {
     "rank5": {
       "source_id": "PX-9006741",
-      "reviewed_frames": false,
-      "frame_timestamps_sec": [],
-      "review_notes": null,
-      "points": null
+      "reviewed_frames": true,
+      "frame_timestamps_sec": [
+        2.11,
+        2.75,
+        3.71,
+        4.67,
+        5.31,
+        5.95,
+        6.59
+      ],
+      "review_notes": "The dog crouches then repeatedly leaps upward in a fenced yard (2.1–6.6s). The visible action is clear but predictable; no distinct comic reversal is apparent and the dog's head nears the crop edge. Subjective visual-only per-segment rubric.",
+      "points": {
+        "visible_action": 20,
+        "comedic_surprise": 8,
+        "setup_payoff_timing": 12,
+        "mobile_readability": 10,
+        "distinctness": 5
+      }
     },
     "rank2": {
       "source_id": "PX-7515923",
-      "reviewed_frames": false,
-      "frame_timestamps_sec": [],
-      "review_notes": null,
-      "points": null
+      "reviewed_frames": true,
+      "frame_timestamps_sec": [
+        17.11,
+        18.39,
+        19.35,
+        19.99,
+        20.31,
+        20.63,
+        20.95,
+        21.59
+      ],
+      "review_notes": "The seated dog waits against a plain blue background, rises at 19.9s and catches a green toy at 20.3–20.6s, then trots toward camera. A readable payoff but limited comedic surprise and a long initial setup. Subjective visual-only per-segment rubric.",
+      "points": {
+        "visible_action": 23,
+        "comedic_surprise": 13,
+        "setup_payoff_timing": 15,
+        "mobile_readability": 14,
+        "distinctness": 7
+      }
     }
-  }
+  },
+  "evidence_run_id": 44880585842,
+  "evidence_video_sha256": "98aec0e358864babd018b3006bed7e9713f8dcb5dbc36a417383cd90a8566c98",
+  "review_method": "15 frames sampled per 5-second segment directly from production-rendered H.264 MP4, verified SHA256; visual observation only, no full audio audition",
+  "audio_reviewed": false
 }
