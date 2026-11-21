@@ -17,7 +17,10 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
         raise ValueError("DISCOVERY_LIMIT_EXCEEDED")
     if fetch is None:
         def fetch(url):
-            with urllib.request.urlopen(url, timeout=18) as response:
+            req=urllib.request.Request(url,headers={
+                "Accept":"application/json",
+                "User-Agent":"TOP5-Editorial-Review/1.0"})
+            with urllib.request.urlopen(req, timeout=18) as response:
                 return json.load(response)
     seen = set(str(x) for x in excluded_ids)
     rows, errors = [], []
