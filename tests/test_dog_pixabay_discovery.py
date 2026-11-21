@@ -52,7 +52,7 @@ class PixabayDiscoveryTests(unittest.TestCase):
         self.assertEqual(discover_pixabay("")["status"],"NO_API_KEY")
     def test_unique_and_unverified(self):
         hit={"id":123,"duration":9,"pageURL":"https://pixabay.com/videos/test-123/",
-             "user":"creator","videos":{"medium":{"url":"https://cdn.pixabay.com/video.mp4","width":720,"height":1280}}}
+             "user":"creator","tags":"dog, puppy, funny","videos":{"medium":{"url":"https://cdn.pixabay.com/video.mp4","width":720,"height":1280}}}
         result=discover_pixabay("mock",fetch=lambda url:{"hits":[hit]})
         self.assertEqual(len(result["candidates"]),1)
         self.assertEqual(result["candidates"][0]["id"],"PB-123")
@@ -70,6 +70,17 @@ class PixabayDiscoveryTests(unittest.TestCase):
         self.assertNotIn("video_url",result["candidates"][0])
         self.assertNotIn("cdn.pixabay.com",str(result))
         self.assertEqual(result["candidates"][0]["tags_from_provider"],"happy dog, playful")
+
+    def test_unrelated_trick_and_halloween_results_are_dropped(self):
+        for tags in ("skateboarder, skateboarding, trick, jump",
+                     "skeleton, halloween, party, ghost, trick"):
+            hit={"id":321,"duration":10,"pageURL":"https://pixabay.com/videos/id-321/",
+                 "tags":tags,"user":"creator",
+                 "videos":{"medium":{"url":"https://cdn.pixabay.com/video/321.mp4"}}}
+            media={}
+            result=discover_pixabay("mock",fetch=lambda url:{"hits":[hit]},transient_media=media)
+            self.assertEqual(result["candidates"],[])
+            self.assertEqual(media,{})
 
     def test_obvious_green_screen_source_is_not_treated_as_real_dog(self):
         hit={"id":345,"duration":10,"pageURL":"https://pixabay.com/videos/dog-345/",

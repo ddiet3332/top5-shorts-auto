@@ -6,6 +6,7 @@ import urllib.parse
 import urllib.request
 import urllib.error
 import time
+import re
 
 API = "https://pixabay.com/api/videos/"
 QUERIES = ("funny dog", "playful puppy", "dog trick")
@@ -52,6 +53,11 @@ def discover_pixabay(api_key, *, fetch=None, per_page=10, max_results=18, exclud
                         media_host.hostname == "pixabay.com" or media_host.hostname.endswith(".pixabay.com")):
                     continue
                 tags = str(hit.get("tags", ""))[:240]
+                # Pixabay's full-text query can return non-dog "trick" footage.
+                # Tags are only a metadata filter; they do not verify video semantics.
+                if not re.search(r"(?<!\\w)(?:dog|dogs|puppy|puppies|canine|doggy|pup)(?!\\w)",
+                                 tags.casefold()):
+                    continue
                 if any(term in (tags + " " + str(hit.get("user", ""))).lower()
                        for term in ("greenscreen", "green screen", "cartoon", "animation")):
                     continue

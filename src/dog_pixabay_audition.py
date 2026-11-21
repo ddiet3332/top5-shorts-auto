@@ -75,8 +75,8 @@ def download_pixabay(video_id, api_key, destination, *, max_bytes=35*1024*1024, 
         raise ValueError("UNSUPPORTED_DURATION")
     return {"duration_sec":duration,"size_bytes":size}
 
-def audition_pixabay(discovery_path,output,api_key,*,max_items=2,downloader=None,previewer=None,media_index=None):
-    if not 0<=max_items<=3:
+def audition_pixabay(discovery_path,output,api_key,*,max_items=4,downloader=None,previewer=None,media_index=None):
+    if not 0<=max_items<=6:
         raise ValueError("MAX_ITEMS_EXCEEDED")
     output=Path(output)
     output.mkdir(parents=True,exist_ok=True)
@@ -84,7 +84,19 @@ def audition_pixabay(discovery_path,output,api_key,*,max_items=2,downloader=None
     pool=[r for r in payload.get("candidates",[]) if r.get("provider")=="pixabay"]
     run=os.environ.get("GITHUB_RUN_ID","0")
     offset=int(run)%len(pool) if pool and run.isdigit() else 0
-    selected=(pool[offset:]+pool[:offset])[:max_items]
+    rotated=pool[offset:]+pool[:offset]
+    selected, creators=[],set()
+    # First sample across different uploaders; avoid four near-identical pet shots.
+    for item in rotated:
+        creator=str(item.get("creator","")).casefold().strip()
+        if creator and creator not in creators:
+            selected.append(item)
+            creators.add(creator)
+        if len(selected)>=max_items:
+            break
+    if len(selected)<max_items:
+        selected.extend(item for item in rotated if item not in selected)
+        selected=selected[:max_items]
     downloader=downloader or download_pixabay
     previewer=previewer or make_five_second_preview
     rows=[]
