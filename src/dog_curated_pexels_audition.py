@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 
@@ -180,6 +181,9 @@ def main():
         args.catalog,args.output,max_assets=args.max_assets)
     print("DOG_CURATED_PEXELS_AUDITION",result["status"],
           len(result["candidates"]),flush=True)
+    if os.environ.get("GITHUB_OUTPUT"):
+        with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as handle:
+            handle.write("ready="+str(result["status"]=="PREVIEW_READY").lower()+"\n")
 
 
 if __name__=="__main__":
