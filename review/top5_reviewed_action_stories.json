@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_basis": "Source SHA256 + exact title + original cut time plus human-supervised inspection of actual V49 #44921764653 composite 35 frames and original 15 samples. Sampled visual captions, NOT end-to-end creative score, original owner licence, full action verification, or YPP approval.",
+  "review_basis": "Source SHA256 + exact title + original cut time plus human-supervised inspection of actual V49 #44921764653 composite 35 frames and original 15 samples. Sampled visual captions, NOT end-to-end creative score, original owner licence, full action verification, or YPP approval. V57 added three source SHA/cut sampled-frame descriptions from V56 actual 35 rendered frames, not a full-action verdict.",
   "reviewed_run_url": "https://github.com/ddiet3332/top5-shorts-auto/actions/runs/44921764653",
   "stories": [
     {
@@ -79,6 +79,78 @@
         ]
       ],
       "evidence": "Run #44921764653 V49 actual ranked 7 and original 3 Himawari satellite samples 2.32/3.92/5.52 show rapid radial growth; time-lapse, not real-time",
+      "publication_approved": false,
+      "rights_verified": false,
+      "full_action_verified": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Side view video of Kawaida Waterfall cascading, Cianda, Kiambu County.webm",
+      "sha256": "8154f19f4c593f7af6021a919a079a8b4ef741d3d09fb7726033b4d157a6b7dc",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Side_view_video_of_Kawaida_Waterfall_cascading%2C_Cianda%2C_Kiambu_County.webm",
+      "start_sec": 2,
+      "cut_tolerance_sec": 0.12,
+      "original_rank": 5,
+      "seconds": 4,
+      "caption_sequence": [
+        [
+          0.2,
+          "바위 사이로 쏟아지는 물줄기"
+        ],
+        [
+          2.2,
+          "끊임없이 흐르는 폭포"
+        ]
+      ],
+      "evidence": "V56 run #44928716051 35 real ranked frames rank5 showed continuous distinct waterfall; no surprising change inferred",
+      "publication_approved": false,
+      "rights_verified": false,
+      "full_action_verified": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:Old Faithful Geyser Eruption selection 2019.webm",
+      "sha256": "024d5492313585a719784bb3ddb05e743b6510d3e1540ce6f47218792514d4db",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Old_Faithful_Geyser_Eruption_selection_2019.webm",
+      "start_sec": 4,
+      "cut_tolerance_sec": 0.12,
+      "original_rank": 2,
+      "seconds": 6,
+      "caption_sequence": [
+        [
+          0.2,
+          "멀리서 솟아오르는 물기둥"
+        ],
+        [
+          2.4,
+          "하늘을 향해 치솟는 간헐천!"
+        ]
+      ],
+      "evidence": "V56 run #44928716051 35 ranked frames Old Faithful rank2 geyser plume visibly shoots upward; exact source 4–10s",
+      "publication_approved": false,
+      "rights_verified": false,
+      "full_action_verified": false
+    },
+    {
+      "topic_id": "nature_moments",
+      "title": "File:2022-01-11 Garonne River Overflow 5472.webm",
+      "sha256": "e81e2fe53870c48f2b0f58cd7043dfd3458344f8f93f81e7d1efa0b1398f7964",
+      "source_page": "https://commons.wikimedia.org/wiki/File:2022-01-11_Garonne_River_Overflow_5472.webm",
+      "start_sec": 6,
+      "cut_tolerance_sec": 0.12,
+      "original_rank": 1,
+      "seconds": 6,
+      "caption_sequence": [
+        [
+          0.2,
+          "황토빛 강물이 강변을 채운다"
+        ],
+        [
+          2.2,
+          "빠르게 흐르는 범람한 강물"
+        ]
+      ],
+      "evidence": "V56 run #44928716051 actual 35 frames rank1 source6-12s showed high brown flowing water; no apparent payoff, therefore demoted to fifth",
       "publication_approved": false,
       "rights_verified": false,
       "full_action_verified": false
