@@ -306,7 +306,7 @@ def repair_worklist(ranks,topic):
             "low_motion_advisory":low_motion,
             "repair_priority":0 if row["rank"]==1 and flag!="RELATIVE_TEXT_VIDEO_MATCH_ONLY" else
                               1 if flag=="POSSIBLE_CAPTION_SCENE_MISMATCH" else
-                              2 if flag=="UNSUPPORTED_SUBJECT_NEEDS_EDITORIAL_REVIEW" else 3,
+                              2 if flag=="UNSUPPORTED_SUBJECT_NEEDS_EDITORIAL_REVIEW" or low_motion else 3,
             "next_action":disposition,
             "actual_action_confirmed":False,
             "suggested_creative_caption":None,
