@@ -9,6 +9,8 @@ on:
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
       - 'src/top5_standard_scene_review.py'
+      - 'src/top5_smolvlm2_editorial.py'
+      - 'tests/test_top5_smolvlm2_editorial.py'
       - 'tests/test_top5_standard_scene_review.py'
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_object_diversity.py'
@@ -37,6 +39,8 @@ on:
       - 'tests/test_top5_topic_workflow_policy.py'
       - 'src/top5_auto_v30.py'
       - 'src/top5_standard_scene_review.py'
+      - 'src/top5_smolvlm2_editorial.py'
+      - 'tests/test_top5_smolvlm2_editorial.py'
       - 'tests/test_top5_standard_scene_review.py'
       - 'src/top5_candidate_visual_gate.py'
       - 'tests/test_top5_object_diversity.py'
@@ -84,4 +88,5 @@ jobs:
           python -m unittest discover -s tests -p 'test_v31_semantic_qa.py' -v
           python -m unittest discover -s tests -p 'test_v31_topic_repair.py' -v
           python -m unittest discover -s tests -p 'test_top5_standard_scene_review.py' -v
+          python -m unittest discover -s tests -p 'test_top5_smolvlm2_editorial.py' -v
 # This CI only validates routing. Full videos and rights review are separate.
